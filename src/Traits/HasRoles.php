@@ -7,6 +7,8 @@ use Braxey\Gatekeeper\Models\Role;
 
 trait HasRoles
 {
+    use InteractsWithRoles;
+
     /**
      * Assign a role to the model.
      */
@@ -42,7 +44,7 @@ trait HasRoles
     /**
      * Revoke a role from the model.
      */
-    public function revokeRole(string $roleName): bool
+    public function revokeRole(string $roleName): int
     {
         // If roles are disabled, we cannot revoke roles.
         if (! config('gatekeeper.features.roles', false)) {
