@@ -3,10 +3,15 @@
 return [
 
     /*
-  |--------------------------------------------------------------------------
-  | Features
-  |--------------------------------------------------------------------------
-  */
+    |--------------------------------------------------------------------------
+    | Feature Toggles
+    |--------------------------------------------------------------------------
+    |
+    | Gatekeeper allows you to enable or disable specific features such as
+    | roles or teams. Disabling features may improve performance and keep
+    | your permission system as simple as possible for your use case.
+    |
+    */
 
     'features' => [
         'roles' => true,
@@ -14,22 +19,24 @@ return [
     ],
 
     /*
-  |--------------------------------------------------------------------------
-  | Table Names
-  |--------------------------------------------------------------------------
-  |
-  | If you need to customize table names, you may do so here. This lets you
-  | avoid conflicts with other packages or legacy tables.
-  |
-  */
+    |--------------------------------------------------------------------------
+    | Table Names
+    |--------------------------------------------------------------------------
+    |
+    | You may customize the database table names used by Gatekeeper. This
+    | is useful if you're integrating Gatekeeper into an existing system
+    | or if you simply prefer different naming conventions for tables.
+    |
+    */
 
     'tables' => [
         'permissions' => 'permissions',
         'roles' => 'roles',
-        // 'teams'                 => 'teams',
+        'teams' => 'teams',
+
         'model_has_permissions' => 'model_has_permissions',
         'model_has_roles' => 'model_has_roles',
-        // 'model_has_teams'       => 'model_has_teams',
+        'model_has_teams' => 'model_has_teams',
     ],
 
 ];

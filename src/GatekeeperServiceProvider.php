@@ -27,7 +27,7 @@ class GatekeeperServiceProvider extends ServiceProvider
     }
 
     /**
-     * Setup the configureation for Gatekeeper.
+     * Setup the configuration for Gatekeeper.
      *
      * @return void
      */
@@ -54,11 +54,11 @@ class GatekeeperServiceProvider extends ServiceProvider
         ], 'gatekeeper-config');
 
         $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
-          ? 'publishesMigrations'
-          : 'publishes';
+            ? 'publishesMigrations'
+            : 'publishes';
 
         $this->{$publishesMigrationsMethod}([
-            __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
+            __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'gatekeeper-migrations');
     }
 }
