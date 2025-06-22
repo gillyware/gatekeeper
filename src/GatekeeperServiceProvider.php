@@ -2,7 +2,6 @@
 
 namespace Braxey\Gatekeeper;
 
-use Braxey\Gatekeeper\Services\GatekeeperService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,6 +17,7 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->registerPublishing();
         $this->registerBladeDirectives();
         $this->registerMiddleware();
+        $this->registerCommands();
     }
 
     /**
@@ -29,7 +29,19 @@ class GatekeeperServiceProvider extends ServiceProvider
     {
         $this->configure();
 
-        $this->app->singleton('gatekeeper', fn () => new GatekeeperService);
+        $this->app->singleton('gatekeeper', fn () => new \Braxey\Gatekeeper\Services\GatekeeperService);
+    }
+
+    /**
+     * Setup the configuration for Gatekeeper.
+     *
+     * @return void
+     */
+    protected function configure()
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
+        );
     }
 
     /**
@@ -100,14 +112,20 @@ class GatekeeperServiceProvider extends ServiceProvider
     }
 
     /**
-     * Setup the configuration for Gatekeeper.
+     * Register the package's commands.
      *
      * @return void
      */
-    protected function configure()
+    protected function registerCommands()
     {
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
-        );
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([
+            \Braxey\Gatekeeper\Console\CreatePermissionCommand::class,
+            \Braxey\Gatekeeper\Console\CreateRoleCommand::class,
+            \Braxey\Gatekeeper\Console\CreateTeamCommand::class,
+        ]);
     }
 }
