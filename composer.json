@@ -43,7 +43,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.x-dev"
+            "dev-main": "0.x-dev"
         },
         "laravel": {
             "providers": [
@@ -57,9 +57,9 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
-        "mockery/mockery": "^1.6",
-        "orchestra/testbench": "^10.4",
-        "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^12.2"
+        "mockery/mockery": "^1.0",
+        "orchestra/testbench": "^8.18|^9.0|^10.0",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.4|^11.5"
     }
 }
