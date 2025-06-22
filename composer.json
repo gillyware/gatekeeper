@@ -1,0 +1,73 @@
+{
+    "name": "gillyware/gatekeeper",
+    "description": "Gatekeeper provides an expressive, fluent interface for access control.",
+    "keywords": ["laravel", "permissions", "roles", "teams", "access control", "authorization"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Braxey",
+            "email": "braxeyy@gmail.com"
+        }
+    ],
+    "require":{
+        "php": "^8.2",
+        "ext-json": "*",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/routing": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/view": "^11.0|^12.0",
+        "laravel/prompts": "^0.3.6",
+        "symfony/http-kernel": "^6.0|^7.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.22",
+        "mockery/mockery": "^1.0",
+        "orchestra/testbench": "^8.18|^9.0|^10.0",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.4|^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gillyware\\Gatekeeper\\": "src/",
+            "Gillyware\\Gatekeeper\\Database\\Factories\\": "database/factories/",
+            "Gillyware\\Gatekeeper\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Gillyware\\Gatekeeper\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "format": [
+            "./vendor/bin/pint"
+        ],
+        "check": [
+            "./vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "test": [
+            "./vendor/bin/phpunit"
+        ],
+        "sweep": [
+            "composer format",
+            "composer check",
+            "composer test"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Gillyware\\Gatekeeper\\GatekeeperServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

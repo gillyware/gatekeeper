@@ -1,0 +1,11 @@
+providers:
+  - Gillyware\Gatekeeper\GatekeeperServiceProvider
+
+migrations:
+  - database/migrations
+
+workbench:
+  build:
+    - create-sqlite-db
+    - db:wipe
+    - migrate:fresh

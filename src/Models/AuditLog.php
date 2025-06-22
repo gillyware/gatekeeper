@@ -1,0 +1,59 @@
+<?php
+
+namespace Gillyware\Gatekeeper\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
+
+class AuditLog extends Model
+{
+    use SoftDeletes;
+
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'action',
+        'action_by_model_type',
+        'action_by_model_id',
+        'action_to_model_type',
+        'action_to_model_id',
+        'metadata',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     */
+    protected $casts = [
+        'metadata' => 'json',
+    ];
+
+    /**
+     * Get the table associated with the model.
+     */
+    public function getTable(): string
+    {
+        return Config::get('gatekeeper.tables.audit_logs');
+    }
+
+    public function actionBy(): MorphTo
+    {
+        return $this->morphTo('action_by_model');
+    }
+
+    public function actionTo(): MorphTo
+    {
+        return $this->morphTo('action_to_model');
+    }
+
+    /**
+     * Check if the table for this model exists in the database.
+     */
+    public static function tableExists(): bool
+    {
+        return Schema::hasTable(Config::get('gatekeeper.tables.audit_logs'));
+    }
+}
