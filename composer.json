@@ -1,0 +1,58 @@
+{
+    "name": "braxey/gatekeeper",
+    "description": "Gatekeeper provides an expressive, fluent interface for access control.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Braxey",
+            "email": "braxeyy@gmail.com"
+        }
+    ],
+    "require":{
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Braxey\\Gatekeeper\\": "src/",
+            "Braxey\\Gatekeeper\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Braxey\\Gatekeeper\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "./vendor/bin/phpunit"
+        ],
+        "check": [
+            "./vendor/bin/phpstan analyse --memory-limit=2G --configuration=phpstan.neon"
+        ],
+        "sweep": [
+            "composer test",
+            "composer check"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Braxey\\Gatekeeper\\GatekeeperServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^10.4",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.2"
+    }
+}
