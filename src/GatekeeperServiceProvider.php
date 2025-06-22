@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper;
 
 use Braxey\Gatekeeper\Services\GatekeeperService;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class GatekeeperServiceProvider extends ServiceProvider
@@ -15,6 +16,8 @@ class GatekeeperServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPublishing();
+        $this->registerBladeDirectives();
+        $this->registerMiddleware();
     }
 
     /**
@@ -27,18 +30,6 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->configure();
 
         $this->app->singleton('gatekeeper', fn () => new GatekeeperService);
-    }
-
-    /**
-     * Setup the configuration for Gatekeeper.
-     *
-     * @return void
-     */
-    protected function configure()
-    {
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
-        );
     }
 
     /**
@@ -63,5 +54,60 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->{$publishesMigrationsMethod}([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'gatekeeper-migrations');
+    }
+
+    /**
+     * Register the Blade directives for Gatekeeper.
+     *
+     * @return void
+     */
+    protected function registerBladeDirectives()
+    {
+        Blade::if('hasPermission', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $permissionName = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasPermission') && $user->hasPermission($permissionName);
+        });
+
+        Blade::if('hasRole', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $roleName = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasRole') && $user->hasRole($roleName);
+        });
+
+        Blade::if('onTeam', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $teamName = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'onTeam') && $user->onTeam($teamName);
+        });
+    }
+
+    /**
+     * Register the middleware for Gatekeeper.
+     *
+     * @return void
+     */
+    protected function registerMiddleware()
+    {
+        $router = $this->app->make('router');
+
+        $router->aliasMiddleware('has_permission', \Braxey\Gatekeeper\Http\Middleware\HasPermission::class);
+        $router->aliasMiddleware('has_role', \Braxey\Gatekeeper\Http\Middleware\HasRole::class);
+        $router->aliasMiddleware('on_team', \Braxey\Gatekeeper\Http\Middleware\OnTeam::class);
+    }
+
+    /**
+     * Setup the configuration for Gatekeeper.
+     *
+     * @return void
+     */
+    protected function configure()
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
+        );
     }
 }

@@ -88,7 +88,7 @@ class HasTeamsTest extends TestCase
 
         $user->assignTeam($teamName);
 
-        $this->assertTrue($user->hasTeam($teamName));
+        $this->assertTrue($user->onTeam($teamName));
     }
 
     public function test_has_team_returns_false_if_team_inactive()
@@ -99,7 +99,7 @@ class HasTeamsTest extends TestCase
 
         $user->assignTeam($teamName);
 
-        $this->assertFalse($user->hasTeam($teamName));
+        $this->assertFalse($user->onTeam($teamName));
     }
 
     public function test_has_team_returns_false_if_team_missing()
@@ -108,7 +108,7 @@ class HasTeamsTest extends TestCase
         $teamName = fake()->unique()->word();
         Team::factory()->withName($teamName)->create();
 
-        $this->assertFalse($user->hasTeam($teamName));
+        $this->assertFalse($user->onTeam($teamName));
     }
 
     public function test_has_team_returns_false_when_teams_feature_disabled()
@@ -119,7 +119,7 @@ class HasTeamsTest extends TestCase
         $teamName = fake()->unique()->word();
         Team::factory()->withName($teamName)->create();
 
-        $this->assertFalse($user->hasTeam($teamName));
+        $this->assertFalse($user->onTeam($teamName));
     }
 
     public function test_assign_team_throws_if_teams_disabled()

@@ -58,7 +58,7 @@ trait HasTeams
     /**
      * Check if the model has a given team.
      */
-    public function hasTeam(string $teamName): bool
+    public function onTeam(string $teamName): bool
     {
         if (! config('gatekeeper.features.teams', false)) {
             return false;
