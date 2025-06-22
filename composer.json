@@ -27,11 +27,11 @@
             "./vendor/bin/phpunit"
         ],
         "check": [
-            "./vendor/bin/phpstan analyse --memory-limit=2G --configuration=phpstan.neon"
+            "./vendor/bin/phpstan analyse --memory-limit=2G"
         ],
         "sweep": [
-            "composer test",
-            "composer check"
+            "composer check",
+            "composer test"
         ]
     },
     "extra": {
