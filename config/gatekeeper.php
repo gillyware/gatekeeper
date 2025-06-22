@@ -2,18 +2,18 @@
 
 return [
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Features
   |--------------------------------------------------------------------------
   */
 
-  'features' => [
-    'roles' => true,
-    'teams' => false,
-  ],
+    'features' => [
+        'roles' => true,
+        'teams' => false,
+    ],
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Table Names
   |--------------------------------------------------------------------------
@@ -23,13 +23,13 @@ return [
   |
   */
 
-  'tables' => [
-    'permissions'           => 'permissions',
-    'roles'                 => 'roles',
-    // 'teams'                 => 'teams',
-    'model_has_permissions' => 'model_has_permissions',
-    'model_has_roles'       => 'model_has_roles',
-    // 'model_has_teams'       => 'model_has_teams',
-  ],
+    'tables' => [
+        'permissions' => 'permissions',
+        'roles' => 'roles',
+        // 'teams'                 => 'teams',
+        'model_has_permissions' => 'model_has_permissions',
+        'model_has_roles' => 'model_has_roles',
+        // 'model_has_teams'       => 'model_has_teams',
+    ],
 
 ];

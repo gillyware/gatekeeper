@@ -30,6 +30,9 @@
         }
     },
     "scripts": {
+        "format": [
+            "./vendor/bin/pint"
+        ],
         "test": [
             "./vendor/bin/phpunit"
         ],
@@ -37,6 +40,7 @@
             "./vendor/bin/phpstan analyse --memory-limit=2G"
         ],
         "sweep": [
+            "composer format",
             "composer check",
             "composer test"
         ]
@@ -57,6 +61,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
+        "laravel/pint": "^1.22",
         "mockery/mockery": "^1.0",
         "orchestra/testbench": "^8.18|^9.0|^10.0",
         "phpstan/phpstan": "^1.10",

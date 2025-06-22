@@ -13,7 +13,7 @@ class GatekeeperServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-      $this->registerPublishing();
+        $this->registerPublishing();
     }
 
     /**
@@ -23,7 +23,7 @@ class GatekeeperServiceProvider extends ServiceProvider
      */
     public function register()
     {
-      $this->configure();
+        $this->configure();
     }
 
     /**
@@ -33,9 +33,9 @@ class GatekeeperServiceProvider extends ServiceProvider
      */
     protected function configure()
     {
-      $this->mergeConfigFrom(
-          __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
-      );
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/gatekeeper.php', 'gatekeeper'
+        );
     }
 
     /**
@@ -45,21 +45,20 @@ class GatekeeperServiceProvider extends ServiceProvider
      */
     protected function registerPublishing()
     {
-      if (!$this->app->runningInConsole()) {
-        return;
-      }
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
 
-      $this->publishes([
-          __DIR__.'/../config/gatekeeper.php' => config_path('gatekeeper.php'),
-      ], 'gatekeeper-config');
+        $this->publishes([
+            __DIR__.'/../config/gatekeeper.php' => config_path('gatekeeper.php'),
+        ], 'gatekeeper-config');
 
-      $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
-        ? 'publishesMigrations'
-        : 'publishes';
+        $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
+          ? 'publishesMigrations'
+          : 'publishes';
 
-      $this->{$publishesMigrationsMethod}([
-          __DIR__.'/../database/migrations' => $this->app->databasePath('migrations')
-      ], 'gatekeeper-migrations');
+        $this->{$publishesMigrationsMethod}([
+            __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
+        ], 'gatekeeper-migrations');
     }
 }
-
