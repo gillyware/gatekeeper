@@ -2,6 +2,7 @@
 
 namespace Braxey\Gatekeeper;
 
+use Braxey\Gatekeeper\Services\GatekeeperService;
 use Illuminate\Support\ServiceProvider;
 
 class GatekeeperServiceProvider extends ServiceProvider
@@ -24,6 +25,8 @@ class GatekeeperServiceProvider extends ServiceProvider
     public function register()
     {
         $this->configure();
+
+        $this->app->singleton('gatekeeper', fn () => new GatekeeperService);
     }
 
     /**
