@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Tests\Unit;
 
 use Braxey\Gatekeeper\Models\ModelHasRole;
 use Braxey\Gatekeeper\Models\Role;
+use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -118,6 +119,55 @@ class HasRolesTest extends TestCase
         $user = User::factory()->create();
         $roleName = fake()->unique()->word();
         Role::factory()->withName($roleName)->create();
+
+        $this->assertFalse($user->hasRole($roleName));
+    }
+
+    public function test_it_returns_true_if_role_is_granted_through_team()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $roleName = fake()->unique()->word();
+        $role = Role::factory()->withName($roleName)->create();
+
+        $team = Team::factory()->create();
+        $team->roles()->attach($role);
+        $user->teams()->attach($team);
+
+        $this->assertTrue($user->hasRole($roleName));
+    }
+
+    public function test_it_returns_false_if_team_does_not_have_the_role()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $roleName = fake()->unique()->word();
+        Role::factory()->withName($roleName)->create();
+
+        $team = Team::factory()->create();
+        $user->teams()->attach($team);
+
+        $this->assertFalse($user->hasRole($roleName));
+    }
+
+    public function test_it_returns_false_if_all_teams_are_inactive_or_deleted()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $roleName = fake()->unique()->word();
+        $role = Role::factory()->withName($roleName)->create();
+
+        $team1 = Team::factory()->create(['is_active' => true]);
+        $team1->roles()->attach($role);
+        $team1->delete();
+        $user->teams()->attach($team1);
+
+        $team2 = Team::factory()->inactive()->create();
+        $team2->roles()->attach($role);
+        $user->teams()->attach($team2);
 
         $this->assertFalse($user->hasRole($roleName));
     }

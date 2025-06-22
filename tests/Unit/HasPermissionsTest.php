@@ -5,6 +5,7 @@ namespace Braxey\Gatekeeper\Tests\Unit;
 use Braxey\Gatekeeper\Models\ModelHasPermission;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
+use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -153,6 +154,101 @@ class HasPermissionsTest extends TestCase
 
         $permissionName = fake()->unique()->word();
         Permission::factory()->withName($permissionName)->create();
+
+        $this->assertFalse($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_true_if_permission_is_granted_through_team()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+        $permissionName = fake()->unique()->word();
+        $permission = Permission::factory()->withName($permissionName)->create();
+
+        $team->permissions()->attach($permission);
+        $user->teams()->attach($team);
+
+        $this->assertTrue($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_true_if_permission_is_granted_through_team_role()
+    {
+        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.roles', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+        $role = Role::factory()->create();
+        $permissionName = fake()->unique()->word();
+        $permission = Permission::factory()->withName($permissionName)->create();
+
+        $role->permissions()->attach($permission);
+        $team->roles()->attach($role);
+        $user->teams()->attach($team);
+
+        $this->assertTrue($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_false_if_team_is_inactive()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->inactive()->create();
+        $permissionName = fake()->unique()->word();
+        $permission = Permission::factory()->withName($permissionName)->create();
+
+        $team->permissions()->attach($permission);
+        $user->teams()->attach($team);
+
+        $this->assertFalse($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_false_if_team_role_is_inactive()
+    {
+        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.roles', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+        $role = Role::factory()->inactive()->create();
+        $permissionName = fake()->unique()->word();
+        $permission = Permission::factory()->withName($permissionName)->create();
+
+        $role->permissions()->attach($permission);
+        $team->roles()->attach($role);
+        $user->teams()->attach($team);
+
+        $this->assertFalse($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_false_if_teams_feature_is_disabled()
+    {
+        Config::set('gatekeeper.features.teams', false);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+        $permissionName = fake()->unique()->word();
+        $permission = Permission::factory()->withName($permissionName)->create();
+
+        $team->permissions()->attach($permission);
+        $user->teams()->attach($team);
+
+        $this->assertFalse($user->hasPermission($permissionName));
+    }
+
+    public function test_it_returns_false_if_team_does_not_have_permission()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+        $permissionName = fake()->unique()->word();
+        Permission::factory()->withName($permissionName)->create();
+
+        $user->teams()->attach($team);
 
         $this->assertFalse($user->hasPermission($permissionName));
     }

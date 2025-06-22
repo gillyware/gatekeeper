@@ -7,7 +7,7 @@ use Braxey\Gatekeeper\Models\Role;
 
 trait HasRoles
 {
-    use InteractsWithRoles;
+    use InteractsWithRoles, InteractsWithTeams;
 
     /**
      * Assign a role to the model.
@@ -80,18 +80,33 @@ trait HasRoles
         }
 
         // Check if the role is directly assigned to the model.
-        $roleDirectlyAssigned = ModelHasRole::forModel($this)
+        $hasDirectRole = ModelHasRole::forModel($this)
             ->where('role_id', $role->id)
             ->whereNull('deleted_at')
             ->orderByDesc('created_at')
-            ->first();
+            ->exists();
 
         // If the role is currently directly assigned to the model, return true.
-        if ($roleDirectlyAssigned) {
+        if ($hasDirectRole) {
             return true;
         }
 
-        // TODO: Implement team-based role checks if teams are enabled.
+        // If teams are enabled, check if the model has the role through teams.
+        if (config('gatekeeper.features.teams', false)) {
+            $teamsTable = config('gatekeeper.tables.teams', 'teams');
+
+            $hasTeamWithRole = $this->teams()
+                ->whereNull("$teamsTable.deleted_at")
+                ->whereNull('model_has_teams.deleted_at')
+                ->where('is_active', true)
+                ->get()
+                ->filter(fn ($team) => $team->hasRole($roleName))
+                ->isNotEmpty();
+
+            if ($hasTeamWithRole) {
+                return true;
+            }
+        }
 
         // Return false by default.
         return false;

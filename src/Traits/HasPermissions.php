@@ -8,7 +8,7 @@ use Braxey\Gatekeeper\Models\Role;
 
 trait HasPermissions
 {
-    use InteractsWithPermissions, InteractsWithRoles;
+    use InteractsWithPermissions, InteractsWithRoles, InteractsWithTeams;
 
     /**
      * Assign a permission to the model.
@@ -20,10 +20,10 @@ trait HasPermissions
         $builder = ModelHasPermission::forModel($this)->where('permission_id', $permission->id);
 
         // Check if the model already has this permission directly assigned.
-        $modelAlreadyDirectlyHasPermission = $builder->whereNull('deleted_at')->exists();
+        $hasDirectPermission = $builder->whereNull('deleted_at')->exists();
 
         // If the model already has this permission directly assigned, we don't need to sync again.
-        if ($modelAlreadyDirectlyHasPermission) {
+        if ($hasDirectPermission) {
             return true;
         }
 
@@ -62,8 +62,6 @@ trait HasPermissions
      */
     public function hasPermission(string $permissionName): bool
     {
-        $rolesEnabled = config('gatekeeper.features.roles', false);
-        // $teamsEnabled = config('gatekeeper.features.teams', false);
         $permission = $this->resolvePermissionByName($permissionName);
 
         // If the permission is not active, we can immediately return false.
@@ -72,18 +70,18 @@ trait HasPermissions
         }
 
         // Fetch the most recent permission assignment.
-        $mostRecentPermission = ModelHasPermission::forModel($this)
+        $recentPermissionAssignment = ModelHasPermission::forModel($this)
             ->where('permission_id', $permission->id)
             ->orderByDesc('created_at')
             ->first();
 
         // If we find a direct permission assignment, we can use it to determine if the model has the permission.
-        if ($mostRecentPermission) {
-            return ! $mostRecentPermission->deleted_at;
+        if ($recentPermissionAssignment) {
+            return ! $recentPermissionAssignment->deleted_at;
         }
 
         // If roles are enabled, check if the model has the permission through roles.
-        if ($rolesEnabled) {
+        if (config('gatekeeper.features.roles', false)) {
             $rolesTableName = config('gatekeeper.tables.roles', 'roles');
 
             $activeModelRolesWithPermission = $this->roles()
@@ -99,7 +97,22 @@ trait HasPermissions
             }
         }
 
-        // TODO: Implement team-based permission checks if teams are enabled.
+        // If teams are enabled, check if the model has the permission through the teams roles or permissions.
+        if (config('gatekeeper.features.teams', false)) {
+            $teamsTableName = config('gatekeeper.tables.teams', 'teams');
+
+            $activeModelTeamsWithPermission = $this->teams()
+                ->whereNull("$teamsTableName.deleted_at")
+                ->whereNull('model_has_teams.deleted_at')
+                ->where('is_active', true)
+                ->get()
+                ->filter(fn ($team) => $team->hasPermission($permission->name));
+
+            // If the model has any active teams with the permission, return true.
+            if ($activeModelTeamsWithPermission->isNotEmpty()) {
+                return true;
+            }
+        }
 
         // Return false by default.
         return false;

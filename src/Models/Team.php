@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Models;
 
 use Braxey\Gatekeeper\Database\Factories\TeamFactory;
 use Braxey\Gatekeeper\Traits\HasPermissions;
+use Braxey\Gatekeeper\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,6 +13,7 @@ class Team extends Model
 {
     use HasFactory;
     use HasPermissions;
+    use HasRoles;
     use SoftDeletes;
 
     /**
