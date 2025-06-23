@@ -160,6 +160,14 @@ class GatekeeperServiceProvider extends ServiceProvider
         $router->aliasMiddleware('has_permission', \Braxey\Gatekeeper\Http\Middleware\HasPermission::class);
         $router->aliasMiddleware('has_role', \Braxey\Gatekeeper\Http\Middleware\HasRole::class);
         $router->aliasMiddleware('on_team', \Braxey\Gatekeeper\Http\Middleware\OnTeam::class);
+
+        $router->aliasMiddleware('has_any_permission', \Braxey\Gatekeeper\Http\Middleware\HasAnyPermission::class);
+        $router->aliasMiddleware('has_any_role', \Braxey\Gatekeeper\Http\Middleware\HasAnyRole::class);
+        $router->aliasMiddleware('on_any_team', \Braxey\Gatekeeper\Http\Middleware\OnAnyTeam::class);
+
+        $router->aliasMiddleware('has_all_permissions', \Braxey\Gatekeeper\Http\Middleware\HasAllPermissions::class);
+        $router->aliasMiddleware('has_all_roles', \Braxey\Gatekeeper\Http\Middleware\HasAllRoles::class);
+        $router->aliasMiddleware('on_all_teams', \Braxey\Gatekeeper\Http\Middleware\OnAllTeams::class);
     }
 
     /**
