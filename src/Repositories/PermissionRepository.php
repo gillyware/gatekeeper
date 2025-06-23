@@ -12,6 +12,17 @@ use Throwable;
 
 class PermissionRepository
 {
+    public function add(string $permissionName): Permission
+    {
+        $permission = new Permission(['name' => $permissionName]);
+
+        if ($permission->save()) {
+            Cache::forget('gatekeeper.permissions');
+        }
+
+        return $permission;
+    }
+
     public function all(): Collection
     {
         $permissions = Cache::get('gatekeeper.permissions');
@@ -31,7 +42,7 @@ class PermissionRepository
     {
         try {
             return $this->all()->where('name', $permissionName)->firstOrFail();
-        } catch (ItemNotFoundException $e) {
+        } catch (ItemNotFoundException) {
             throw new PermissionNotFoundException($permissionName);
         } catch (Throwable $t) {
             throw $t;

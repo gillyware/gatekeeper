@@ -6,6 +6,7 @@ use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Services\GatekeeperService;
+use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use RuntimeException;
@@ -18,10 +19,10 @@ class GatekeeperServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->service = new GatekeeperService;
+        $this->service = app('gatekeeper');
     }
 
-    public function test_we_can_create_a_permission()
+    public function test_create_permission_delegates_to_repository()
     {
         $permissionName = fake()->unique()->word();
 
@@ -31,7 +32,7 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($permissionName, $permission->name);
     }
 
-    public function test_we_can_create_a_role_when_roles_feature_is_enabled()
+    public function test_create_role_delegates_to_repository_when_enabled()
     {
         Config::set('gatekeeper.features.roles', true);
 
@@ -43,19 +44,17 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($roleName, $role->name);
     }
 
-    public function test_it_throws_exception_when_creating_role_if_roles_feature_is_disabled()
+    public function test_create_role_throws_when_disabled()
     {
         Config::set('gatekeeper.features.roles', false);
-
-        $roleName = fake()->unique()->word();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Roles feature is disabled.');
 
-        $this->service->createRole($roleName);
+        $this->service->createRole(fake()->unique()->word());
     }
 
-    public function test_we_can_create_a_team_when_teams_feature_is_enabled()
+    public function test_create_team_delegates_to_repository_when_enabled()
     {
         Config::set('gatekeeper.features.teams', true);
 
@@ -67,15 +66,62 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($teamName, $team->name);
     }
 
-    public function test_it_throws_exception_when_creating_team_if_teams_feature_is_disabled()
+    public function test_create_team_throws_when_disabled()
     {
         Config::set('gatekeeper.features.teams', false);
-
-        $teamName = fake()->unique()->word();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Teams feature is disabled.');
 
-        $this->service->createTeam($teamName);
+        $this->service->createTeam(fake()->unique()->word());
+    }
+
+    public function test_model_permission_methods_delegate()
+    {
+        $user = User::factory()->create();
+        $perm1 = Permission::factory()->create(['name' => fake()->unique()->word()]);
+        $perm2 = Permission::factory()->create(['name' => fake()->unique()->word()]);
+
+        $this->assertTrue($this->service->assignPermissionToModel($user, $perm1->name));
+        $this->assertTrue($this->service->assignPermissionsToModel($user, [$perm2->name]));
+        $this->assertTrue($this->service->modelHasPermission($user, $perm1->name));
+        $this->assertTrue($this->service->modelHasAnyPermission($user, [$perm1->name, $perm2->name]));
+        $this->assertTrue($this->service->modelHasAllPermissions($user, [$perm1->name, $perm2->name]));
+        $this->assertTrue($this->service->revokePermissionFromModel($user, $perm1->name));
+        $this->assertTrue($this->service->revokePermissionsFromModel($user, [$perm2->name]));
+    }
+
+    public function test_model_role_methods_delegate()
+    {
+        Config::set('gatekeeper.features.roles', true);
+
+        $user = User::factory()->create();
+        $role1 = Role::factory()->create(['name' => fake()->unique()->word()]);
+        $role2 = Role::factory()->create(['name' => fake()->unique()->word()]);
+
+        $this->assertTrue($this->service->assignRoleToModel($user, $role1->name));
+        $this->assertTrue($this->service->assignRolesToModel($user, [$role2->name]));
+        $this->assertTrue($this->service->modelHasRole($user, $role1->name));
+        $this->assertTrue($this->service->modelHasAnyRole($user, [$role1->name, $role2->name]));
+        $this->assertTrue($this->service->modelHasAllRoles($user, [$role1->name, $role2->name]));
+        $this->assertTrue($this->service->revokeRoleFromModel($user, $role1->name));
+        $this->assertTrue($this->service->revokeRolesFromModel($user, [$role2->name]));
+    }
+
+    public function test_model_team_methods_delegate()
+    {
+        Config::set('gatekeeper.features.teams', true);
+
+        $user = User::factory()->create();
+        $team1 = Team::factory()->create(['name' => fake()->unique()->word()]);
+        $team2 = Team::factory()->create(['name' => fake()->unique()->word()]);
+
+        $this->assertTrue($this->service->addModelToTeam($user, $team1->name));
+        $this->assertTrue($this->service->addModelsToTeams($user, [$team2->name]));
+        $this->assertTrue($this->service->modelOnTeam($user, $team1->name));
+        $this->assertTrue($this->service->modelOnAnyTeam($user, [$team1->name, $team2->name]));
+        $this->assertTrue($this->service->modelOnAllTeams($user, [$team1->name, $team2->name]));
+        $this->assertTrue($this->service->removeModelFromTeam($user, $team1->name));
+        $this->assertTrue($this->service->removeModelsFromTeams($user, [$team2->name]));
     }
 }

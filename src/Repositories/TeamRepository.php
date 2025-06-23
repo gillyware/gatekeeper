@@ -12,6 +12,17 @@ use Throwable;
 
 class TeamRepository
 {
+    public function add(string $teamName): Team
+    {
+        $team = new Team(['name' => $teamName]);
+
+        if ($team->save()) {
+            Cache::forget('gatekeeper.teams');
+        }
+
+        return $team;
+    }
+
     public function all(): Collection
     {
         $teams = Cache::get('gatekeeper.teams');
@@ -31,7 +42,7 @@ class TeamRepository
     {
         try {
             return $this->all()->where('name', $teamName)->firstOrFail();
-        } catch (ItemNotFoundException $e) {
+        } catch (ItemNotFoundException) {
             throw new TeamNotFoundException($teamName);
         } catch (Throwable $t) {
             throw $t;

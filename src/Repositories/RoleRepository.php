@@ -12,6 +12,17 @@ use Throwable;
 
 class RoleRepository
 {
+    public function add(string $roleName): Role
+    {
+        $role = new Role(['name' => $roleName]);
+
+        if ($role->save()) {
+            Cache::forget('gatekeeper.roles');
+        }
+
+        return $role;
+    }
+
     public function all(): Collection
     {
         $roles = Cache::get('gatekeeper.roles');
@@ -31,7 +42,7 @@ class RoleRepository
     {
         try {
             return $this->all()->where('name', $roleName)->firstOrFail();
-        } catch (ItemNotFoundException $e) {
+        } catch (ItemNotFoundException) {
             throw new RoleNotFoundException($roleName);
         } catch (Throwable $t) {
             throw $t;
