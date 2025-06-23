@@ -33,10 +33,16 @@ return [
         'permissions' => 'permissions',
         'roles' => 'roles',
         'teams' => 'teams',
+    ],
 
-        'model_has_permissions' => 'model_has_permissions',
-        'model_has_roles' => 'model_has_roles',
-        'model_has_teams' => 'model_has_teams',
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Settings
+    |--------------------------------------------------------------------------
+    */
+
+    'cache' => [
+        'ttl' => env('GATEKEEPER_CACHE_TTL', 24 * 60 * 60), // 24 hours
     ],
 
 ];

@@ -2,6 +2,8 @@
 
 namespace Braxey\Gatekeeper;
 
+use Braxey\Gatekeeper\Services\GatekeeperService;
+// use Braxey\Gatekeeper\Services\PermissionCacheService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,7 +31,8 @@ class GatekeeperServiceProvider extends ServiceProvider
     {
         $this->configure();
 
-        $this->app->singleton('gatekeeper', fn () => new \Braxey\Gatekeeper\Services\GatekeeperService);
+        $this->app->singleton('gatekeeper', fn () => new GatekeeperService);
+        // $this->app->singleton(PermissionCacheService::class, fn () => new PermissionCacheService);
     }
 
     /**

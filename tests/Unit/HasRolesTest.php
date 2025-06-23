@@ -2,12 +2,12 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit;
 
+use Braxey\Gatekeeper\Exceptions\RoleNotFoundException;
 use Braxey\Gatekeeper\Models\ModelHasRole;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Config;
 use RuntimeException;
 
@@ -343,7 +343,7 @@ class HasRolesTest extends TestCase
 
     public function test_it_throws_if_role_does_not_exist()
     {
-        $this->expectException(ModelNotFoundException::class);
+        $this->expectException(RoleNotFoundException::class);
 
         $user = User::factory()->create();
         $user->assignRole('nonexistent');

@@ -19,7 +19,7 @@ trait HasTeams
             throw new \RuntimeException('Cannot assign teams when the teams feature is disabled.');
         }
 
-        $team = $this->resolveTeamByName($teamName);
+        $team = $this->teamRepository()->findByName($teamName);
 
         $alreadyAssigned = ModelHasTeam::forModel($this)
             ->where('team_id', $team->id)
@@ -62,7 +62,7 @@ trait HasTeams
             throw new \RuntimeException('Cannot revoke teams when the teams feature is disabled.');
         }
 
-        $team = $this->resolveTeamByName($teamName);
+        $team = $this->teamRepository()->findByName($teamName);
 
         ModelHasTeam::forModel($this)
             ->where('team_id', $team->id)
@@ -95,7 +95,7 @@ trait HasTeams
             return false;
         }
 
-        $team = $this->resolveTeamByName($teamName);
+        $team = $this->teamRepository()->findByName($teamName);
 
         if (! $team->is_active) {
             return false;
@@ -133,14 +133,6 @@ trait HasTeams
         }
 
         return true;
-    }
-
-    /**
-     * Get a team by its name.
-     */
-    private function resolveTeamByName(string $teamName): Team
-    {
-        return Team::where('name', $teamName)->firstOrFail();
     }
 
     /**

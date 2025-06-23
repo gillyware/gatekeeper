@@ -2,13 +2,13 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit;
 
+use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\ModelHasPermission;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Config;
 
 class HasPermissionsTest extends TestCase
@@ -411,7 +411,7 @@ class HasPermissionsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->expectException(ModelNotFoundException::class);
+        $this->expectException(PermissionNotFoundException::class);
 
         $user->assignPermission('nonexistent_permission');
     }

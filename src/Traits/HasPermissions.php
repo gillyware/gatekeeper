@@ -3,8 +3,8 @@
 namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\ModelHasPermission;
-use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
+use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
 
 trait HasPermissions
@@ -16,7 +16,7 @@ trait HasPermissions
      */
     public function assignPermission(string $permissionName): bool
     {
-        $permission = $this->resolvePermissionByName($permissionName);
+        $permission = $this->permissionRepository()->findByName($permissionName);
 
         $builder = ModelHasPermission::forModel($this)->where('permission_id', $permission->id);
 
@@ -57,7 +57,7 @@ trait HasPermissions
      */
     public function revokePermission(string $permissionName): bool
     {
-        $permission = $this->resolvePermissionByName($permissionName);
+        $permission = $this->permissionRepository()->findByName($permissionName);
 
         $revokedAll = true;
 
@@ -91,7 +91,7 @@ trait HasPermissions
      */
     public function hasPermission(string $permissionName): bool
     {
-        $permission = $this->resolvePermissionByName($permissionName);
+        $permission = $this->permissionRepository()->findByName($permissionName);
 
         // If the permission is not active, we can immediately return false.
         if (! $permission->is_active) {
@@ -111,36 +111,24 @@ trait HasPermissions
 
         // If roles are enabled, check if the model has the permission through roles.
         if (config('gatekeeper.features.roles', false)) {
-            $rolesTableName = config('gatekeeper.tables.roles', 'roles');
-
-            $activeModelRolesWithPermission = $this->roles()
-                ->withTrashed()
-                ->whereNull("$rolesTableName.deleted_at")
-                ->whereNull('model_has_roles.deleted_at')
-                ->where('is_active', true)
-                ->get()
-                ->filter(fn (Role $role) => $role->hasPermission($permission->name));
+            $hasRoleWithPermission = $this->roleRepository()
+                ->getActiveForModel($this)
+                ->some(fn (Role $role) => $role->hasPermission($permission->name));
 
             // If the model has any active roles with the permission, return true.
-            if ($activeModelRolesWithPermission->isNotEmpty()) {
+            if ($hasRoleWithPermission) {
                 return true;
             }
         }
 
         // If teams are enabled, check if the model has the permission through the teams roles or permissions.
         if (config('gatekeeper.features.teams', false)) {
-            $teamsTableName = config('gatekeeper.tables.teams', 'teams');
-
-            $activeModelTeamsWithPermission = $this->teams()
-                ->withTrashed()
-                ->whereNull("$teamsTableName.deleted_at")
-                ->whereNull('model_has_teams.deleted_at')
-                ->where('is_active', true)
-                ->get()
-                ->filter(fn ($team) => $team->hasPermission($permission->name));
+            $onTeamWithPermission = $this->teamRepository()
+                ->getActiveForModel($this)
+                ->some(fn (Team $team) => $team->hasPermission($permission->name));
 
             // If the model has any active teams with the permission, return true.
-            if ($activeModelTeamsWithPermission->isNotEmpty()) {
+            if ($onTeamWithPermission) {
                 return true;
             }
         }
@@ -175,14 +163,6 @@ trait HasPermissions
         }
 
         return true;
-    }
-
-    /**
-     * Get a permission by its name.
-     */
-    private function resolvePermissionByName(string $permissionName): Permission
-    {
-        return Permission::where('name', $permissionName)->firstOrFail();
     }
 
     /**

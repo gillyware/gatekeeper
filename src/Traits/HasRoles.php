@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\ModelHasRole;
 use Braxey\Gatekeeper\Models\Role;
+use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
 
 trait HasRoles
@@ -20,7 +21,7 @@ trait HasRoles
             throw new \RuntimeException('Cannot assign roles when the roles feature is disabled.');
         }
 
-        $role = $this->resolveRoleByName($roleName);
+        $role = $this->roleRepository()->findByName($roleName);
 
         $builder = ModelHasRole::forModel($this)->where('role_id', $role->id);
 
@@ -66,7 +67,7 @@ trait HasRoles
             throw new \RuntimeException('Cannot revoke roles when the roles feature is disabled.');
         }
 
-        $role = $this->resolveRoleByName($roleName);
+        $role = $this->roleRepository()->findByName($roleName);
 
         ModelHasRole::forModel($this)
             ->where('role_id', $role->id)
@@ -99,7 +100,7 @@ trait HasRoles
             return false;
         }
 
-        $role = $this->resolveRoleByName($roleName);
+        $role = $this->roleRepository()->findByName($roleName);
 
         // If the role is not active, we can immediately return false.
         if (! $role->is_active) {
@@ -120,18 +121,11 @@ trait HasRoles
 
         // If teams are enabled, check if the model has the role through teams.
         if (config('gatekeeper.features.teams', false)) {
-            $teamsTable = config('gatekeeper.tables.teams', 'teams');
+            $onTeamWithRole = $this->teamRepository()
+                ->getActiveForModel($this)
+                ->some(fn (Team $team) => $team->hasRole($roleName));
 
-            $hasTeamWithRole = $this->teams()
-                ->withTrashed()
-                ->whereNull("$teamsTable.deleted_at")
-                ->whereNull('model_has_teams.deleted_at')
-                ->where('is_active', true)
-                ->get()
-                ->filter(fn ($team) => $team->hasRole($roleName))
-                ->isNotEmpty();
-
-            if ($hasTeamWithRole) {
+            if ($onTeamWithRole) {
                 return true;
             }
         }
@@ -165,14 +159,6 @@ trait HasRoles
         }
 
         return true;
-    }
-
-    /**
-     * Get a role by its name.
-     */
-    private function resolveRoleByName(string $roleName): Role
-    {
-        return Role::where('name', $roleName)->firstOrFail();
     }
 
     /**

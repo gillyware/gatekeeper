@@ -2,11 +2,11 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit;
 
+use Braxey\Gatekeeper\Exceptions\TeamNotFoundException;
 use Braxey\Gatekeeper\Models\ModelHasTeam;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Config;
 use RuntimeException;
 
@@ -293,7 +293,7 @@ class HasTeamsTest extends TestCase
 
     public function test_it_throws_if_team_does_not_exist()
     {
-        $this->expectException(ModelNotFoundException::class);
+        $this->expectException(TeamNotFoundException::class);
 
         $user = User::factory()->create();
         $user->addToTeam('nonexistent_team');
