@@ -5,7 +5,6 @@ namespace Braxey\Gatekeeper\Traits;
 use Braxey\Gatekeeper\Models\ModelHasRole;
 use Braxey\Gatekeeper\Models\Role;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
 
 trait HasRoles
 {
@@ -50,7 +49,7 @@ trait HasRoles
     {
         $result = true;
 
-        foreach (Arr::from($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roleNames) as $roleName) {
             $result = $result && $this->assignRole($roleName);
         }
 
@@ -84,7 +83,7 @@ trait HasRoles
     {
         $result = true;
 
-        foreach (Arr::from($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roleNames) as $roleName) {
             $result = $result && $this->revokeRole($roleName);
         }
 
@@ -145,7 +144,7 @@ trait HasRoles
      */
     public function hasAnyRole(array|Arrayable $roleNames): bool
     {
-        foreach (Arr::from($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roleNames) as $roleName) {
             if ($this->hasRole($roleName)) {
                 return true;
             }
@@ -159,7 +158,7 @@ trait HasRoles
      */
     public function hasAllRoles(array|Arrayable $roleNames): bool
     {
-        foreach (Arr::from($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roleNames) as $roleName) {
             if (! $this->hasRole($roleName)) {
                 return false;
             }
@@ -174,5 +173,13 @@ trait HasRoles
     private function resolveRoleByName(string $roleName): Role
     {
         return Role::where('name', $roleName)->firstOrFail();
+    }
+
+    /**
+     * Convert an array or Arrayable object of role names to an array.
+     */
+    private function roleNamesArray(array|Arrayable $roleNames): array
+    {
+        return $roleNames instanceof Arrayable ? $roleNames->toArray() : $roleNames;
     }
 }

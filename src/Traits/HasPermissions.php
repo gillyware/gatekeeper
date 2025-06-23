@@ -6,7 +6,6 @@ use Braxey\Gatekeeper\Models\ModelHasPermission;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
 
 trait HasPermissions
 {
@@ -46,7 +45,7 @@ trait HasPermissions
     {
         $result = true;
 
-        foreach (Arr::from($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
             $result = $result && $this->assignPermission($permissionName);
         }
 
@@ -80,7 +79,7 @@ trait HasPermissions
     {
         $result = true;
 
-        foreach (Arr::from($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
             $result = $result && $this->revokePermission($permissionName);
         }
 
@@ -155,7 +154,7 @@ trait HasPermissions
      */
     public function hasAnyPermission(array|Arrayable $permissionNames): bool
     {
-        foreach (Arr::from($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
             if ($this->hasPermission($permissionName)) {
                 return true;
             }
@@ -169,7 +168,7 @@ trait HasPermissions
      */
     public function hasAllPermissions(array|Arrayable $permissionNames): bool
     {
-        foreach (Arr::from($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
             if (! $this->hasPermission($permissionName)) {
                 return false;
             }
@@ -184,5 +183,13 @@ trait HasPermissions
     private function resolvePermissionByName(string $permissionName): Permission
     {
         return Permission::where('name', $permissionName)->firstOrFail();
+    }
+
+    /**
+     * Convert an array or Arrayable object of permission names to an array.
+     */
+    private function permissionNamesArray(array|Arrayable $permissionNames): array
+    {
+        return $permissionNames instanceof Arrayable ? $permissionNames->toArray() : $permissionNames;
     }
 }

@@ -5,7 +5,6 @@ namespace Braxey\Gatekeeper\Traits;
 use Braxey\Gatekeeper\Models\ModelHasTeam;
 use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
 
 trait HasTeams
 {
@@ -47,7 +46,7 @@ trait HasTeams
     {
         $result = true;
 
-        foreach (Arr::from($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teamNames) as $teamName) {
             $result = $result && $this->addToTeam($teamName);
         }
 
@@ -80,7 +79,7 @@ trait HasTeams
     {
         $result = true;
 
-        foreach (Arr::from($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teamNames) as $teamName) {
             $result = $result && $this->removeFromTeam($teamName);
         }
 
@@ -113,7 +112,7 @@ trait HasTeams
      */
     public function onAnyTeam(array|Arrayable $teamNames): bool
     {
-        foreach (Arr::from($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teamNames) as $teamName) {
             if ($this->onTeam($teamName)) {
                 return true;
             }
@@ -127,7 +126,7 @@ trait HasTeams
      */
     public function onAllTeams(array|Arrayable $teamNames): bool
     {
-        foreach (Arr::from($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teamNames) as $teamName) {
             if (! $this->onTeam($teamName)) {
                 return false;
             }
@@ -142,5 +141,13 @@ trait HasTeams
     private function resolveTeamByName(string $teamName): Team
     {
         return Team::where('name', $teamName)->firstOrFail();
+    }
+
+    /**
+     * Convert an array or Arrayable object of team names to an array.
+     */
+    private function teamNamesArray(array|Arrayable $teamNames): array
+    {
+        return $teamNames instanceof Arrayable ? $teamNames->toArray() : $teamNames;
     }
 }
