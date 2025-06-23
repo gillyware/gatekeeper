@@ -75,6 +75,9 @@ class GatekeeperServiceProvider extends ServiceProvider
      */
     protected function registerBladeDirectives()
     {
+        /**
+         * Permissions.
+         */
         Blade::if('hasPermission', function (...$args) {
             $user = count($args) === 2 ? $args[0] : auth()->user();
             $permissionName = count($args) === 2 ? $args[1] : $args[0];
@@ -82,6 +85,23 @@ class GatekeeperServiceProvider extends ServiceProvider
             return $user && method_exists($user, 'hasPermission') && $user->hasPermission($permissionName);
         });
 
+        Blade::if('hasAnyPermission', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $permissionNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasAnyPermission') && $user->hasAnyPermission($permissionNames);
+        });
+
+        Blade::if('hasAllPermissions', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $permissionNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasAllPermissions') && $user->hasAllPermissions($permissionNames);
+        });
+
+        /**
+         * Roles.
+         */
         Blade::if('hasRole', function (...$args) {
             $user = count($args) === 2 ? $args[0] : auth()->user();
             $roleName = count($args) === 2 ? $args[1] : $args[0];
@@ -89,11 +109,42 @@ class GatekeeperServiceProvider extends ServiceProvider
             return $user && method_exists($user, 'hasRole') && $user->hasRole($roleName);
         });
 
+        Blade::if('hasAnyRole', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $roleNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole($roleNames);
+        });
+
+        Blade::if('hasAllRoles', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $roleNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'hasAllRoles') && $user->hasAllRoles($roleNames);
+        });
+
+        /**
+         * Teams.
+         */
         Blade::if('onTeam', function (...$args) {
             $user = count($args) === 2 ? $args[0] : auth()->user();
             $teamName = count($args) === 2 ? $args[1] : $args[0];
 
             return $user && method_exists($user, 'onTeam') && $user->onTeam($teamName);
+        });
+
+        Blade::if('onAnyTeam', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $teamNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'onAnyTeam') && $user->onAnyTeam($teamNames);
+        });
+
+        Blade::if('onAllTeams', function (...$args) {
+            $user = count($args) === 2 ? $args[0] : auth()->user();
+            $teamNames = count($args) === 2 ? $args[1] : $args[0];
+
+            return $user && method_exists($user, 'onAllTeams') && $user->onAllTeams($teamNames);
         });
     }
 
