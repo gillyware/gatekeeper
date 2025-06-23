@@ -54,6 +54,44 @@ class HasRolesTest extends TestCase
             ->get());
     }
 
+    public function test_we_can_assign_multiple_roles()
+    {
+        $user = User::factory()->create();
+        $roles = collect([
+            Role::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Role::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignRoles([$name1, $name2]);
+
+        foreach ($roles as $role) {
+            $this->assertDatabaseHas('model_has_roles', [
+                'role_id' => $role->id,
+                'model_id' => $user->id,
+                'model_type' => $user->getMorphClass(),
+            ]);
+        }
+    }
+
+    public function test_we_can_assign_multiple_roles_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $roles = collect([
+            Role::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Role::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignRoles(collect([$name1, $name2]));
+
+        foreach ($roles as $role) {
+            $this->assertDatabaseHas('model_has_roles', [
+                'role_id' => $role->id,
+                'model_id' => $user->id,
+                'model_type' => $user->getMorphClass(),
+            ]);
+        }
+    }
+
     public function test_we_can_revoke_a_role()
     {
         $user = User::factory()->create();
@@ -70,15 +108,42 @@ class HasRolesTest extends TestCase
         ]);
     }
 
-    public function test_revoke_role_does_nothing_if_not_assigned()
+    public function test_we_can_revoke_multiple_roles()
     {
         $user = User::factory()->create();
-        $roleName = fake()->unique()->word();
-        Role::factory()->withName($roleName)->create();
+        $roles = collect([
+            Role::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Role::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
 
-        $result = $user->revokeRole($roleName);
+        $user->assignRoles([$name1, $name2]);
+        $user->revokeRoles([$name1, $name2]);
 
-        $this->assertSame(0, $result); // No rows affected.
+        foreach ($roles as $role) {
+            $this->assertSoftDeleted('model_has_roles', [
+                'role_id' => $role->id,
+                'model_id' => $user->id,
+            ]);
+        }
+    }
+
+    public function test_we_can_revoke_multiple_roles_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $roles = collect([
+            Role::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Role::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignRoles(collect([$name1, $name2]));
+        $user->revokeRoles(collect([$name1, $name2]));
+
+        foreach ($roles as $role) {
+            $this->assertSoftDeleted('model_has_roles', [
+                'role_id' => $role->id,
+                'model_id' => $user->id,
+            ]);
+        }
     }
 
     public function test_we_can_check_if_user_has_a_role()
@@ -196,6 +261,84 @@ class HasRolesTest extends TestCase
         Role::factory()->withName($roleName)->create();
 
         $user->revokeRole($roleName);
+    }
+
+    public function test_has_any_role_returns_true_if_one_matches()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Role::factory()->withName($name)->create();
+        }
+
+        $user->assignRole($names[1]);
+
+        $this->assertTrue($user->hasAnyRole($names));
+    }
+
+    public function test_has_any_role_returns_true_if_one_matches_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Role::factory()->withName($name)->create();
+        }
+
+        $user->assignRole($names[1]);
+
+        $this->assertTrue($user->hasAnyRole(collect($names)));
+    }
+
+    public function test_has_any_role_returns_false_if_none_match()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Role::factory()->withName($name)->create();
+        }
+
+        $this->assertFalse($user->hasAnyRole($names));
+    }
+
+    public function test_has_all_roles_returns_false_if_any_are_missing()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        Role::factory()->withName($names[0])->create();
+        Role::factory()->withName($names[1])->create();
+
+        $user->assignRole($names[0]);
+
+        $this->assertFalse($user->hasAllRoles($names));
+    }
+
+    public function test_has_all_roles_returns_true_if_all_match()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        foreach ($names as $name) {
+            Role::factory()->withName($name)->create();
+        }
+
+        $user->assignRoles($names);
+
+        $this->assertTrue($user->hasAllRoles($names));
+    }
+
+    public function test_has_all_roles_returns_true_if_all_match_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        foreach ($names as $name) {
+            Role::factory()->withName($name)->create();
+        }
+
+        $user->assignRoles(collect($names));
+
+        $this->assertTrue($user->hasAllRoles(collect($names)));
     }
 
     public function test_it_throws_if_role_does_not_exist()

@@ -4,6 +4,8 @@ namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\ModelHasTeam;
 use Braxey\Gatekeeper\Models\Team;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
 
 trait HasTeams
 {
@@ -12,7 +14,7 @@ trait HasTeams
     /**
      * Assign a team to the model.
      */
-    public function assignTeam(string $teamName): bool
+    public function addToTeam(string $teamName): bool
     {
         if (! config('gatekeeper.features.teams', false)) {
             throw new \RuntimeException('Cannot assign teams when the teams feature is disabled.');
@@ -39,9 +41,23 @@ trait HasTeams
     }
 
     /**
+     * Assign multiple teams to the model.
+     */
+    public function addToTeams(array|Arrayable $teamNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($teamNames) as $teamName) {
+            $result = $result && $this->addToTeam($teamName);
+        }
+
+        return $result;
+    }
+
+    /**
      * Revoke a team from the model.
      */
-    public function revokeTeam(string $teamName): int
+    public function removeFromTeam(string $teamName): bool
     {
         if (! config('gatekeeper.features.teams', false)) {
             throw new \RuntimeException('Cannot revoke teams when the teams feature is disabled.');
@@ -49,10 +65,26 @@ trait HasTeams
 
         $team = $this->resolveTeamByName($teamName);
 
-        return ModelHasTeam::forModel($this)
+        ModelHasTeam::forModel($this)
             ->where('team_id', $team->id)
             ->whereNull('deleted_at')
             ->delete();
+
+        return true;
+    }
+
+    /**
+     * Revoke multiple teams from the model.
+     */
+    public function removeFromTeams(array|Arrayable $teamNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($teamNames) as $teamName) {
+            $result = $result && $this->removeFromTeam($teamName);
+        }
+
+        return $result;
     }
 
     /**
@@ -77,11 +109,37 @@ trait HasTeams
     }
 
     /**
-     * Get a team by its name.
-     *
-     * @return \Braxey\Gatekeeper\Models\Team
+     * Check if the model is on any of the given teams.
      */
-    private function resolveTeamByName(string $teamName)
+    public function onAnyTeam(array|Arrayable $teamNames): bool
+    {
+        foreach (Arr::from($teamNames) as $teamName) {
+            if ($this->onTeam($teamName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the model is on all of the given teams.
+     */
+    public function onAllTeams(array|Arrayable $teamNames): bool
+    {
+        foreach (Arr::from($teamNames) as $teamName) {
+            if (! $this->onTeam($teamName)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get a team by its name.
+     */
+    private function resolveTeamByName(string $teamName): Team
     {
         return Team::where('name', $teamName)->firstOrFail();
     }

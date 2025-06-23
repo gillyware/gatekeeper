@@ -3,16 +3,15 @@
 namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\Role;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait InteractsWithRoles
 {
     /**
      * Get the roles associated with the model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function roles()
+    public function roles(): MorphToMany
     {
-        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'model_id', 'role_id')->withTrashed();
+        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'model_id', 'role_id');
     }
 }

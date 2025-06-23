@@ -5,6 +5,8 @@ namespace Braxey\Gatekeeper\Traits;
 use Braxey\Gatekeeper\Models\ModelHasPermission;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
 
 trait HasPermissions
 {
@@ -38,6 +40,20 @@ trait HasPermissions
     }
 
     /**
+     * Assign multiple permissions to the model.
+     */
+    public function assignPermissions(array|Arrayable $permissionNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($permissionNames) as $permissionName) {
+            $result = $result && $this->assignPermission($permissionName);
+        }
+
+        return $result;
+    }
+
+    /**
      * Revoke a permission from the model.
      */
     public function revokePermission(string $permissionName): bool
@@ -55,6 +71,20 @@ trait HasPermissions
             });
 
         return $revokedAll;
+    }
+
+    /**
+     * Revoke multiple permissions from the model.
+     */
+    public function revokePermissions(array|Arrayable $permissionNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($permissionNames) as $permissionName) {
+            $result = $result && $this->revokePermission($permissionName);
+        }
+
+        return $result;
     }
 
     /**
@@ -85,6 +115,7 @@ trait HasPermissions
             $rolesTableName = config('gatekeeper.tables.roles', 'roles');
 
             $activeModelRolesWithPermission = $this->roles()
+                ->withTrashed()
                 ->whereNull("$rolesTableName.deleted_at")
                 ->whereNull('model_has_roles.deleted_at')
                 ->where('is_active', true)
@@ -102,6 +133,7 @@ trait HasPermissions
             $teamsTableName = config('gatekeeper.tables.teams', 'teams');
 
             $activeModelTeamsWithPermission = $this->teams()
+                ->withTrashed()
                 ->whereNull("$teamsTableName.deleted_at")
                 ->whereNull('model_has_teams.deleted_at')
                 ->where('is_active', true)
@@ -119,11 +151,37 @@ trait HasPermissions
     }
 
     /**
-     * Get a permission by its name.
-     *
-     * @return \Braxey\Gatekeeper\Models\Permission
+     * Check if the model has any of the given permissions.
      */
-    private function resolvePermissionByName(string $permissionName)
+    public function hasAnyPermission(array|Arrayable $permissionNames): bool
+    {
+        foreach (Arr::from($permissionNames) as $permissionName) {
+            if ($this->hasPermission($permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the model has all of the given permissions.
+     */
+    public function hasAllPermissions(array|Arrayable $permissionNames): bool
+    {
+        foreach (Arr::from($permissionNames) as $permissionName) {
+            if (! $this->hasPermission($permissionName)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get a permission by its name.
+     */
+    private function resolvePermissionByName(string $permissionName): Permission
     {
         return Permission::where('name', $permissionName)->firstOrFail();
     }

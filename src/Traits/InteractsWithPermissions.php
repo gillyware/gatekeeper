@@ -3,16 +3,15 @@
 namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\Permission;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait InteractsWithPermissions
 {
     /**
      * Get the permissions associated with the model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function permissions()
+    public function permissions(): MorphToMany
     {
-        return $this->morphToMany(Permission::class, 'model', 'model_has_permissions', 'model_id', 'permission_id')->withTrashed();
+        return $this->morphToMany(Permission::class, 'model', 'model_has_permissions', 'model_id', 'permission_id');
     }
 }

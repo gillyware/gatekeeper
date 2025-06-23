@@ -4,6 +4,8 @@ namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Models\ModelHasRole;
 use Braxey\Gatekeeper\Models\Role;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Arr;
 
 trait HasRoles
 {
@@ -42,9 +44,23 @@ trait HasRoles
     }
 
     /**
+     * Assign multiple roles to the model.
+     */
+    public function assignRoles(array|Arrayable $roleNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($roleNames) as $roleName) {
+            $result = $result && $this->assignRole($roleName);
+        }
+
+        return $result;
+    }
+
+    /**
      * Revoke a role from the model.
      */
-    public function revokeRole(string $roleName): int
+    public function revokeRole(string $roleName): bool
     {
         // If roles are disabled, we cannot revoke roles.
         if (! config('gatekeeper.features.roles', false)) {
@@ -53,10 +69,26 @@ trait HasRoles
 
         $role = $this->resolveRoleByName($roleName);
 
-        return ModelHasRole::forModel($this)
+        ModelHasRole::forModel($this)
             ->where('role_id', $role->id)
             ->whereNull('deleted_at')
             ->delete();
+
+        return true;
+    }
+
+    /**
+     * Revoke multiple roles from the model.
+     */
+    public function revokeRoles(array|Arrayable $roleNames): bool
+    {
+        $result = true;
+
+        foreach (Arr::from($roleNames) as $roleName) {
+            $result = $result && $this->revokeRole($roleName);
+        }
+
+        return $result;
     }
 
     /**
@@ -64,11 +96,7 @@ trait HasRoles
      */
     public function hasRole(string $roleName): bool
     {
-        $rolesEnabled = config('gatekeeper.features.roles', false);
-        // $teamsEnabled = config('gatekeeper.features.teams', false);
-
-        // If roles are disabled, return false immediately.
-        if (! $rolesEnabled) {
+        if (! config('gatekeeper.features.roles', false)) {
             return false;
         }
 
@@ -96,6 +124,7 @@ trait HasRoles
             $teamsTable = config('gatekeeper.tables.teams', 'teams');
 
             $hasTeamWithRole = $this->teams()
+                ->withTrashed()
                 ->whereNull("$teamsTable.deleted_at")
                 ->whereNull('model_has_teams.deleted_at')
                 ->where('is_active', true)
@@ -108,16 +137,41 @@ trait HasRoles
             }
         }
 
-        // Return false by default.
         return false;
     }
 
     /**
-     * Get a role by its name.
-     *
-     * @return \Braxey\Gatekeeper\Models\Role
+     * Check if the model has any of the given roles.
      */
-    private function resolveRoleByName(string $roleName)
+    public function hasAnyRole(array|Arrayable $roleNames): bool
+    {
+        foreach (Arr::from($roleNames) as $roleName) {
+            if ($this->hasRole($roleName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the model has all of the given roles.
+     */
+    public function hasAllRoles(array|Arrayable $roleNames): bool
+    {
+        foreach (Arr::from($roleNames) as $roleName) {
+            if (! $this->hasRole($roleName)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get a role by its name.
+     */
+    private function resolveRoleByName(string $roleName): Role
     {
         return Role::where('name', $roleName)->firstOrFail();
     }

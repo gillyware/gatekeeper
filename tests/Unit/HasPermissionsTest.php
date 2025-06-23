@@ -48,6 +48,44 @@ class HasPermissionsTest extends TestCase
         $this->assertCount(1, $modelHasPermissions);
     }
 
+    public function test_we_can_assign_multiple_permissions()
+    {
+        $user = User::factory()->create();
+        $permissions = collect([
+            Permission::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Permission::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignPermissions([$name1, $name2]);
+
+        foreach ($permissions as $permission) {
+            $this->assertDatabaseHas('model_has_permissions', [
+                'permission_id' => $permission->id,
+                'model_id' => $user->id,
+                'model_type' => $user->getMorphClass(),
+            ]);
+        }
+    }
+
+    public function test_we_can_assign_multiple_permissions_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $permissions = collect([
+            Permission::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Permission::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignPermissions(collect([$name1, $name2]));
+
+        foreach ($permissions as $permission) {
+            $this->assertDatabaseHas('model_has_permissions', [
+                'permission_id' => $permission->id,
+                'model_id' => $user->id,
+                'model_type' => $user->getMorphClass(),
+            ]);
+        }
+    }
+
     public function test_we_can_revoke_a_permission()
     {
         $user = User::factory()->create();
@@ -81,6 +119,44 @@ class HasPermissionsTest extends TestCase
 
         $this->assertCount(2, ModelHasPermission::withTrashed()->where('permission_id', $permission->id)->get());
         $this->assertCount(2, ModelHasPermission::onlyTrashed()->where('permission_id', $permission->id)->get());
+    }
+
+    public function test_we_can_revoke_multiple_permissions()
+    {
+        $user = User::factory()->create();
+        $permissions = collect([
+            Permission::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Permission::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignPermissions([$name1, $name2]);
+        $user->revokePermissions([$name1, $name2]);
+
+        foreach ($permissions as $permission) {
+            $this->assertSoftDeleted('model_has_permissions', [
+                'permission_id' => $permission->id,
+                'model_id' => $user->id,
+            ]);
+        }
+    }
+
+    public function test_we_can_revoke_multiple_permissions_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $permissions = collect([
+            Permission::factory()->withName($name1 = fake()->unique()->word())->create(),
+            Permission::factory()->withName($name2 = fake()->unique()->word())->create(),
+        ]);
+
+        $user->assignPermissions(collect([$name1, $name2]));
+        $user->revokePermissions(collect([$name1, $name2]));
+
+        foreach ($permissions as $permission) {
+            $this->assertSoftDeleted('model_has_permissions', [
+                'permission_id' => $permission->id,
+                'model_id' => $user->id,
+            ]);
+        }
     }
 
     public function test_we_can_check_if_model_has_permission()
@@ -251,6 +327,84 @@ class HasPermissionsTest extends TestCase
         $user->teams()->attach($team);
 
         $this->assertFalse($user->hasPermission($permissionName));
+    }
+
+    public function test_has_any_permission_returns_true_if_one_matches()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Permission::factory()->withName($name)->create();
+        }
+
+        $user->assignPermission($names[1]);
+
+        $this->assertTrue($user->hasAnyPermission($names));
+    }
+
+    public function test_has_any_permission_returns_true_if_one_matches_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Permission::factory()->withName($name)->create();
+        }
+
+        $user->assignPermission($names[1]);
+
+        $this->assertTrue($user->hasAnyPermission(collect($names)));
+    }
+
+    public function test_has_any_permission_returns_false_if_none_match()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+
+        foreach ($names as $name) {
+            Permission::factory()->withName($name)->create();
+        }
+
+        $this->assertFalse($user->hasAnyPermission($names));
+    }
+
+    public function test_has_all_permissions_returns_false_if_any_are_missing()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        Permission::factory()->withName($names[0])->create();
+        Permission::factory()->withName($names[1])->create();
+
+        $user->assignPermission($names[0]);
+
+        $this->assertFalse($user->hasAllPermissions($names));
+    }
+
+    public function test_has_all_permissions_returns_true_if_all_match()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        foreach ($names as $name) {
+            Permission::factory()->withName($name)->create();
+        }
+
+        $user->assignPermissions($names);
+
+        $this->assertTrue($user->hasAllPermissions($names));
+    }
+
+    public function test_has_all_permissions_returns_true_if_all_match_with_arrayable()
+    {
+        $user = User::factory()->create();
+        $names = [fake()->unique()->word(), fake()->unique()->word()];
+        foreach ($names as $name) {
+            Permission::factory()->withName($name)->create();
+        }
+
+        $user->assignPermissions($names);
+
+        $this->assertTrue($user->hasAllPermissions(collect($names)));
     }
 
     public function test_it_throws_if_permission_does_not_exist()
