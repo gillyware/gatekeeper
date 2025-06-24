@@ -9,6 +9,7 @@ use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 class AssignCommandTest extends TestCase
 {
@@ -35,9 +36,9 @@ class AssignCommandTest extends TestCase
             '--team' => $team->name,
         ]);
 
-        $this->assertTrue($user->roles->contains($role));
-        $this->assertTrue($user->permissions->contains($permission));
-        $this->assertTrue($user->teams->contains($team));
+        $this->assertTrue($user->hasPermission($permission->name));
+        $this->assertTrue($user->hasRole($role->name));
+        $this->assertTrue($user->onTeam($team->name));
     }
 
     public function test_assigns_multiple_roles_permissions_and_teams()
@@ -59,51 +60,48 @@ class AssignCommandTest extends TestCase
             '--team' => $teamNames,
         ]);
 
-        foreach ($roles as $role) {
-            $this->assertTrue($user->roles->contains($role));
-        }
-
-        foreach ($permissions as $permission) {
-            $this->assertTrue($user->permissions->contains($permission));
-        }
-
-        foreach ($teams as $team) {
-            $this->assertTrue($user->teams->contains($team));
-        }
+        $this->assertTrue($user->hasAllPermissions($permissions->pluck('name')));
+        $this->assertTrue($user->hasAllRoles($roles->pluck('name')));
+        $this->assertTrue($user->onAllTeams($teams->pluck('name')));
     }
 
     public function test_fails_if_model_class_does_not_exist()
     {
+        $output = new BufferedOutput;
+
         $exitCode = Artisan::call('gatekeeper:assign', [
             '--model_id' => 1,
             '--model_class' => 'Fake\\Class',
-        ]);
+        ], $output);
 
         $this->assertEquals(1, $exitCode);
-        $this->assertStringContainsString('does not exist', Artisan::output());
+        $this->assertStringContainsString('does not exist', $output->fetch());
     }
 
     public function test_fails_if_model_is_not_found()
     {
+        $output = new BufferedOutput;
+
         $exitCode = Artisan::call('gatekeeper:assign', [
             '--model_id' => 999,
             '--model_class' => User::class,
-        ]);
+        ], $output);
 
         $this->assertEquals(1, $exitCode);
-        $this->assertStringContainsString('not found', Artisan::output());
+        $this->assertStringContainsString('not found', $output->fetch());
     }
 
     public function test_fails_if_nothing_to_assign()
     {
         $user = User::factory()->create();
+        $output = new BufferedOutput;
 
         $exitCode = Artisan::call('gatekeeper:assign', [
             '--model_id' => $user->id,
             '--model_class' => User::class,
-        ]);
+        ], $output);
 
         $this->assertEquals(1, $exitCode);
-        $this->assertStringContainsString('Please provide at least one of', Artisan::output());
+        $this->assertStringContainsString('Please provide at least one of', $output->fetch());
     }
 }
