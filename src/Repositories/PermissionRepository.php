@@ -12,12 +12,12 @@ use Throwable;
 
 class PermissionRepository
 {
-    public function add(string $permissionName): Permission
+    public function create(string $permissionName): Permission
     {
         $permission = new Permission(['name' => $permissionName]);
 
         if ($permission->save()) {
-            Cache::forget('gatekeeper.permissions');
+            Cache::forget($this->getCacheKeyForAll());
         }
 
         return $permission;
@@ -25,7 +25,7 @@ class PermissionRepository
 
     public function all(): Collection
     {
-        $permissions = Cache::get('gatekeeper.permissions');
+        $permissions = Cache::get($this->getCacheKeyForAll());
 
         if ($permissions) {
             return collect($permissions);
@@ -33,7 +33,7 @@ class PermissionRepository
 
         $permissions = Permission::all();
 
-        Cache::put('gatekeeper.permissions', $permissions, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($this->getCacheKeyForAll(), $permissions, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $permissions;
     }
@@ -57,6 +57,11 @@ class PermissionRepository
         return $this->all()->filter(fn (Permission $permission) => $permission->is_active);
     }
 
+    public function getActiveWhereNameIn(array|Collection $permissionNames): Collection
+    {
+        return $this->getActive()->whereIn('name', $permissionNames);
+    }
+
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -64,14 +69,9 @@ class PermissionRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
-    public function getActiveWhereNameIn(array|Collection $permissionNames): Collection
-    {
-        return $this->getActive()->whereIn('name', $permissionNames);
-    }
-
     public function getActiveNamesForModel(Model $model): Collection
     {
-        $cacheKey = "gatekeeper.permissions.{$model->getMorphClass()}.{$model->getKey()}";
+        $cacheKey = $this->getCacheKeyForModel($model);
 
         $activePermissionNames = Cache::get($cacheKey);
 
@@ -87,8 +87,23 @@ class PermissionRepository
             ->whereNull('model_has_permissions.deleted_at')
             ->pluck("$permissionsTable.name");
 
-        Cache::put($cacheKey, $activePermissionNames, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($cacheKey, $activePermissionNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activePermissionNames;
+    }
+
+    public function invalidateCacheForModel(Model $model): void
+    {
+        Cache::forget($this->getCacheKeyForModel($model));
+    }
+
+    private function getCacheKeyForAll(): string
+    {
+        return 'gatekeeper.permissions';
+    }
+
+    private function getCacheKeyForModel(Model $model): string
+    {
+        return "gatekeeper.permissions.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

@@ -2,9 +2,7 @@
 
 namespace Braxey\Gatekeeper\Traits;
 
-use Braxey\Gatekeeper\Models\ModelHasRole;
-use Braxey\Gatekeeper\Models\Role;
-use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 
 trait HasRoles
@@ -16,31 +14,7 @@ trait HasRoles
      */
     public function assignRole(string $roleName): bool
     {
-        // If roles are disabled, we cannot assign roles.
-        if (! config('gatekeeper.features.roles', false)) {
-            throw new \RuntimeException('Cannot assign roles when the roles feature is disabled.');
-        }
-
-        $role = $this->roleRepository()->findByName($roleName);
-
-        $builder = ModelHasRole::forModel($this)->where('role_id', $role->id);
-
-        // Check if the model already has this role directly assigned.
-        $modelAlreadyDirectlyHasRole = $builder->whereNull('deleted_at')->exists();
-
-        // If the model already has this role directly assigned, we don't need to sync again.
-        if ($modelAlreadyDirectlyHasRole) {
-            return true;
-        }
-
-        // Insert the role assignment.
-        $modelHasRole = new ModelHasRole([
-            'role_id' => $role->id,
-            'model_type' => $this->getMorphClass(),
-            'model_id' => $this->getKey(),
-        ]);
-
-        return $modelHasRole->save();
+        return Gatekeeper::assignRoleToModel($this, $roleName);
     }
 
     /**
@@ -48,13 +22,7 @@ trait HasRoles
      */
     public function assignRoles(array|Arrayable $roleNames): bool
     {
-        $result = true;
-
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
-            $result = $result && $this->assignRole($roleName);
-        }
-
-        return $result;
+        return Gatekeeper::assignRolesToModel($this, $roleNames);
     }
 
     /**
@@ -62,19 +30,7 @@ trait HasRoles
      */
     public function revokeRole(string $roleName): bool
     {
-        // If roles are disabled, we cannot revoke roles.
-        if (! config('gatekeeper.features.roles', false)) {
-            throw new \RuntimeException('Cannot revoke roles when the roles feature is disabled.');
-        }
-
-        $role = $this->roleRepository()->findByName($roleName);
-
-        ModelHasRole::forModel($this)
-            ->where('role_id', $role->id)
-            ->whereNull('deleted_at')
-            ->delete();
-
-        return true;
+        return Gatekeeper::revokeRoleFromModel($this, $roleName);
     }
 
     /**
@@ -82,13 +38,7 @@ trait HasRoles
      */
     public function revokeRoles(array|Arrayable $roleNames): bool
     {
-        $result = true;
-
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
-            $result = $result && $this->revokeRole($roleName);
-        }
-
-        return $result;
+        return Gatekeeper::revokeRolesFromModel($this, $roleNames);
     }
 
     /**
@@ -96,41 +46,7 @@ trait HasRoles
      */
     public function hasRole(string $roleName): bool
     {
-        if (! config('gatekeeper.features.roles', false)) {
-            return false;
-        }
-
-        $role = $this->roleRepository()->findByName($roleName);
-
-        // If the role is not active, we can immediately return false.
-        if (! $role->is_active) {
-            return false;
-        }
-
-        // Check if the role is directly assigned to the model.
-        $hasDirectRole = ModelHasRole::forModel($this)
-            ->where('role_id', $role->id)
-            ->whereNull('deleted_at')
-            ->orderByDesc('created_at')
-            ->exists();
-
-        // If the role is currently directly assigned to the model, return true.
-        if ($hasDirectRole) {
-            return true;
-        }
-
-        // If teams are enabled, check if the model has the role through teams.
-        if (config('gatekeeper.features.teams', false)) {
-            $onTeamWithRole = $this->teamRepository()
-                ->getActiveForModel($this)
-                ->some(fn (Team $team) => $team->hasRole($roleName));
-
-            if ($onTeamWithRole) {
-                return true;
-            }
-        }
-
-        return false;
+        return Gatekeeper::modelHasRole($this, $roleName);
     }
 
     /**
@@ -138,13 +54,7 @@ trait HasRoles
      */
     public function hasAnyRole(array|Arrayable $roleNames): bool
     {
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
-            if ($this->hasRole($roleName)) {
-                return true;
-            }
-        }
-
-        return false;
+        return Gatekeeper::modelHasAnyRole($this, $roleNames);
     }
 
     /**
@@ -152,20 +62,6 @@ trait HasRoles
      */
     public function hasAllRoles(array|Arrayable $roleNames): bool
     {
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
-            if (! $this->hasRole($roleName)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Convert an array or Arrayable object of role names to an array.
-     */
-    private function roleNamesArray(array|Arrayable $roleNames): array
-    {
-        return $roleNames instanceof Arrayable ? $roleNames->toArray() : $roleNames;
+        return Gatekeeper::modelHasAllRoles($this, $roleNames);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit;
 
+use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
+use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -9,7 +11,6 @@ use Braxey\Gatekeeper\Services\GatekeeperService;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
-use RuntimeException;
 
 class GatekeeperServiceTest extends TestCase
 {
@@ -22,7 +23,7 @@ class GatekeeperServiceTest extends TestCase
         $this->service = app('gatekeeper');
     }
 
-    public function test_create_permission_delegates_to_repository()
+    public function test_create_permission_delegates_to_permission_service()
     {
         $permissionName = fake()->unique()->word();
 
@@ -32,7 +33,7 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($permissionName, $permission->name);
     }
 
-    public function test_create_role_delegates_to_repository_when_enabled()
+    public function test_create_role_delegates_to_role_service_when_enabled()
     {
         Config::set('gatekeeper.features.roles', true);
 
@@ -48,13 +49,12 @@ class GatekeeperServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.roles', false);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Roles feature is disabled.');
+        $this->expectException(RolesFeatureDisabledException::class);
 
         $this->service->createRole(fake()->unique()->word());
     }
 
-    public function test_create_team_delegates_to_repository_when_enabled()
+    public function test_create_team_delegates_to_team_service_when_enabled()
     {
         Config::set('gatekeeper.features.teams', true);
 
@@ -70,8 +70,7 @@ class GatekeeperServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.teams', false);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Teams feature is disabled.');
+        $this->expectException(TeamsFeatureDisabledException::class);
 
         $this->service->createTeam(fake()->unique()->word());
     }
@@ -117,11 +116,11 @@ class GatekeeperServiceTest extends TestCase
         $team2 = Team::factory()->create(['name' => fake()->unique()->word()]);
 
         $this->assertTrue($this->service->addModelToTeam($user, $team1->name));
-        $this->assertTrue($this->service->addModelsToTeams($user, [$team2->name]));
+        $this->assertTrue($this->service->addModelToTeams($user, [$team2->name]));
         $this->assertTrue($this->service->modelOnTeam($user, $team1->name));
         $this->assertTrue($this->service->modelOnAnyTeam($user, [$team1->name, $team2->name]));
         $this->assertTrue($this->service->modelOnAllTeams($user, [$team1->name, $team2->name]));
         $this->assertTrue($this->service->removeModelFromTeam($user, $team1->name));
-        $this->assertTrue($this->service->removeModelsFromTeams($user, [$team2->name]));
+        $this->assertTrue($this->service->removeModelFromTeams($user, [$team2->name]));
     }
 }

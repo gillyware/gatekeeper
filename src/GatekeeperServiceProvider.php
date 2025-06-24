@@ -2,11 +2,10 @@
 
 namespace Braxey\Gatekeeper;
 
-use Braxey\Gatekeeper\Repositories\PermissionRepository;
-use Braxey\Gatekeeper\Repositories\RoleRepository;
-use Braxey\Gatekeeper\Repositories\TeamRepository;
 use Braxey\Gatekeeper\Services\GatekeeperService;
-// use Braxey\Gatekeeper\Services\PermissionCacheService;
+use Braxey\Gatekeeper\Services\PermissionService;
+use Braxey\Gatekeeper\Services\RoleService;
+use Braxey\Gatekeeper\Services\TeamService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,9 +35,9 @@ class GatekeeperServiceProvider extends ServiceProvider
 
         $this->app->singleton('gatekeeper', function ($app) {
             return new GatekeeperService(
-                $app->make(PermissionRepository::class),
-                $app->make(RoleRepository::class),
-                $app->make(TeamRepository::class),
+                $app->make(PermissionService::class),
+                $app->make(RoleService::class),
+                $app->make(TeamService::class),
             );
         });
     }

@@ -12,12 +12,12 @@ use Throwable;
 
 class RoleRepository
 {
-    public function add(string $roleName): Role
+    public function create(string $roleName): Role
     {
         $role = new Role(['name' => $roleName]);
 
         if ($role->save()) {
-            Cache::forget('gatekeeper.roles');
+            Cache::forget($this->getCacheKeyForAll());
         }
 
         return $role;
@@ -25,7 +25,7 @@ class RoleRepository
 
     public function all(): Collection
     {
-        $roles = Cache::get('gatekeeper.roles');
+        $roles = Cache::get($this->getCacheKeyForAll());
 
         if ($roles) {
             return collect($roles);
@@ -33,7 +33,7 @@ class RoleRepository
 
         $roles = Role::all();
 
-        Cache::put('gatekeeper.roles', $roles, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($this->getCacheKeyForAll(), $roles, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $roles;
     }
@@ -57,6 +57,11 @@ class RoleRepository
         return $this->all()->filter(fn (Role $role) => $role->is_active);
     }
 
+    public function getActiveWhereNameIn(array|Collection $roleNames): Collection
+    {
+        return $this->getActive()->whereIn('name', $roleNames);
+    }
+
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -64,14 +69,9 @@ class RoleRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
-    public function getActiveWhereNameIn(array|Collection $roleNames): Collection
-    {
-        return $this->getActive()->whereIn('name', $roleNames);
-    }
-
     public function getActiveNamesForModel(Model $model): Collection
     {
-        $cacheKey = "gatekeeper.roles.{$model->getMorphClass()}.{$model->getKey()}";
+        $cacheKey = $this->getCacheKeyForModel($model);
 
         $activeRoleNames = Cache::get($cacheKey);
 
@@ -87,8 +87,23 @@ class RoleRepository
             ->whereNull('model_has_roles.deleted_at')
             ->pluck("$rolesTable.name");
 
-        Cache::put($cacheKey, $activeRoleNames, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($cacheKey, $activeRoleNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activeRoleNames;
+    }
+
+    public function invalidateCacheForModel(Model $model): void
+    {
+        Cache::forget($this->getCacheKeyForModel($model));
+    }
+
+    private function getCacheKeyForAll(): string
+    {
+        return 'gatekeeper.roles';
+    }
+
+    private function getCacheKeyForModel(Model $model): string
+    {
+        return "gatekeeper.roles.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

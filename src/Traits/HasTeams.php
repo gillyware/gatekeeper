@@ -2,7 +2,7 @@
 
 namespace Braxey\Gatekeeper\Traits;
 
-use Braxey\Gatekeeper\Models\ModelHasTeam;
+use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -15,28 +15,7 @@ trait HasTeams
      */
     public function addToTeam(string $teamName): bool
     {
-        if (! config('gatekeeper.features.teams', false)) {
-            throw new \RuntimeException('Cannot assign teams when the teams feature is disabled.');
-        }
-
-        $team = $this->teamRepository()->findByName($teamName);
-
-        $alreadyAssigned = ModelHasTeam::forModel($this)
-            ->where('team_id', $team->id)
-            ->whereNull('deleted_at')
-            ->exists();
-
-        if ($alreadyAssigned) {
-            return true;
-        }
-
-        $modelHasTeam = new ModelHasTeam([
-            'team_id' => $team->id,
-            'model_type' => $this->getMorphClass(),
-            'model_id' => $this->getKey(),
-        ]);
-
-        return $modelHasTeam->save();
+        return Gatekeeper::addModelToTeam($this, $teamName);
     }
 
     /**
@@ -44,13 +23,7 @@ trait HasTeams
      */
     public function addToTeams(array|Arrayable $teamNames): bool
     {
-        $result = true;
-
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
-            $result = $result && $this->addToTeam($teamName);
-        }
-
-        return $result;
+        return Gatekeeper::addModelToTeams($this, $teamNames);
     }
 
     /**
@@ -58,18 +31,7 @@ trait HasTeams
      */
     public function removeFromTeam(string $teamName): bool
     {
-        if (! config('gatekeeper.features.teams', false)) {
-            throw new \RuntimeException('Cannot revoke teams when the teams feature is disabled.');
-        }
-
-        $team = $this->teamRepository()->findByName($teamName);
-
-        ModelHasTeam::forModel($this)
-            ->where('team_id', $team->id)
-            ->whereNull('deleted_at')
-            ->delete();
-
-        return true;
+        return Gatekeeper::removeModelFromTeam($this, $teamName);
     }
 
     /**
@@ -77,13 +39,7 @@ trait HasTeams
      */
     public function removeFromTeams(array|Arrayable $teamNames): bool
     {
-        $result = true;
-
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
-            $result = $result && $this->removeFromTeam($teamName);
-        }
-
-        return $result;
+        return Gatekeeper::removeModelFromTeams($this, $teamNames);
     }
 
     /**
@@ -91,20 +47,7 @@ trait HasTeams
      */
     public function onTeam(string $teamName): bool
     {
-        if (! config('gatekeeper.features.teams', false)) {
-            return false;
-        }
-
-        $team = $this->teamRepository()->findByName($teamName);
-
-        if (! $team->is_active) {
-            return false;
-        }
-
-        return ModelHasTeam::forModel($this)
-            ->where('team_id', $team->id)
-            ->whereNull('deleted_at')
-            ->exists();
+        return Gatekeeper::modelOnTeam($this, $teamName);
     }
 
     /**
@@ -112,13 +55,7 @@ trait HasTeams
      */
     public function onAnyTeam(array|Arrayable $teamNames): bool
     {
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
-            if ($this->onTeam($teamName)) {
-                return true;
-            }
-        }
-
-        return false;
+        return Gatekeeper::modelOnAnyTeam($this, $teamNames);
     }
 
     /**
@@ -126,20 +63,6 @@ trait HasTeams
      */
     public function onAllTeams(array|Arrayable $teamNames): bool
     {
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
-            if (! $this->onTeam($teamName)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Convert an array or Arrayable object of team names to an array.
-     */
-    private function teamNamesArray(array|Arrayable $teamNames): array
-    {
-        return $teamNames instanceof Arrayable ? $teamNames->toArray() : $teamNames;
+        return Gatekeeper::modelOnAllTeams($this, $teamNames);
     }
 }

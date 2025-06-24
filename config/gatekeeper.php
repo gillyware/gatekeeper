@@ -42,7 +42,7 @@ return [
     */
 
     'cache' => [
-        'ttl' => env('GATEKEEPER_CACHE_TTL', 24 * 60 * 60), // 24 hours
+        'ttl' => env('GATEKEEPER_CACHE_TTL', 2 * 60 * 60),
     ],
 
 ];

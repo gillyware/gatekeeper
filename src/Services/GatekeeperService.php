@@ -5,18 +5,15 @@ namespace Braxey\Gatekeeper\Services;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
-use Braxey\Gatekeeper\Repositories\PermissionRepository;
-use Braxey\Gatekeeper\Repositories\RoleRepository;
-use Braxey\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 
 class GatekeeperService
 {
     public function __construct(
-        private readonly PermissionRepository $permissionRepository,
-        private readonly RoleRepository $roleRepository,
-        private readonly TeamRepository $teamRepository,
+        private readonly PermissionService $permissionService,
+        private readonly RoleService $roleService,
+        private readonly TeamService $teamService,
     ) {}
 
     /**
@@ -24,42 +21,42 @@ class GatekeeperService
      */
     public function createPermission(string $name): Permission
     {
-        return $this->permissionRepository->add($name);
+        return $this->permissionService->create($name);
     }
 
     public function assignPermissionToModel(Model $model, string $permissionName): bool
     {
-        return $model->assignPermission($permissionName);
+        return $this->permissionService->assignToModel($model, $permissionName);
     }
 
     public function assignPermissionsToModel(Model $model, array|Arrayable $permissionNames): bool
     {
-        return $model->assignPermissions($permissionNames);
+        return $this->permissionService->assignMultipleToModel($model, $permissionNames);
     }
 
     public function revokePermissionFromModel(Model $model, string $permissionName): bool
     {
-        return $model->revokePermission($permissionName);
+        return $this->permissionService->revokeFromModel($model, $permissionName);
     }
 
     public function revokePermissionsFromModel(Model $model, array|Arrayable $permissionNames): bool
     {
-        return $model->revokePermissions($permissionNames);
+        return $this->permissionService->revokeMultipleFromModel($model, $permissionNames);
     }
 
     public function modelHasPermission(Model $model, string $permissionName): bool
     {
-        return $model->hasPermission($permissionName);
+        return $this->permissionService->modelHas($model, $permissionName);
     }
 
     public function modelHasAnyPermission(Model $model, array|Arrayable $permissionNames): bool
     {
-        return $model->hasAnyPermission($permissionNames);
+        return $this->permissionService->modelHasAny($model, $permissionNames);
     }
 
     public function modelHasAllPermissions(Model $model, array|Arrayable $permissionNames): bool
     {
-        return $model->hasAllPermissions($permissionNames);
+        return $this->permissionService->modelHasAll($model, $permissionNames);
     }
 
     /**
@@ -67,46 +64,42 @@ class GatekeeperService
      */
     public function createRole(string $name): Role
     {
-        if (! config('gatekeeper.features.roles', false)) {
-            throw new \RuntimeException('Roles feature is disabled.');
-        }
-
-        return $this->roleRepository->add($name);
+        return $this->roleService->create($name);
     }
 
     public function assignRoleToModel(Model $model, string $roleName): bool
     {
-        return $model->assignRole($roleName);
+        return $this->roleService->assignToModel($model, $roleName);
     }
 
     public function assignRolesToModel(Model $model, array|Arrayable $roleNames): bool
     {
-        return $model->assignRoles($roleNames);
+        return $this->roleService->assignMultipleToModel($model, $roleNames);
     }
 
     public function revokeRoleFromModel(Model $model, string $roleName): bool
     {
-        return $model->revokeRole($roleName);
+        return $this->roleService->revokeFromModel($model, $roleName);
     }
 
     public function revokeRolesFromModel(Model $model, array|Arrayable $roleNames): bool
     {
-        return $model->revokeRoles($roleNames);
+        return $this->roleService->revokeMultipleFromModel($model, $roleNames);
     }
 
     public function modelHasRole(Model $model, string $roleName): bool
     {
-        return $model->hasRole($roleName);
+        return $this->roleService->modelHas($model, $roleName);
     }
 
     public function modelHasAnyRole(Model $model, array|Arrayable $roleNames): bool
     {
-        return $model->hasAnyRole($roleNames);
+        return $this->roleService->modelHasAny($model, $roleNames);
     }
 
     public function modelHasAllRoles(Model $model, array|Arrayable $roleNames): bool
     {
-        return $model->hasAllRoles($roleNames);
+        return $this->roleService->modelHasAll($model, $roleNames);
     }
 
     /**
@@ -114,45 +107,41 @@ class GatekeeperService
      */
     public function createTeam(string $name): Team
     {
-        if (! config('gatekeeper.features.teams', false)) {
-            throw new \RuntimeException('Teams feature is disabled.');
-        }
-
-        return $this->teamRepository->add($name);
+        return $this->teamService->create($name);
     }
 
     public function addModelToTeam(Model $model, string $teamName): bool
     {
-        return $model->addToTeam($teamName);
+        return $this->teamService->addModelTo($model, $teamName);
     }
 
-    public function addModelsToTeams(Model $model, array|Arrayable $teamNames): bool
+    public function addModelToTeams(Model $model, array|Arrayable $teamNames): bool
     {
-        return $model->addToTeams($teamNames);
+        return $this->teamService->addModelToAll($model, $teamNames);
     }
 
     public function removeModelFromTeam(Model $model, string $teamName): bool
     {
-        return $model->removeFromTeam($teamName);
+        return $this->teamService->removeModelFrom($model, $teamName);
     }
 
-    public function removeModelsFromTeams(Model $model, array|Arrayable $teamNames): bool
+    public function removeModelFromTeams(Model $model, array|Arrayable $teamNames): bool
     {
-        return $model->removeFromTeams($teamNames);
+        return $this->teamService->removeModelFromAll($model, $teamNames);
     }
 
     public function modelOnTeam(Model $model, string $teamName): bool
     {
-        return $model->onTeam($teamName);
+        return $this->teamService->modelOn($model, $teamName);
     }
 
     public function modelOnAnyTeam(Model $model, array|Arrayable $teamNames): bool
     {
-        return $model->onAnyTeam($teamNames);
+        return $this->teamService->modelOnAny($model, $teamNames);
     }
 
     public function modelOnAllTeams(Model $model, array|Arrayable $teamNames): bool
     {
-        return $model->onAllTeams($teamNames);
+        return $this->teamService->modelOnAll($model, $teamNames);
     }
 }

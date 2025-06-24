@@ -2,16 +2,17 @@
 
 namespace Braxey\Gatekeeper\Http\Middleware;
 
+use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Closure;
 use Illuminate\Http\Request;
 
 class HasRole
 {
-    public function handle(Request $request, Closure $next, string $role)
+    public function handle(Request $request, Closure $next, string $roleName)
     {
         $user = $request->user();
 
-        if (! $user || ! method_exists($user, 'hasRole') || ! $user->hasRole($role)) {
+        if (! Gatekeeper::modelHasRole($user, $roleName)) {
             abort(403, 'Forbidden');
         }
 

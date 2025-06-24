@@ -12,12 +12,12 @@ use Throwable;
 
 class TeamRepository
 {
-    public function add(string $teamName): Team
+    public function create(string $teamName): Team
     {
         $team = new Team(['name' => $teamName]);
 
         if ($team->save()) {
-            Cache::forget('gatekeeper.teams');
+            Cache::forget($this->getCacheKeyForAll());
         }
 
         return $team;
@@ -25,7 +25,7 @@ class TeamRepository
 
     public function all(): Collection
     {
-        $teams = Cache::get('gatekeeper.teams');
+        $teams = Cache::get($this->getCacheKeyForAll());
 
         if ($teams) {
             return collect($teams);
@@ -33,7 +33,7 @@ class TeamRepository
 
         $teams = Team::all();
 
-        Cache::put('gatekeeper.teams', $teams, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($this->getCacheKeyForAll(), $teams, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $teams;
     }
@@ -57,6 +57,11 @@ class TeamRepository
         return $this->all()->filter(fn (Team $team) => $team->is_active);
     }
 
+    public function getActiveWhereNameIn(array|Collection $teamNames): Collection
+    {
+        return $this->getActive()->whereIn('name', $teamNames);
+    }
+
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -64,14 +69,9 @@ class TeamRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
-    public function getActiveWhereNameIn(array|Collection $teamNames): Collection
-    {
-        return $this->getActive()->whereIn('name', $teamNames);
-    }
-
     public function getActiveNamesForModel(Model $model): Collection
     {
-        $cacheKey = "gatekeeper.teams.{$model->getMorphClass()}.{$model->getKey()}";
+        $cacheKey = $this->getCacheKeyForModel($model);
 
         $activeTeamNames = Cache::get($cacheKey);
 
@@ -87,8 +87,23 @@ class TeamRepository
             ->whereNull('model_has_teams.deleted_at')
             ->pluck("$teamsTable.name");
 
-        Cache::put($cacheKey, $activeTeamNames, config('gatekeeper.cache.ttl', 24 * 60 * 60));
+        Cache::put($cacheKey, $activeTeamNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activeTeamNames;
+    }
+
+    public function invalidateCacheForModel(Model $model): void
+    {
+        Cache::forget($this->getCacheKeyForModel($model));
+    }
+
+    private function getCacheKeyForAll(): string
+    {
+        return 'gatekeeper.teams';
+    }
+
+    private function getCacheKeyForModel(Model $model): string
+    {
+        return "gatekeeper.teams.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

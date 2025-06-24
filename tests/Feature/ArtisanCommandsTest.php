@@ -2,6 +2,8 @@
 
 namespace Braxey\Gatekeeper\Tests\Feature;
 
+use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
+use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Braxey\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 
@@ -34,8 +36,7 @@ class ArtisanCommandsTest extends TestCase
     {
         Config::set('gatekeeper.features.roles', false);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Roles feature is disabled.');
+        $this->expectException(RolesFeatureDisabledException::class);
 
         $this->artisan('gatekeeper:create-role '.fake()->unique()->word());
     }
@@ -56,8 +57,7 @@ class ArtisanCommandsTest extends TestCase
     {
         Config::set('gatekeeper.features.teams', false);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Teams feature is disabled.');
+        $this->expectException(TeamsFeatureDisabledException::class);
 
         $this->artisan('gatekeeper:create-team '.fake()->unique()->word());
     }
