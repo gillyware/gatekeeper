@@ -74,18 +74,11 @@ class TeamServiceTest extends TestCase
     public function test_add_model_to_multiple_teams()
     {
         $user = User::factory()->create();
-        $names = [fake()->unique()->word(), fake()->unique()->word()];
-        $teams = collect($names)->map(fn ($name) => Team::factory()->withName($name)->create());
+        $teams = Team::factory()->count(3)->create();
 
-        $result = $this->service->addModelToAll($user, $names);
+        $this->service->addModelToAll($user, $teams);
 
-        $this->assertTrue($result);
-        $teams->each(function ($team) use ($user) {
-            $this->assertDatabaseHas('model_has_teams', [
-                'model_id' => $user->id,
-                'team_id' => $team->id,
-            ]);
-        });
+        $this->assertTrue($user->onAllTeams($teams));
     }
 
     public function test_remove_model_from_team()
@@ -125,12 +118,11 @@ class TeamServiceTest extends TestCase
     public function test_model_on_team()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->addModelTo($user, $name);
+        $this->service->addModelTo($user, $team);
 
-        $this->assertTrue($this->service->modelOn($user, $name));
+        $this->assertTrue($this->service->modelOn($user, $team));
     }
 
     public function test_model_on_team_returns_false_if_team_inactive()

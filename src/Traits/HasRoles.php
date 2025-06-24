@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Traits;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
+use Braxey\Gatekeeper\Models\Role;
 use Illuminate\Contracts\Support\Arrayable;
 
 trait HasRoles
@@ -12,56 +13,56 @@ trait HasRoles
     /**
      * Assign a role to the model.
      */
-    public function assignRole(string $roleName): bool
+    public function assignRole(Role|string $role): bool
     {
-        return Gatekeeper::assignRoleToModel($this, $roleName);
+        return Gatekeeper::assignRoleToModel($this, $role);
     }
 
     /**
      * Assign multiple roles to the model.
      */
-    public function assignRoles(array|Arrayable $roleNames): bool
+    public function assignRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::assignRolesToModel($this, $roleNames);
+        return Gatekeeper::assignRolesToModel($this, $roles);
     }
 
     /**
      * Revoke a role from the model.
      */
-    public function revokeRole(string $roleName): bool
+    public function revokeRole(Role|string $role): bool
     {
-        return Gatekeeper::revokeRoleFromModel($this, $roleName);
+        return Gatekeeper::revokeRoleFromModel($this, $role);
     }
 
     /**
      * Revoke multiple roles from the model.
      */
-    public function revokeRoles(array|Arrayable $roleNames): bool
+    public function revokeRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::revokeRolesFromModel($this, $roleNames);
+        return Gatekeeper::revokeRolesFromModel($this, $roles);
     }
 
     /**
      * Check if the model has a given role.
      */
-    public function hasRole(string $roleName): bool
+    public function hasRole(Role|string $role): bool
     {
-        return Gatekeeper::modelHasRole($this, $roleName);
+        return Gatekeeper::modelHasRole($this, $role);
     }
 
     /**
      * Check if the model has any of the given roles.
      */
-    public function hasAnyRole(array|Arrayable $roleNames): bool
+    public function hasAnyRole(array|Arrayable $roles): bool
     {
-        return Gatekeeper::modelHasAnyRole($this, $roleNames);
+        return Gatekeeper::modelHasAnyRole($this, $roles);
     }
 
     /**
      * Check if the model has all of the given roles.
      */
-    public function hasAllRoles(array|Arrayable $roleNames): bool
+    public function hasAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::modelHasAllRoles($this, $roleNames);
+        return Gatekeeper::modelHasAllRoles($this, $roles);
     }
 }

@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithRolesException;
+use Braxey\Gatekeeper\Exceptions\RoleNotFoundException;
 use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -31,11 +32,12 @@ class RoleService
     /**
      * Assign a role to a model.
      */
-    public function assignToModel(Model $model, string $roleName): bool
+    public function assignToModel(Model $model, Role|string $role): bool
     {
         $this->forceRolesFeature();
         $this->forceRoleInteraction($model);
 
+        $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         // If the model already has this role directly assigned, we don't need to sync again.
@@ -55,11 +57,11 @@ class RoleService
     /**
      * Assign multiple roles to a model.
      */
-    public function assignMultipleToModel(Model $model, array|Arrayable $roleNames): bool
+    public function assignMultipleToModel(Model $model, array|Arrayable $roles): bool
     {
         $result = true;
 
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roles) as $roleName) {
             $result = $result && $this->assignToModel($model, $roleName);
         }
 
@@ -69,11 +71,12 @@ class RoleService
     /**
      * Revoke a role from a model.
      */
-    public function revokeFromModel(Model $model, string $roleName): bool
+    public function revokeFromModel(Model $model, Role|string $role): bool
     {
         $this->forceRolesFeature();
         $this->forceRoleInteraction($model);
 
+        $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         if ($this->modelHasRoleRepository->deleteForModelAndRole($model, $role)) {
@@ -89,11 +92,11 @@ class RoleService
     /**
      * Revoke multiple roles from a model.
      */
-    public function revokeMultipleFromModel(Model $model, array|Arrayable $roleNames): bool
+    public function revokeMultipleFromModel(Model $model, array|Arrayable $roles): bool
     {
         $result = true;
 
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roles) as $roleName) {
             $result = $result && $this->revokeFromModel($model, $roleName);
         }
 
@@ -103,11 +106,12 @@ class RoleService
     /**
      * Check if a model has a given role.
      */
-    public function modelHas(Model $model, string $roleName): bool
+    public function modelHas(Model $model, Role|string $role): bool
     {
         $this->forceRolesFeature();
         $this->forceRoleInteraction($model);
 
+        $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         // If the role is not active, we can immediately return false.
@@ -124,7 +128,7 @@ class RoleService
         if (config('gatekeeper.features.teams', false)) {
             $onTeamWithRole = $this->teamRepository
                 ->getActiveForModel($model)
-                ->some(fn (Team $team) => $team->hasRole($roleName));
+                ->some(fn (Team $team) => $team->hasRole($role));
 
             if ($onTeamWithRole) {
                 return true;
@@ -137,9 +141,9 @@ class RoleService
     /**
      * Check if a model has any of the given roles.
      */
-    public function modelHasAny(Model $model, array|Arrayable $roleNames): bool
+    public function modelHasAny(Model $model, array|Arrayable $roles): bool
     {
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roles) as $roleName) {
             if ($this->modelHas($model, $roleName)) {
                 return true;
             }
@@ -151,9 +155,9 @@ class RoleService
     /**
      * Check if a model has all of the given roles.
      */
-    public function modelHasAll(Model $model, array|Arrayable $roleNames): bool
+    public function modelHasAll(Model $model, array|Arrayable $roles): bool
     {
-        foreach ($this->roleNamesArray($roleNames) as $roleName) {
+        foreach ($this->roleNamesArray($roles) as $roleName) {
             if (! $this->modelHas($model, $roleName)) {
                 return false;
             }
@@ -195,10 +199,30 @@ class RoleService
     }
 
     /**
-     * Convert an array or Arrayable object of role names to an array.
+     * Convert an array or Arrayable object of roles or role names to an array of role names.
      */
-    private function roleNamesArray(array|Arrayable $roleNames): array
+    private function roleNamesArray(array|Arrayable $roles): array
     {
-        return $roleNames instanceof Arrayable ? $roleNames->toArray() : $roleNames;
+        $rolesArray = $roles instanceof Arrayable ? $roles->toArray() : $roles;
+
+        return array_map(function (Role|array|string $role) {
+            return $this->resolveRoleName($role);
+        }, $rolesArray);
+    }
+
+    /**
+     * Resolve the role name from a Role instance or a string.
+     */
+    private function resolveRoleName(Role|array|string $role): string
+    {
+        if (is_array($role)) {
+            if (isset($role['name'])) {
+                return $role['name'];
+            }
+
+            throw new RoleNotFoundException(json_encode($role));
+        }
+
+        return $role instanceof Role ? $role->name : $role;
     }
 }

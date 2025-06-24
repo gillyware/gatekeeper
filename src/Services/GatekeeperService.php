@@ -19,129 +19,129 @@ class GatekeeperService
     /**
      * Create a new permission.
      */
-    public function createPermission(string $name): Permission
+    public function createPermission(string $permissionName): Permission
     {
-        return $this->permissionService->create($name);
+        return $this->permissionService->create($permissionName);
     }
 
-    public function assignPermissionToModel(Model $model, string $permissionName): bool
+    public function assignPermissionToModel(Model $model, Permission|string $permission): bool
     {
-        return $this->permissionService->assignToModel($model, $permissionName);
+        return $this->permissionService->assignToModel($model, $permission);
     }
 
-    public function assignPermissionsToModel(Model $model, array|Arrayable $permissionNames): bool
+    public function assignPermissionsToModel(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->assignMultipleToModel($model, $permissionNames);
+        return $this->permissionService->assignMultipleToModel($model, $permissions);
     }
 
-    public function revokePermissionFromModel(Model $model, string $permissionName): bool
+    public function revokePermissionFromModel(Model $model, Permission|string $permission): bool
     {
-        return $this->permissionService->revokeFromModel($model, $permissionName);
+        return $this->permissionService->revokeFromModel($model, $permission);
     }
 
-    public function revokePermissionsFromModel(Model $model, array|Arrayable $permissionNames): bool
+    public function revokePermissionsFromModel(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->revokeMultipleFromModel($model, $permissionNames);
+        return $this->permissionService->revokeMultipleFromModel($model, $permissions);
     }
 
-    public function modelHasPermission(Model $model, string $permissionName): bool
+    public function modelHasPermission(Model $model, Permission|string $permission): bool
     {
-        return $this->permissionService->modelHas($model, $permissionName);
+        return $this->permissionService->modelHas($model, $permission);
     }
 
-    public function modelHasAnyPermission(Model $model, array|Arrayable $permissionNames): bool
+    public function modelHasAnyPermission(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->modelHasAny($model, $permissionNames);
+        return $this->permissionService->modelHasAny($model, $permissions);
     }
 
-    public function modelHasAllPermissions(Model $model, array|Arrayable $permissionNames): bool
+    public function modelHasAllPermissions(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->modelHasAll($model, $permissionNames);
+        return $this->permissionService->modelHasAll($model, $permissions);
     }
 
     /**
      * Create a new role.
      */
-    public function createRole(string $name): Role
+    public function createRole(string $roleName): Role
     {
-        return $this->roleService->create($name);
+        return $this->roleService->create($roleName);
     }
 
-    public function assignRoleToModel(Model $model, string $roleName): bool
+    public function assignRoleToModel(Model $model, Role|string $role): bool
     {
-        return $this->roleService->assignToModel($model, $roleName);
+        return $this->roleService->assignToModel($model, $role);
     }
 
-    public function assignRolesToModel(Model $model, array|Arrayable $roleNames): bool
+    public function assignRolesToModel(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->assignMultipleToModel($model, $roleNames);
+        return $this->roleService->assignMultipleToModel($model, $roles);
     }
 
-    public function revokeRoleFromModel(Model $model, string $roleName): bool
+    public function revokeRoleFromModel(Model $model, Role|string $role): bool
     {
-        return $this->roleService->revokeFromModel($model, $roleName);
+        return $this->roleService->revokeFromModel($model, $role);
     }
 
-    public function revokeRolesFromModel(Model $model, array|Arrayable $roleNames): bool
+    public function revokeRolesFromModel(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->revokeMultipleFromModel($model, $roleNames);
+        return $this->roleService->revokeMultipleFromModel($model, $roles);
     }
 
-    public function modelHasRole(Model $model, string $roleName): bool
+    public function modelHasRole(Model $model, Role|string $role): bool
     {
-        return $this->roleService->modelHas($model, $roleName);
+        return $this->roleService->modelHas($model, $role);
     }
 
-    public function modelHasAnyRole(Model $model, array|Arrayable $roleNames): bool
+    public function modelHasAnyRole(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->modelHasAny($model, $roleNames);
+        return $this->roleService->modelHasAny($model, $roles);
     }
 
-    public function modelHasAllRoles(Model $model, array|Arrayable $roleNames): bool
+    public function modelHasAllRoles(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->modelHasAll($model, $roleNames);
+        return $this->roleService->modelHasAll($model, $roles);
     }
 
     /**
      * Create a new team.
      */
-    public function createTeam(string $name): Team
+    public function createTeam(string $teamName): Team
     {
-        return $this->teamService->create($name);
+        return $this->teamService->create($teamName);
     }
 
-    public function addModelToTeam(Model $model, string $teamName): bool
+    public function addModelToTeam(Model $model, Team|string $team): bool
     {
-        return $this->teamService->addModelTo($model, $teamName);
+        return $this->teamService->addModelTo($model, $team);
     }
 
-    public function addModelToTeams(Model $model, array|Arrayable $teamNames): bool
+    public function addModelToTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->addModelToAll($model, $teamNames);
+        return $this->teamService->addModelToAll($model, $teams);
     }
 
-    public function removeModelFromTeam(Model $model, string $teamName): bool
+    public function removeModelFromTeam(Model $model, Team|string $team): bool
     {
-        return $this->teamService->removeModelFrom($model, $teamName);
+        return $this->teamService->removeModelFrom($model, $team);
     }
 
-    public function removeModelFromTeams(Model $model, array|Arrayable $teamNames): bool
+    public function removeModelFromTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->removeModelFromAll($model, $teamNames);
+        return $this->teamService->removeModelFromAll($model, $teams);
     }
 
-    public function modelOnTeam(Model $model, string $teamName): bool
+    public function modelOnTeam(Model $model, Team|string $team): bool
     {
-        return $this->teamService->modelOn($model, $teamName);
+        return $this->teamService->modelOn($model, $team);
     }
 
-    public function modelOnAnyTeam(Model $model, array|Arrayable $teamNames): bool
+    public function modelOnAnyTeam(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->modelOnAny($model, $teamNames);
+        return $this->teamService->modelOnAny($model, $teams);
     }
 
-    public function modelOnAllTeams(Model $model, array|Arrayable $teamNames): bool
+    public function modelOnAllTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->modelOnAll($model, $teamNames);
+        return $this->teamService->modelOnAll($model, $teams);
     }
 }

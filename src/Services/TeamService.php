@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
+use Braxey\Gatekeeper\Exceptions\TeamNotFoundException;
 use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -28,11 +29,12 @@ class TeamService
     /**
      * Assign a team to a model.
      */
-    public function addModelTo(Model $model, string $teamName): bool
+    public function addModelTo(Model $model, Team|string $team): bool
     {
         $this->forceTeamsFeature();
         $this->forceTeamInteraction($model);
 
+        $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         // If the model already has this team directly assigned, we don't need to sync again.
@@ -54,11 +56,11 @@ class TeamService
     /**
      * Assign multiple teams to a model.
      */
-    public function addModelToAll(Model $model, array|Arrayable $teamNames): bool
+    public function addModelToAll(Model $model, array|Arrayable $teams): bool
     {
         $result = true;
 
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teams) as $teamName) {
             $result = $result && $this->addModelTo($model, $teamName);
         }
 
@@ -68,11 +70,12 @@ class TeamService
     /**
      * Revoke a team from a model.
      */
-    public function removeModelFrom(Model $model, string $teamName): bool
+    public function removeModelFrom(Model $model, Team|string $team): bool
     {
         $this->forceTeamsFeature();
         $this->forceTeamInteraction($model);
 
+        $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         if ($this->modelHasTeamRepository->deleteForModelAndTeam($model, $team)) {
@@ -88,11 +91,11 @@ class TeamService
     /**
      * Revoke multiple teams from a model.
      */
-    public function removeModelFromAll(Model $model, array|Arrayable $teamNames): bool
+    public function removeModelFromAll(Model $model, array|Arrayable $teams): bool
     {
         $result = true;
 
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teams) as $teamName) {
             $result = $result && $this->removeModelFrom($model, $teamName);
         }
 
@@ -102,11 +105,12 @@ class TeamService
     /**
      * Check if a model has a given team.
      */
-    public function modelOn(Model $model, string $teamName): bool
+    public function modelOn(Model $model, Team|string $team): bool
     {
         $this->forceTeamsFeature();
         $this->forceTeamInteraction($model);
 
+        $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         if (! $team->is_active) {
@@ -120,9 +124,9 @@ class TeamService
     /**
      * Check if a model has any of the given teams.
      */
-    public function modelOnAny(Model $model, array|Arrayable $teamNames): bool
+    public function modelOnAny(Model $model, array|Arrayable $teams): bool
     {
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teams) as $teamName) {
             if ($this->modelOn($model, $teamName)) {
                 return true;
             }
@@ -134,9 +138,9 @@ class TeamService
     /**
      * Check if a model has all of the given teams.
      */
-    public function modelOnAll(Model $model, array|Arrayable $teamNames): bool
+    public function modelOnAll(Model $model, array|Arrayable $teams): bool
     {
-        foreach ($this->teamNamesArray($teamNames) as $teamName) {
+        foreach ($this->teamNamesArray($teams) as $teamName) {
             if (! $this->modelOn($model, $teamName)) {
                 return false;
             }
@@ -178,10 +182,30 @@ class TeamService
     }
 
     /**
-     * Convert an array or Arrayable object of team names to an array.
+     * Convert an array or Arrayable object of teams or team names to an array of team names.
      */
-    private function teamNamesArray(array|Arrayable $teamNames): array
+    private function teamNamesArray(array|Arrayable $teams): array
     {
-        return $teamNames instanceof Arrayable ? $teamNames->toArray() : $teamNames;
+        $teamsArray = $teams instanceof Arrayable ? $teams->toArray() : $teams;
+
+        return array_map(function (Team|array|string $team) {
+            return $this->resolveTeamName($team);
+        }, $teamsArray);
+    }
+
+    /**
+     * Resolve the team name from a Team instance or a string.
+     */
+    private function resolveTeamName(Team|array|string $team): string
+    {
+        if (is_array($team)) {
+            if (isset($team['name'])) {
+                return $team['name'];
+            }
+
+            throw new TeamNotFoundException(json_encode($team));
+        }
+
+        return $team instanceof Team ? $team->name : $team;
     }
 }

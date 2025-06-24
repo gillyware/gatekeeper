@@ -13,56 +13,56 @@ trait HasTeams
     /**
      * Assign a team to the model.
      */
-    public function addToTeam(string $teamName): bool
+    public function addToTeam(Team|string $team): bool
     {
-        return Gatekeeper::addModelToTeam($this, $teamName);
+        return Gatekeeper::addModelToTeam($this, $team);
     }
 
     /**
      * Assign multiple teams to the model.
      */
-    public function addToTeams(array|Arrayable $teamNames): bool
+    public function addToTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::addModelToTeams($this, $teamNames);
+        return Gatekeeper::addModelToTeams($this, $teams);
     }
 
     /**
      * Revoke a team from the model.
      */
-    public function removeFromTeam(string $teamName): bool
+    public function removeFromTeam(Team|string $team): bool
     {
-        return Gatekeeper::removeModelFromTeam($this, $teamName);
+        return Gatekeeper::removeModelFromTeam($this, $team);
     }
 
     /**
      * Revoke multiple teams from the model.
      */
-    public function removeFromTeams(array|Arrayable $teamNames): bool
+    public function removeFromTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::removeModelFromTeams($this, $teamNames);
+        return Gatekeeper::removeModelFromTeams($this, $teams);
     }
 
     /**
      * Check if the model has a given team.
      */
-    public function onTeam(string $teamName): bool
+    public function onTeam(Team|string $team): bool
     {
-        return Gatekeeper::modelOnTeam($this, $teamName);
+        return Gatekeeper::modelOnTeam($this, $team);
     }
 
     /**
      * Check if the model is on any of the given teams.
      */
-    public function onAnyTeam(array|Arrayable $teamNames): bool
+    public function onAnyTeam(array|Arrayable $teams): bool
     {
-        return Gatekeeper::modelOnAnyTeam($this, $teamNames);
+        return Gatekeeper::modelOnAnyTeam($this, $teams);
     }
 
     /**
      * Check if the model is on all of the given teams.
      */
-    public function onAllTeams(array|Arrayable $teamNames): bool
+    public function onAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::modelOnAllTeams($this, $teamNames);
+        return Gatekeeper::modelOnAllTeams($this, $teams);
     }
 }

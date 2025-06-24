@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithPermissionsException;
+use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -31,10 +32,11 @@ class PermissionService
     /**
      * Assign a permission to a model.
      */
-    public function assignToModel(Model $model, string $permissionName): bool
+    public function assignToModel(Model $model, Role|string $permission): bool
     {
         $this->forcePermissionInteraction($model);
 
+        $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         // If the model already has this permission directly assigned, we don't need to sync again.
@@ -54,11 +56,11 @@ class PermissionService
     /**
      * Assign multiple permissions to a model.
      */
-    public function assignMultipleToModel(Model $model, array|Arrayable $permissionNames): bool
+    public function assignMultipleToModel(Model $model, array|Arrayable $permissions): bool
     {
         $result = true;
 
-        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
             $result = $result && $this->assignToModel($model, $permissionName);
         }
 
@@ -68,10 +70,11 @@ class PermissionService
     /**
      * Revoke a permission from a model.
      */
-    public function revokeFromModel(Model $model, string $permissionName): bool
+    public function revokeFromModel(Model $model, Permission|string $permission): bool
     {
         $this->forcePermissionInteraction($model);
 
+        $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         if ($this->modelHasPermissionRepository->deleteForModelAndPermission($model, $permission)) {
@@ -87,11 +90,11 @@ class PermissionService
     /**
      * Revoke multiple permissions from a model.
      */
-    public function revokeMultipleFromModel(Model $model, array|Arrayable $permissionNames): bool
+    public function revokeMultipleFromModel(Model $model, array|Arrayable $permissions): bool
     {
         $result = true;
 
-        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
             $result = $result && $this->revokeFromModel($model, $permissionName);
         }
 
@@ -101,10 +104,11 @@ class PermissionService
     /**
      * Check if a model has a given permission.
      */
-    public function modelHas(Model $model, string $permissionName): bool
+    public function modelHas(Model $model, Permission|string $permission): bool
     {
         $this->forcePermissionInteraction($model);
 
+        $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         // If the permission is not active, we can immediately return false.
@@ -124,7 +128,7 @@ class PermissionService
         if (config('gatekeeper.features.roles', false)) {
             $hasRoleWithPermission = $this->roleRepository
                 ->getActiveForModel($model)
-                ->some(fn (Role $role) => $role->hasPermission($permission->name));
+                ->some(fn (Role $role) => $role->hasPermission($permission));
 
             // If the model has any active roles with the permission, return true.
             if ($hasRoleWithPermission) {
@@ -136,7 +140,7 @@ class PermissionService
         if (config('gatekeeper.features.teams', false)) {
             $onTeamWithPermission = $this->teamRepository
                 ->getActiveForModel($model)
-                ->some(fn (Team $team) => $team->hasPermission($permission->name));
+                ->some(fn (Team $team) => $team->hasPermission($permission));
 
             // If the model has any active teams with the permission, return true.
             if ($onTeamWithPermission) {
@@ -151,9 +155,9 @@ class PermissionService
     /**
      * Check if a model has any of the given permissions.
      */
-    public function modelHasAny(Model $model, array|Arrayable $permissionNames): bool
+    public function modelHasAny(Model $model, array|Arrayable $permissions): bool
     {
-        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
             if ($this->modelHas($model, $permissionName)) {
                 return true;
             }
@@ -165,9 +169,9 @@ class PermissionService
     /**
      * Check if a model has all of the given permissions.
      */
-    public function modelHasAll(Model $model, array|Arrayable $permissionNames): bool
+    public function modelHasAll(Model $model, array|Arrayable $permissions): bool
     {
-        foreach ($this->permissionNamesArray($permissionNames) as $permissionName) {
+        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
             if (! $this->modelHas($model, $permissionName)) {
                 return false;
             }
@@ -199,10 +203,30 @@ class PermissionService
     }
 
     /**
-     * Convert an array or Arrayable object of permission names to an array.
+     * Convert an array or Arrayable object of permissions or permission names to an array of permission names.
      */
-    private function permissionNamesArray(array|Arrayable $permissionNames): array
+    private function permissionNamesArray(array|Arrayable $permissions): array
     {
-        return $permissionNames instanceof Arrayable ? $permissionNames->toArray() : $permissionNames;
+        $permissionsArray = $permissions instanceof Arrayable ? $permissions->toArray() : $permissions;
+
+        return array_map(function (Permission|array|string $permission) {
+            return $this->resolvePermissionName($permission);
+        }, $permissionsArray);
+    }
+
+    /**
+     * Resolve the permission name from a Permission instance or a string.
+     */
+    private function resolvePermissionName(Permission|array|string $permission): string
+    {
+        if (is_array($permission)) {
+            if (isset($permission['name'])) {
+                return $permission['name'];
+            }
+
+            throw new PermissionNotFoundException(json_encode($permission));
+        }
+
+        return $permission instanceof Permission ? $permission->name : $permission;
     }
 }

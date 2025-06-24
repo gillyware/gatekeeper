@@ -65,24 +65,21 @@ class PermissionServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
-        $names = $permissions->pluck('name');
 
-        $this->assertTrue($this->service->assignMultipleToModel($user, $names));
-
-        $this->assertTrue($user->hasAllPermissions($names));
+        $this->assertTrue($this->service->assignMultipleToModel($user, $permissions));
+        $this->assertTrue($this->service->modelHasAll($user, $permissions));
     }
 
     public function test_revoke_multiple_permissions()
     {
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
-        $names = $permissions->pluck('name');
 
-        $this->service->assignMultipleToModel($user, $names);
+        $this->service->assignMultipleToModel($user, $permissions);
 
-        $this->service->revokeMultipleFromModel($user, $names);
+        $this->service->revokeMultipleFromModel($user, $permissions);
 
-        $this->assertFalse($user->hasAnyPermission($names));
+        $this->assertFalse($user->hasAnyPermission($permissions));
     }
 
     public function test_model_has_direct_permission()
@@ -112,13 +109,13 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.roles', true);
 
         $user = User::factory()->create();
-        $permission = Permission::factory()->create();
+        $perm = Permission::factory()->create();
         $role = Role::factory()->create();
 
-        $role->permissions()->attach($permission);
+        $role->permissions()->attach($perm);
         $user->roles()->attach($role);
 
-        $this->assertTrue($this->service->modelHas($user, $permission->name));
+        $this->assertTrue($this->service->modelHas($user, $perm->name));
     }
 
     public function test_model_has_permission_through_team_permission()
@@ -126,13 +123,13 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.teams', true);
 
         $user = User::factory()->create();
-        $permission = Permission::factory()->create();
+        $perm = Permission::factory()->create();
         $team = Team::factory()->create();
 
-        $team->permissions()->attach($permission);
+        $team->permissions()->attach($perm);
         $user->teams()->attach($team);
 
-        $this->assertTrue($this->service->modelHas($user, $permission->name));
+        $this->assertTrue($this->service->modelHas($user, $perm->name));
     }
 
     public function test_model_has_permission_through_team_role_permission()
@@ -141,15 +138,15 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.roles', true);
 
         $user = User::factory()->create();
-        $permission = Permission::factory()->create();
+        $perm = Permission::factory()->create();
         $team = Team::factory()->create();
         $role = Role::factory()->create();
 
-        $role->permissions()->attach($permission);
+        $role->permissions()->attach($perm);
         $team->roles()->attach($role);
         $user->teams()->attach($team);
 
-        $this->assertTrue($this->service->modelHas($user, $permission->name));
+        $this->assertTrue($this->service->modelHas($user, $perm->name));
     }
 
     public function test_model_has_any_permission()

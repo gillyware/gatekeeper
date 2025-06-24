@@ -61,39 +61,33 @@ class RoleServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
-        $names = $roles->pluck('name');
 
-        $this->assertTrue($this->service->assignMultipleToModel($user, $names));
+        $this->assertTrue($this->service->assignMultipleToModel($user, $roles));
 
-        foreach ($names as $name) {
-            $this->assertTrue($user->hasRole($name));
-        }
+        $this->assertTrue($user->hasAllRoles($roles));
     }
 
     public function test_revoke_multiple_roles()
     {
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
-        $names = $roles->pluck('name');
 
-        $this->service->assignMultipleToModel($user, $names);
+        $this->service->assignMultipleToModel($user, $roles);
 
-        $this->assertTrue($this->service->revokeMultipleFromModel($user, $names));
+        $this->assertTrue($this->service->revokeMultipleFromModel($user, $roles));
 
-        foreach ($names as $name) {
-            $this->assertFalse($user->hasRole($name));
-        }
+        $this->assertFalse($user->hasAnyRole($roles));
     }
 
     public function test_model_has_role_direct()
     {
         $user = User::factory()->create();
         $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->withName($name)->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $role);
 
-        $this->assertTrue($this->service->modelHas($user, $name));
+        $this->assertTrue($this->service->modelHas($user, $role));
     }
 
     public function test_model_has_role_through_team()
