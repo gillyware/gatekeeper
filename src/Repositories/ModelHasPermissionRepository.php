@@ -9,6 +9,9 @@ use Illuminate\Support\Collection;
 
 class ModelHasPermissionRepository
 {
+    /**
+     * Create a new ModelHasPermission instance.
+     */
     public function create(Model $model, Permission $permission): ModelHasPermission
     {
         return ModelHasPermission::create([
@@ -18,11 +21,17 @@ class ModelHasPermissionRepository
         ]);
     }
 
+    /**
+     * Get all ModelHasPermission instances for a given model and permission.
+     */
     public function getForModelAndPermission(Model $model, Permission $permission): Collection
     {
         return ModelHasPermission::forModel($model)->where('permission_id', $permission->id)->get();
     }
 
+    /**
+     * Get the most recent ModelHasPermission instance for a given model and permission, including trashed instances.
+     */
     public function getRecentForModelAndPermissionIncludingTrashed(Model $model, Permission $permission): ?ModelHasPermission
     {
         return ModelHasPermission::forModel($model)
@@ -32,6 +41,9 @@ class ModelHasPermissionRepository
             ->first();
     }
 
+    /**
+     * Delete all ModelHasPermission instances for a given model and permission.
+     */
     public function deleteForModelAndPermission(Model $model, Permission $permission): bool
     {
         $this->getForModelAndPermission($model, $permission)->each(function (ModelHasPermission $modelHasPermission) {

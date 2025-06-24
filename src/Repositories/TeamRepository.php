@@ -12,6 +12,9 @@ use Throwable;
 
 class TeamRepository
 {
+    /**
+     * Create a new Team instance.
+     */
     public function create(string $teamName): Team
     {
         $team = new Team(['name' => $teamName]);
@@ -23,6 +26,9 @@ class TeamRepository
         return $team;
     }
 
+    /**
+     * Get all teams.
+     */
     public function all(): Collection
     {
         $teams = Cache::get($this->getCacheKeyForAll());
@@ -38,6 +44,9 @@ class TeamRepository
         return $teams;
     }
 
+    /**
+     * Find a team by its name.
+     */
     public function findByName(string $teamName): Team
     {
         try {
@@ -57,11 +66,17 @@ class TeamRepository
         return $this->all()->filter(fn (Team $team) => $team->is_active);
     }
 
+    /**
+     * Get active teams where the name is in the provided array or collection.
+     */
     public function getActiveWhereNameIn(array|Collection $teamNames): Collection
     {
         return $this->getActive()->whereIn('name', $teamNames);
     }
 
+    /**
+     * Get active teams for a specific model.
+     */
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -69,6 +84,9 @@ class TeamRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
+    /**
+     * Get active team names for a specific model.
+     */
     public function getActiveNamesForModel(Model $model): Collection
     {
         $cacheKey = $this->getCacheKeyForModel($model);
@@ -92,16 +110,25 @@ class TeamRepository
         return $activeTeamNames;
     }
 
+    /**
+     * Invalidate the cache for all teams.
+     */
     public function invalidateCacheForModel(Model $model): void
     {
         Cache::forget($this->getCacheKeyForModel($model));
     }
 
+    /**
+     * Invalidate the cache for all teams.
+     */
     private function getCacheKeyForAll(): string
     {
         return 'gatekeeper.teams';
     }
 
+    /**
+     * Get the cache key for a specific model.
+     */
     private function getCacheKeyForModel(Model $model): string
     {
         return "gatekeeper.teams.{$model->getMorphClass()}.{$model->getKey()}";

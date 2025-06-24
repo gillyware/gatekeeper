@@ -1,6 +1,6 @@
 <?php
 
-namespace Braxey\Gatekeeper\Tests\Unit;
+namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithRolesException;
 use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;

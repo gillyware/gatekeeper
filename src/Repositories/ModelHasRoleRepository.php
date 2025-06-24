@@ -9,6 +9,9 @@ use Illuminate\Support\Collection;
 
 class ModelHasRoleRepository
 {
+    /**
+     * Create a new ModelHasRole instance.
+     */
     public function create(Model $model, Role $role): ModelHasRole
     {
         return ModelHasRole::create([
@@ -18,11 +21,17 @@ class ModelHasRoleRepository
         ]);
     }
 
+    /**
+     * Get all ModelHasRole instances for a given model and role.
+     */
     public function getForModelAndRole(Model $model, Role $role): Collection
     {
         return ModelHasRole::forModel($model)->where('role_id', $role->id)->get();
     }
 
+    /**
+     * Get the most recent ModelHasRole instance for a given model and role, including trashed instances.
+     */
     public function getRecentForModelAndRoleIncludingTrashed(Model $model, Role $role): ?ModelHasRole
     {
         return ModelHasRole::forModel($model)
@@ -32,6 +41,9 @@ class ModelHasRoleRepository
             ->first();
     }
 
+    /**
+     * Delete all ModelHasRole instances for a given model and role.
+     */
     public function deleteForModelAndRole(Model $model, Role $role): bool
     {
         $this->getForModelAndRole($model, $role)->each(function (ModelHasRole $modelHasRole) {

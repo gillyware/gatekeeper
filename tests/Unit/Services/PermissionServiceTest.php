@@ -1,6 +1,6 @@
 <?php
 
-namespace Braxey\Gatekeeper\Tests\Unit;
+namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithPermissionsException;
 use Braxey\Gatekeeper\Models\Permission;
@@ -112,13 +112,13 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.roles', true);
 
         $user = User::factory()->create();
-        $perm = Permission::factory()->create();
+        $permission = Permission::factory()->create();
         $role = Role::factory()->create();
 
-        $role->permissions()->attach($perm);
+        $role->permissions()->attach($permission);
         $user->roles()->attach($role);
 
-        $this->assertTrue($this->service->modelHas($user, $perm->name));
+        $this->assertTrue($this->service->modelHas($user, $permission->name));
     }
 
     public function test_model_has_permission_through_team_permission()
@@ -126,13 +126,13 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.teams', true);
 
         $user = User::factory()->create();
-        $perm = Permission::factory()->create();
+        $permission = Permission::factory()->create();
         $team = Team::factory()->create();
 
-        $team->permissions()->attach($perm);
+        $team->permissions()->attach($permission);
         $user->teams()->attach($team);
 
-        $this->assertTrue($this->service->modelHas($user, $perm->name));
+        $this->assertTrue($this->service->modelHas($user, $permission->name));
     }
 
     public function test_model_has_permission_through_team_role_permission()
@@ -141,15 +141,15 @@ class PermissionServiceTest extends TestCase
         Config::set('gatekeeper.features.roles', true);
 
         $user = User::factory()->create();
-        $perm = Permission::factory()->create();
+        $permission = Permission::factory()->create();
         $team = Team::factory()->create();
         $role = Role::factory()->create();
 
-        $role->permissions()->attach($perm);
+        $role->permissions()->attach($permission);
         $team->roles()->attach($role);
         $user->teams()->attach($team);
 
-        $this->assertTrue($this->service->modelHas($user, $perm->name));
+        $this->assertTrue($this->service->modelHas($user, $permission->name));
     }
 
     public function test_model_has_any_permission()

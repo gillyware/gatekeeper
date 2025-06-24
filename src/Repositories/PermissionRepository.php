@@ -12,6 +12,9 @@ use Throwable;
 
 class PermissionRepository
 {
+    /**
+     * Create a new Permission instance.
+     */
     public function create(string $permissionName): Permission
     {
         $permission = new Permission(['name' => $permissionName]);
@@ -23,6 +26,9 @@ class PermissionRepository
         return $permission;
     }
 
+    /**
+     * Get all permissions.
+     */
     public function all(): Collection
     {
         $permissions = Cache::get($this->getCacheKeyForAll());
@@ -38,6 +44,9 @@ class PermissionRepository
         return $permissions;
     }
 
+    /**
+     * Find a permission by its name.
+     */
     public function findByName(string $permissionName): Permission
     {
         try {
@@ -57,11 +66,17 @@ class PermissionRepository
         return $this->all()->filter(fn (Permission $permission) => $permission->is_active);
     }
 
+    /**
+     * Get active permissions where the name is in the provided array or collection.
+     */
     public function getActiveWhereNameIn(array|Collection $permissionNames): Collection
     {
         return $this->getActive()->whereIn('name', $permissionNames);
     }
 
+    /**
+     * Get active permissions for a specific model.
+     */
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -69,6 +84,9 @@ class PermissionRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
+    /**
+     * Get active permission names for a specific model.
+     */
     public function getActiveNamesForModel(Model $model): Collection
     {
         $cacheKey = $this->getCacheKeyForModel($model);
@@ -92,16 +110,25 @@ class PermissionRepository
         return $activePermissionNames;
     }
 
+    /**
+     * Invalidate the cache for all permissions.
+     */
     public function invalidateCacheForModel(Model $model): void
     {
         Cache::forget($this->getCacheKeyForModel($model));
     }
 
+    /**
+     * Invalidate the cache for all permissions.
+     */
     private function getCacheKeyForAll(): string
     {
         return 'gatekeeper.permissions';
     }
 
+    /**
+     * Get the cache key for a specific model's permissions.
+     */
     private function getCacheKeyForModel(Model $model): string
     {
         return "gatekeeper.permissions.{$model->getMorphClass()}.{$model->getKey()}";

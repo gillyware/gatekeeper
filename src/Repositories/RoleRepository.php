@@ -12,6 +12,9 @@ use Throwable;
 
 class RoleRepository
 {
+    /**
+     * Create a new Role instance.
+     */
     public function create(string $roleName): Role
     {
         $role = new Role(['name' => $roleName]);
@@ -23,6 +26,9 @@ class RoleRepository
         return $role;
     }
 
+    /**
+     * Get all roles.
+     */
     public function all(): Collection
     {
         $roles = Cache::get($this->getCacheKeyForAll());
@@ -38,6 +44,9 @@ class RoleRepository
         return $roles;
     }
 
+    /**
+     * Find a role by its name.
+     */
     public function findByName(string $roleName): Role
     {
         try {
@@ -57,11 +66,17 @@ class RoleRepository
         return $this->all()->filter(fn (Role $role) => $role->is_active);
     }
 
+    /**
+     * Get active roles where the name is in the provided array or collection.
+     */
     public function getActiveWhereNameIn(array|Collection $roleNames): Collection
     {
         return $this->getActive()->whereIn('name', $roleNames);
     }
 
+    /**
+     * Get active roles for a specific model.
+     */
     public function getActiveForModel(Model $model): Collection
     {
         $activeNamesForModel = $this->getActiveNamesForModel($model);
@@ -69,6 +84,9 @@ class RoleRepository
         return $this->getActiveWhereNameIn($activeNamesForModel);
     }
 
+    /**
+     * Get active role names for a specific model.
+     */
     public function getActiveNamesForModel(Model $model): Collection
     {
         $cacheKey = $this->getCacheKeyForModel($model);
@@ -92,16 +110,25 @@ class RoleRepository
         return $activeRoleNames;
     }
 
+    /**
+     * Invalidate the cache for a specific model.
+     */
     public function invalidateCacheForModel(Model $model): void
     {
         Cache::forget($this->getCacheKeyForModel($model));
     }
 
+    /**
+     * Invalidate the cache for all roles.
+     */
     private function getCacheKeyForAll(): string
     {
         return 'gatekeeper.roles';
     }
 
+    /**
+     * Get the cache key for a specific model.
+     */
     private function getCacheKeyForModel(Model $model): string
     {
         return "gatekeeper.roles.{$model->getMorphClass()}.{$model->getKey()}";

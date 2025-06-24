@@ -1,6 +1,6 @@
 <?php
 
-namespace Braxey\Gatekeeper\Tests\Unit;
+namespace Braxey\Gatekeeper\Tests\Unit\Traits;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Braxey\Gatekeeper\Tests\Fixtures\User;

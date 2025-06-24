@@ -1,6 +1,6 @@
 <?php
 
-namespace Braxey\Gatekeeper\Tests\Unit;
+namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
 use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
