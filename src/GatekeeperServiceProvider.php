@@ -195,6 +195,10 @@ class GatekeeperServiceProvider extends ServiceProvider
             \Braxey\Gatekeeper\Console\CreatePermissionCommand::class,
             \Braxey\Gatekeeper\Console\CreateRoleCommand::class,
             \Braxey\Gatekeeper\Console\CreateTeamCommand::class,
+            \Braxey\Gatekeeper\Console\ListCommand::class,
+            \Braxey\Gatekeeper\Console\RevokeCommand::class,
+            \Braxey\Gatekeeper\Console\AssignCommand::class,
+            \Braxey\Gatekeeper\Console\ClearCacheCommand::class,
         ]);
     }
 }

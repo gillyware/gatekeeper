@@ -7,21 +7,34 @@ use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Repositories\RoleRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
+use Mockery;
 
 class RoleRepositoryTest extends TestCase
 {
     protected RoleRepository $repository;
 
+    protected TaggedCache $taggedCache;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->taggedCache = Mockery::mock(TaggedCache::class);
+        Cache::shouldReceive('tags')->with('gatekeeper')->andReturn($this->taggedCache)->byDefault();
+
+        $this->taggedCache->shouldReceive('get')->andReturn(null)->byDefault();
+        $this->taggedCache->shouldReceive('put')->andReturn(true)->byDefault();
+        $this->taggedCache->shouldReceive('forget')->andReturn(true)->byDefault();
+        $this->taggedCache->shouldReceive('has')->andReturn(false)->byDefault();
+
         $this->repository = new RoleRepository;
     }
 
     public function test_create_role()
     {
-        Cache::shouldReceive('forget')->once();
+        $this->taggedCache->shouldReceive('forget')->once();
 
         $name = fake()->unique()->word();
 
@@ -34,7 +47,7 @@ class RoleRepositoryTest extends TestCase
     public function test_all_returns_cached_roles_if_available()
     {
         $cached = Role::factory()->count(2)->make();
-        Cache::shouldReceive('get')->once()->andReturn($cached);
+        $this->taggedCache->shouldReceive('get')->once()->andReturn($cached);
 
         $result = $this->repository->all();
 
@@ -43,8 +56,8 @@ class RoleRepositoryTest extends TestCase
 
     public function test_all_fetches_roles_and_caches_if_not_cached()
     {
-        Cache::shouldReceive('get')->once()->andReturn(null);
-        Cache::shouldReceive('put')->once();
+        $this->taggedCache->shouldReceive('get')->once()->andReturn(null);
+        $this->taggedCache->shouldReceive('put')->once();
 
         Role::factory()->count(2)->create();
 
@@ -98,8 +111,8 @@ class RoleRepositoryTest extends TestCase
 
         $user->roles()->attach($role);
 
-        Cache::shouldReceive('get')->once()->andReturn(null);
-        Cache::shouldReceive('put')->once();
+        $this->taggedCache->shouldReceive('get')->once()->andReturn(null);
+        $this->taggedCache->shouldReceive('put')->once();
 
         $result = $this->repository->getActiveNamesForModel($user);
 
@@ -110,7 +123,7 @@ class RoleRepositoryTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Cache::shouldReceive('forget')->once();
+        $this->taggedCache->shouldReceive('forget')->once();
 
         $this->repository->invalidateCacheForModel($user);
     }

@@ -20,7 +20,7 @@ class PermissionRepository
         $permission = new Permission(['name' => $permissionName]);
 
         if ($permission->save()) {
-            Cache::forget($this->getCacheKeyForAll());
+            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
         }
 
         return $permission;
@@ -31,7 +31,7 @@ class PermissionRepository
      */
     public function all(): Collection
     {
-        $permissions = Cache::get($this->getCacheKeyForAll());
+        $permissions = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
 
         if ($permissions) {
             return collect($permissions);
@@ -39,7 +39,7 @@ class PermissionRepository
 
         $permissions = Permission::all();
 
-        Cache::put($this->getCacheKeyForAll(), $permissions, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $permissions, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $permissions;
     }
@@ -91,7 +91,7 @@ class PermissionRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activePermissionNames = Cache::get($cacheKey);
+        $activePermissionNames = Cache::tags('gatekeeper')->get($cacheKey);
 
         if ($activePermissionNames) {
             return collect($activePermissionNames);
@@ -105,7 +105,7 @@ class PermissionRepository
             ->whereNull('model_has_permissions.deleted_at')
             ->pluck("$permissionsTable.name");
 
-        Cache::put($cacheKey, $activePermissionNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($cacheKey, $activePermissionNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activePermissionNames;
     }
@@ -115,7 +115,7 @@ class PermissionRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::forget($this->getCacheKeyForModel($model));
+        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
     }
 
     /**

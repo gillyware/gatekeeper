@@ -2,28 +2,39 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit\Repositories;
 
+use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Repositories\PermissionRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
+use Mockery;
 
 class PermissionRepositoryTest extends TestCase
 {
     protected PermissionRepository $repository;
 
+    protected TaggedCache $taggedCache;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->taggedCache = Mockery::mock(TaggedCache::class);
+        Cache::shouldReceive('tags')->with('gatekeeper')->andReturn($this->taggedCache)->byDefault();
+
+        $this->taggedCache->shouldReceive('get')->andReturn(null)->byDefault();
+        $this->taggedCache->shouldReceive('put')->andReturn(true)->byDefault();
+        $this->taggedCache->shouldReceive('forget')->andReturn(true)->byDefault();
+        $this->taggedCache->shouldReceive('has')->andReturn(false)->byDefault();
+
         $this->repository = new PermissionRepository;
-        Cache::flush();
     }
 
     public function test_create_stores_permission_and_forgets_cache()
     {
-        Cache::shouldReceive('forget')
-            ->once()
-            ->with('gatekeeper.permissions');
+        $this->taggedCache->shouldReceive('forget')->once()->with('gatekeeper.permissions');
 
         $name = fake()->unique()->word();
         $permission = $this->repository->create($name);
@@ -34,8 +45,8 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_all_returns_cached_if_available()
     {
-        $cached = Permission::factory()->count(2)->create();
-        Cache::put('gatekeeper.permissions', $cached);
+        $cached = Permission::factory()->count(2)->make();
+        $this->taggedCache->shouldReceive('get')->with('gatekeeper.permissions')->once()->andReturn($cached);
 
         $result = $this->repository->all();
 
@@ -45,7 +56,9 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_all_caches_result_if_not_cached()
     {
-        Cache::forget('gatekeeper.permissions');
+        $this->taggedCache->shouldReceive('get')->once()->andReturn(null);
+        $this->taggedCache->shouldReceive('put')->once();
+
         $permissions = Permission::factory()->count(3)->create();
 
         $this->assertEqualsCanonicalizing(
@@ -56,15 +69,16 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_find_by_name_throws_when_not_found()
     {
-        $this->expectException(\Braxey\Gatekeeper\Exceptions\PermissionNotFoundException::class);
+        $this->expectException(PermissionNotFoundException::class);
         $this->repository->findByName('nonexistent');
     }
 
     public function test_find_by_name_returns_permission()
     {
         $permission = Permission::factory()->create();
-        $result = $this->repository->findByName($permission->name);
+        $this->repository->all();
 
+        $result = $this->repository->findByName($permission->name);
         $this->assertTrue($permission->is($result));
     }
 
@@ -99,11 +113,15 @@ class PermissionRepositoryTest extends TestCase
         $user->permissions()->attach($permission);
 
         $key = "gatekeeper.permissions.{$user->getMorphClass()}.{$user->getKey()}";
-        Cache::forget($key);
+
+        $this->taggedCache->shouldReceive('get')->with($key)->once()->andReturn(null);
+        $this->taggedCache->shouldReceive('put')->once();
+        $this->taggedCache->shouldReceive('has')->with($key)->andReturn(true);
 
         $names = $this->repository->getActiveNamesForModel($user);
+
         $this->assertContains($permission->name, $names->toArray());
-        $this->assertTrue(Cache::has($key));
+        $this->assertTrue(Cache::tags('gatekeeper')->has($key));
     }
 
     public function test_get_active_for_model_returns_active_permissions()
@@ -113,6 +131,8 @@ class PermissionRepositoryTest extends TestCase
         $inactive = Permission::factory()->inactive()->create();
 
         $user->permissions()->attach([$active->id, $inactive->id]);
+
+        $this->repository->getActiveNamesForModel($user);
 
         $permissions = $this->repository->getActiveForModel($user);
 
@@ -125,10 +145,8 @@ class PermissionRepositoryTest extends TestCase
         $user = User::factory()->create();
         $key = "gatekeeper.permissions.{$user->getMorphClass()}.{$user->getKey()}";
 
-        Cache::put($key, ['test']);
-        $this->assertTrue(Cache::has($key));
+        $this->taggedCache->shouldReceive('forget')->once()->with($key);
 
         $this->repository->invalidateCacheForModel($user);
-        $this->assertFalse(Cache::has($key));
     }
 }

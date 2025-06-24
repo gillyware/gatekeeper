@@ -17,7 +17,7 @@ class TeamRepositoryTest extends TestCase
     {
         parent::setUp();
         $this->repository = app(TeamRepository::class);
-        Cache::flush();
+        Cache::tags('gatekeeper')->flush();
     }
 
     public function test_create_team_and_cache_is_invalidated()
@@ -106,6 +106,6 @@ class TeamRepositoryTest extends TestCase
         $this->repository->invalidateCacheForModel($user);
 
         $key = 'gatekeeper.teams.'.$user->getMorphClass().'.'.$user->getKey();
-        $this->assertNull(Cache::get($key));
+        $this->assertNull(Cache::tags('gatekeeper')->get($key));
     }
 }

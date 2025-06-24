@@ -20,7 +20,7 @@ class TeamRepository
         $team = new Team(['name' => $teamName]);
 
         if ($team->save()) {
-            Cache::forget($this->getCacheKeyForAll());
+            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
         }
 
         return $team;
@@ -31,7 +31,7 @@ class TeamRepository
      */
     public function all(): Collection
     {
-        $teams = Cache::get($this->getCacheKeyForAll());
+        $teams = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
 
         if ($teams) {
             return collect($teams);
@@ -39,7 +39,7 @@ class TeamRepository
 
         $teams = Team::all();
 
-        Cache::put($this->getCacheKeyForAll(), $teams, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $teams, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $teams;
     }
@@ -91,7 +91,7 @@ class TeamRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activeTeamNames = Cache::get($cacheKey);
+        $activeTeamNames = Cache::tags('gatekeeper')->get($cacheKey);
 
         if ($activeTeamNames) {
             return collect($activeTeamNames);
@@ -105,7 +105,7 @@ class TeamRepository
             ->whereNull('model_has_teams.deleted_at')
             ->pluck("$teamsTable.name");
 
-        Cache::put($cacheKey, $activeTeamNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($cacheKey, $activeTeamNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activeTeamNames;
     }
@@ -115,7 +115,7 @@ class TeamRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::forget($this->getCacheKeyForModel($model));
+        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
     }
 
     /**

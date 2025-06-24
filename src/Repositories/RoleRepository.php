@@ -20,7 +20,7 @@ class RoleRepository
         $role = new Role(['name' => $roleName]);
 
         if ($role->save()) {
-            Cache::forget($this->getCacheKeyForAll());
+            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
         }
 
         return $role;
@@ -31,7 +31,7 @@ class RoleRepository
      */
     public function all(): Collection
     {
-        $roles = Cache::get($this->getCacheKeyForAll());
+        $roles = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
 
         if ($roles) {
             return collect($roles);
@@ -39,7 +39,7 @@ class RoleRepository
 
         $roles = Role::all();
 
-        Cache::put($this->getCacheKeyForAll(), $roles, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $roles, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $roles;
     }
@@ -91,7 +91,7 @@ class RoleRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activeRoleNames = Cache::get($cacheKey);
+        $activeRoleNames = Cache::tags('gatekeeper')->get($cacheKey);
 
         if ($activeRoleNames) {
             return collect($activeRoleNames);
@@ -105,7 +105,7 @@ class RoleRepository
             ->whereNull('model_has_roles.deleted_at')
             ->pluck("$rolesTable.name");
 
-        Cache::put($cacheKey, $activeRoleNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        Cache::tags('gatekeeper')->put($cacheKey, $activeRoleNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
 
         return $activeRoleNames;
     }
@@ -115,7 +115,7 @@ class RoleRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::forget($this->getCacheKeyForModel($model));
+        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
     }
 
     /**
