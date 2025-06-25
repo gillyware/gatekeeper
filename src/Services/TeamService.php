@@ -2,18 +2,22 @@
 
 namespace Braxey\Gatekeeper\Services;
 
+use Braxey\Gatekeeper\Dtos\AuditLog\CreateTeamAuditLogDto;
 use Braxey\Gatekeeper\Exceptions\TeamNotFoundException;
 use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Repositories\AuditLogRepository;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 class TeamService extends AbstractGatekeeperEntityService
 {
     public function __construct(
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasTeamRepository $modelHasTeamRepository,
+        private readonly AuditLogRepository $auditLogRepository,
     ) {}
 
     public function create(string $teamName): Team
@@ -22,7 +26,13 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
 
-        return $this->teamRepository->create($teamName);
+        $team = $this->teamRepository->create($teamName);
+
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new CreateTeamAuditLogDto($team));
+        }
+
+        return $team;
     }
 
     /**

@@ -2,9 +2,11 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
+use Braxey\Gatekeeper\Constants\AuditLog\Action;
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
 use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Braxey\Gatekeeper\Facades\Gatekeeper;
+use Braxey\Gatekeeper\Models\AuditLog;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Services\TeamService;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
@@ -38,6 +40,15 @@ class TeamServiceTest extends TestCase
 
         $this->assertInstanceOf(Team::class, $team);
         $this->assertEquals($name, $team->name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $createTeamLog = $auditLogs->first();
+        $this->assertEquals(Action::TEAM_CREATE, $createTeamLog->action);
+        $this->assertEquals($name, $createTeamLog->metadata['name']);
+        $this->assertTrue($this->user->is($createTeamLog->actionBy));
+        $this->assertNull($createTeamLog->actionTo);
     }
 
     public function test_create_team_throws_if_disabled()

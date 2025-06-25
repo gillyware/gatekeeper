@@ -2,14 +2,17 @@
 
 namespace Braxey\Gatekeeper\Services;
 
+use Braxey\Gatekeeper\Dtos\AuditLog\CreateRoleAuditLogDto;
 use Braxey\Gatekeeper\Exceptions\RoleNotFoundException;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Repositories\AuditLogRepository;
 use Braxey\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Braxey\Gatekeeper\Repositories\RoleRepository;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 class RoleService extends AbstractGatekeeperEntityService
 {
@@ -17,6 +20,7 @@ class RoleService extends AbstractGatekeeperEntityService
         private readonly RoleRepository $roleRepository,
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasRoleRepository $modelHasRoleRepository,
+        private readonly AuditLogRepository $auditLogRepository,
     ) {}
 
     public function create(string $roleName): Role
@@ -25,7 +29,13 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
 
-        return $this->roleRepository->create($roleName);
+        $role = $this->roleRepository->create($roleName);
+
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new CreateRoleAuditLogDto($role));
+        }
+
+        return $role;
     }
 
     /**

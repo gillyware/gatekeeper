@@ -2,9 +2,11 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
+use Braxey\Gatekeeper\Constants\AuditLog\Action;
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithRolesException;
 use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
 use Braxey\Gatekeeper\Facades\Gatekeeper;
+use Braxey\Gatekeeper\Models\AuditLog;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Services\RoleService;
@@ -39,6 +41,15 @@ class RoleServiceTest extends TestCase
 
         $this->assertInstanceOf(Role::class, $role);
         $this->assertEquals($name, $role->name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $createRoleLog = $auditLogs->first();
+        $this->assertEquals(Action::ROLE_CREATE, $createRoleLog->action);
+        $this->assertEquals($name, $createRoleLog->metadata['name']);
+        $this->assertTrue($this->user->is($createRoleLog->actionBy));
+        $this->assertNull($createRoleLog->actionTo);
     }
 
     public function test_assign_and_revoke_role()
