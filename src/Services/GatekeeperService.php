@@ -8,16 +8,21 @@ use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Traits\ActsForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class GatekeeperService
 {
     use ActsForGatekeeper;
 
+    private string $lifecycleId;
+
     public function __construct(
         private readonly PermissionService $permissionService,
         private readonly RoleService $roleService,
         private readonly TeamService $teamService,
-    ) {}
+    ) {
+        $this->setLifecycleId();
+    }
 
     /**
      * Set the acting as model.
@@ -40,6 +45,14 @@ class GatekeeperService
         $this->resolveActingAs();
 
         return $this->actingAs;
+    }
+
+    /**
+     * Get the lifecycle ID for the current request or CLI execution.
+     */
+    public function getLifecycleId(): string
+    {
+        return $this->lifecycleId;
     }
 
     /**
@@ -169,5 +182,17 @@ class GatekeeperService
     public function modelOnAllTeams(Model $model, array|Arrayable $teams): bool
     {
         return $this->teamService->modelOnAll($model, $teams);
+    }
+
+    private function setLifecycleId(): void
+    {
+        if (app()->runningInConsole()) {
+            $this->lifecycleId = 'cli_'.Str::uuid()->toString();
+        } else {
+            $requestId = request()->header('X-Request-ID');
+            $this->lifecycleId = $requestId
+                ? 'request_'.$requestId
+                : 'request_generated_'.Str::uuid()->toString();
+        }
     }
 }

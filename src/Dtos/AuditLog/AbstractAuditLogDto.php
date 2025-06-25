@@ -19,11 +19,4 @@ abstract class AbstractAuditLogDto
     }
 
     abstract public function getAction(): string;
-
-    public function setActionByModel(Model $model): static
-    {
-        $this->actionByModel = $model;
-
-        return $this;
-    }
 }

@@ -41,6 +41,15 @@ class PermissionServiceTest extends TestCase
 
         $this->assertInstanceOf(Permission::class, $permission);
         $this->assertEquals($name, $permission->name);
+    }
+
+    public function test_audit_log_inserted_on_permission_creation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
@@ -52,7 +61,18 @@ class PermissionServiceTest extends TestCase
         $this->assertNull($createPermissionLog->actionTo);
     }
 
-    public function test_assign_and_revoke_permission()
+    public function test_audit_log_not_inserted_on_permission_creation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_assign_permission()
     {
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -60,12 +80,39 @@ class PermissionServiceTest extends TestCase
 
         $this->assertTrue($this->service->assignToModel($user, $name));
         $this->assertTrue($user->hasPermission($name));
+    }
 
-        $this->assertTrue($this->service->revokeFromModel($user, $name));
-        $this->assertSoftDeleted('model_has_permissions', [
-            'model_id' => $user->id,
-        ]);
-        $this->assertFalse($user->hasPermission($name));
+    public function test_audit_log_inserted_on_permission_assignment_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Permission::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $assignPermissionLog = $auditLogs->first();
+        $this->assertEquals(Action::PERMISSION_ASSIGN, $assignPermissionLog->action);
+        $this->assertEquals($name, $assignPermissionLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignPermissionLog->actionBy->id);
+        $this->assertEquals($user->id, $assignPermissionLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_permission_assignment_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Permission::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
     }
 
     public function test_assign_multiple_permissions()
@@ -88,6 +135,21 @@ class PermissionServiceTest extends TestCase
 
         $this->assertTrue($this->service->assignMultipleToModel($user, $permissions));
         $this->assertTrue($this->service->modelHasAll($user, $permissions));
+    }
+
+    public function test_revoke_permission()
+    {
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Permission::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $this->assertTrue($this->service->revokeFromModel($user, $name));
+        $this->assertSoftDeleted('model_has_permissions', [
+            'model_id' => $user->id,
+        ]);
+        $this->assertFalse($user->hasPermission($name));
     }
 
     public function test_revoke_multiple_permissions()

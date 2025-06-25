@@ -2,8 +2,8 @@
 
 namespace Braxey\Gatekeeper\Services;
 
+use Braxey\Gatekeeper\Dtos\AuditLog\AssignTeamAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreateTeamAuditLogDto;
-use Braxey\Gatekeeper\Exceptions\TeamNotFoundException;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\AuditLogRepository;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -45,7 +45,7 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->enforceTeamsFeature();
         $this->enforceTeamInteraction($model);
 
-        $teamName = $this->resolveTeamName($team);
+        $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         // If the model already has this team directly assigned, we don't need to sync again.
@@ -57,6 +57,11 @@ class TeamService extends AbstractGatekeeperEntityService
 
         // Insert the team assignment.
         $this->modelHasTeamRepository->create($model, $team);
+
+        // Audit log the team assignment if auditing is enabled.
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new AssignTeamAuditLogDto($model, $team));
+        }
 
         // Invalidate the teams cache for the model.
         $this->teamRepository->invalidateCacheForModel($model);
@@ -71,7 +76,7 @@ class TeamService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->teamNamesArray($teams) as $teamName) {
+        foreach ($this->entityNamesArray($teams) as $teamName) {
             $result = $result && $this->addModelTo($model, $teamName);
         }
 
@@ -88,7 +93,7 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->enforceTeamsFeature();
         $this->enforceTeamInteraction($model);
 
-        $teamName = $this->resolveTeamName($team);
+        $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         if ($this->modelHasTeamRepository->deleteForModelAndTeam($model, $team)) {
@@ -108,7 +113,7 @@ class TeamService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->teamNamesArray($teams) as $teamName) {
+        foreach ($this->entityNamesArray($teams) as $teamName) {
             $result = $result && $this->removeModelFrom($model, $teamName);
         }
 
@@ -123,7 +128,7 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->enforceTeamsFeature();
         $this->enforceTeamInteraction($model);
 
-        $teamName = $this->resolveTeamName($team);
+        $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findByName($teamName);
 
         if (! $team->is_active) {
@@ -139,7 +144,7 @@ class TeamService extends AbstractGatekeeperEntityService
      */
     public function modelOnAny(Model $model, array|Arrayable $teams): bool
     {
-        foreach ($this->teamNamesArray($teams) as $teamName) {
+        foreach ($this->entityNamesArray($teams) as $teamName) {
             if ($this->modelOn($model, $teamName)) {
                 return true;
             }
@@ -153,7 +158,7 @@ class TeamService extends AbstractGatekeeperEntityService
      */
     public function modelOnAll(Model $model, array|Arrayable $teams): bool
     {
-        foreach ($this->teamNamesArray($teams) as $teamName) {
+        foreach ($this->entityNamesArray($teams) as $teamName) {
             if (! $this->modelOn($model, $teamName)) {
                 return false;
             }
@@ -172,33 +177,5 @@ class TeamService extends AbstractGatekeeperEntityService
 
         // If the team is currently directly assigned to the model, return true.
         return $recentTeamAssignment && ! $recentTeamAssignment->deleted_at;
-    }
-
-    /**
-     * Convert an array or Arrayable object of teams or team names to an array of team names.
-     */
-    private function teamNamesArray(array|Arrayable $teams): array
-    {
-        $teamsArray = $teams instanceof Arrayable ? $teams->toArray() : $teams;
-
-        return array_map(function (Team|array|string $team) {
-            return $this->resolveTeamName($team);
-        }, $teamsArray);
-    }
-
-    /**
-     * Resolve the team name from a Team instance or a string.
-     */
-    private function resolveTeamName(Team|array|string $team): string
-    {
-        if (is_array($team)) {
-            if (isset($team['name'])) {
-                return $team['name'];
-            }
-
-            throw new TeamNotFoundException(json_encode($team));
-        }
-
-        return $team instanceof Team ? $team->name : $team;
     }
 }

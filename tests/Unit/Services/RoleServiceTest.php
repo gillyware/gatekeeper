@@ -41,6 +41,15 @@ class RoleServiceTest extends TestCase
 
         $this->assertInstanceOf(Role::class, $role);
         $this->assertEquals($name, $role->name);
+    }
+
+    public function test_audit_log_inserted_on_role_creation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
@@ -52,7 +61,18 @@ class RoleServiceTest extends TestCase
         $this->assertNull($createRoleLog->actionTo);
     }
 
-    public function test_assign_and_revoke_role()
+    public function test_audit_log_not_inserted_on_role_creation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_assign_role()
     {
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -60,9 +80,39 @@ class RoleServiceTest extends TestCase
 
         $this->assertTrue($this->service->assignToModel($user, $name));
         $this->assertTrue($user->hasRole($name));
+    }
 
-        $this->assertTrue($this->service->revokeFromModel($user, $name));
-        $this->assertFalse($user->hasRole($name));
+    public function test_audit_log_inserted_on_role_assignment_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Role::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $assignRoleLog = $auditLogs->first();
+        $this->assertEquals(Action::ROLE_ASSIGN, $assignRoleLog->action);
+        $this->assertEquals($name, $assignRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_role_assignment_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Role::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
     }
 
     public function test_assign_duplicate_role_is_ignored()
@@ -83,6 +133,18 @@ class RoleServiceTest extends TestCase
         $this->assertTrue($this->service->assignMultipleToModel($user, $roles));
 
         $this->assertTrue($user->hasAllRoles($roles));
+    }
+
+    public function test_revoke_role()
+    {
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Role::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+
+        $this->assertTrue($this->service->revokeFromModel($user, $name));
+        $this->assertFalse($user->hasRole($name));
     }
 
     public function test_revoke_multiple_roles()

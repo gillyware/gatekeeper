@@ -2,8 +2,8 @@
 
 namespace Braxey\Gatekeeper\Services;
 
+use Braxey\Gatekeeper\Dtos\AuditLog\AssignPermissionAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreatePermissionAuditLogDto;
-use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -49,7 +49,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforcePermissionInteraction($model);
 
-        $permissionName = $this->resolvePermissionName($permission);
+        $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         // If the model already has this permission directly assigned, we don't need to sync again.
@@ -59,6 +59,11 @@ class PermissionService extends AbstractGatekeeperEntityService
 
         // Insert the permission assignment.
         $this->modelHasPermissionRepository->create($model, $permission);
+
+        // Audit log the permission assignment if auditing is enabled.
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new AssignPermissionAuditLogDto($model, $permission));
+        }
 
         // Invalidate the permissions cache for the model.
         $this->permissionRepository->invalidateCacheForModel($model);
@@ -73,7 +78,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
+        foreach ($this->entityNamesArray($permissions) as $permissionName) {
             $result = $result && $this->assignToModel($model, $permissionName);
         }
 
@@ -89,7 +94,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforcePermissionInteraction($model);
 
-        $permissionName = $this->resolvePermissionName($permission);
+        $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         if ($this->modelHasPermissionRepository->deleteForModelAndPermission($model, $permission)) {
@@ -109,7 +114,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
+        foreach ($this->entityNamesArray($permissions) as $permissionName) {
             $result = $result && $this->revokeFromModel($model, $permissionName);
         }
 
@@ -123,7 +128,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     {
         $this->enforcePermissionInteraction($model);
 
-        $permissionName = $this->resolvePermissionName($permission);
+        $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
         // If the permission is not active, we can immediately return false.
@@ -172,7 +177,7 @@ class PermissionService extends AbstractGatekeeperEntityService
      */
     public function modelHasAny(Model $model, array|Arrayable $permissions): bool
     {
-        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
+        foreach ($this->entityNamesArray($permissions) as $permissionName) {
             if ($this->modelHas($model, $permissionName)) {
                 return true;
             }
@@ -186,7 +191,7 @@ class PermissionService extends AbstractGatekeeperEntityService
      */
     public function modelHasAll(Model $model, array|Arrayable $permissions): bool
     {
-        foreach ($this->permissionNamesArray($permissions) as $permissionName) {
+        foreach ($this->entityNamesArray($permissions) as $permissionName) {
             if (! $this->modelHas($model, $permissionName)) {
                 return false;
             }
@@ -205,33 +210,5 @@ class PermissionService extends AbstractGatekeeperEntityService
 
         // If the permission is currently directly assigned to the model, return true.
         return $recentPermissionAssignment && ! $recentPermissionAssignment->deleted_at;
-    }
-
-    /**
-     * Convert an array or Arrayable object of permissions or permission names to an array of permission names.
-     */
-    private function permissionNamesArray(array|Arrayable $permissions): array
-    {
-        $permissionsArray = $permissions instanceof Arrayable ? $permissions->toArray() : $permissions;
-
-        return array_map(function (Permission|array|string $permission) {
-            return $this->resolvePermissionName($permission);
-        }, $permissionsArray);
-    }
-
-    /**
-     * Resolve the permission name from a Permission instance or a string.
-     */
-    private function resolvePermissionName(Permission|array|string $permission): string
-    {
-        if (is_array($permission)) {
-            if (isset($permission['name'])) {
-                return $permission['name'];
-            }
-
-            throw new PermissionNotFoundException(json_encode($permission));
-        }
-
-        return $permission instanceof Permission ? $permission->name : $permission;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Braxey\Gatekeeper\Services;
 
+use Braxey\Gatekeeper\Dtos\AuditLog\AssignRoleAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreateRoleAuditLogDto;
-use Braxey\Gatekeeper\Exceptions\RoleNotFoundException;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\AuditLogRepository;
@@ -48,7 +48,7 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->enforceRolesFeature();
         $this->enforceRoleInteraction($model);
 
-        $roleName = $this->resolveRoleName($role);
+        $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         // If the model already has this role directly assigned, we don't need to sync again.
@@ -58,6 +58,11 @@ class RoleService extends AbstractGatekeeperEntityService
 
         // Insert the role assignment.
         $this->modelHasRoleRepository->create($model, $role);
+
+        // Audit log the role assignment if auditing is enabled.
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new AssignRoleAuditLogDto($model, $role));
+        }
 
         // Invalidate the roles cache for the model.
         $this->roleRepository->invalidateCacheForModel($model);
@@ -72,7 +77,7 @@ class RoleService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->roleNamesArray($roles) as $roleName) {
+        foreach ($this->entityNamesArray($roles) as $roleName) {
             $result = $result && $this->assignToModel($model, $roleName);
         }
 
@@ -89,7 +94,7 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->enforceRolesFeature();
         $this->enforceRoleInteraction($model);
 
-        $roleName = $this->resolveRoleName($role);
+        $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         if ($this->modelHasRoleRepository->deleteForModelAndRole($model, $role)) {
@@ -109,7 +114,7 @@ class RoleService extends AbstractGatekeeperEntityService
     {
         $result = true;
 
-        foreach ($this->roleNamesArray($roles) as $roleName) {
+        foreach ($this->entityNamesArray($roles) as $roleName) {
             $result = $result && $this->revokeFromModel($model, $roleName);
         }
 
@@ -124,7 +129,7 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->enforceRolesFeature();
         $this->enforceRoleInteraction($model);
 
-        $roleName = $this->resolveRoleName($role);
+        $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
 
         // If the role is not active, we can immediately return false.
@@ -156,7 +161,7 @@ class RoleService extends AbstractGatekeeperEntityService
      */
     public function modelHasAny(Model $model, array|Arrayable $roles): bool
     {
-        foreach ($this->roleNamesArray($roles) as $roleName) {
+        foreach ($this->entityNamesArray($roles) as $roleName) {
             if ($this->modelHas($model, $roleName)) {
                 return true;
             }
@@ -170,7 +175,7 @@ class RoleService extends AbstractGatekeeperEntityService
      */
     public function modelHasAll(Model $model, array|Arrayable $roles): bool
     {
-        foreach ($this->roleNamesArray($roles) as $roleName) {
+        foreach ($this->entityNamesArray($roles) as $roleName) {
             if (! $this->modelHas($model, $roleName)) {
                 return false;
             }
@@ -189,33 +194,5 @@ class RoleService extends AbstractGatekeeperEntityService
 
         // If the role is currently directly assigned to the model, return true.
         return $recentRoleAssignment && ! $recentRoleAssignment->deleted_at;
-    }
-
-    /**
-     * Convert an array or Arrayable object of roles or role names to an array of role names.
-     */
-    private function roleNamesArray(array|Arrayable $roles): array
-    {
-        $rolesArray = $roles instanceof Arrayable ? $roles->toArray() : $roles;
-
-        return array_map(function (Role|array|string $role) {
-            return $this->resolveRoleName($role);
-        }, $rolesArray);
-    }
-
-    /**
-     * Resolve the role name from a Role instance or a string.
-     */
-    private function resolveRoleName(Role|array|string $role): string
-    {
-        if (is_array($role)) {
-            if (isset($role['name'])) {
-                return $role['name'];
-            }
-
-            throw new RoleNotFoundException(json_encode($role));
-        }
-
-        return $role instanceof Role ? $role->name : $role;
     }
 }

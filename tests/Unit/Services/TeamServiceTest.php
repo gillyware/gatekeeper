@@ -40,6 +40,15 @@ class TeamServiceTest extends TestCase
 
         $this->assertInstanceOf(Team::class, $team);
         $this->assertEquals($name, $team->name);
+    }
+
+    public function test_audit_log_inserted_on_team_creation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
@@ -49,6 +58,17 @@ class TeamServiceTest extends TestCase
         $this->assertEquals($name, $createTeamLog->metadata['name']);
         $this->assertTrue($this->user->is($createTeamLog->actionBy));
         $this->assertNull($createTeamLog->actionTo);
+    }
+
+    public function test_audit_log_not_inserted_on_team_creation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $name = fake()->unique()->word();
+
+        $this->service->create($name);
+
+        $this->assertCount(0, AuditLog::all());
     }
 
     public function test_create_team_throws_if_disabled()
@@ -75,6 +95,39 @@ class TeamServiceTest extends TestCase
             'team_id' => $team->id,
             'deleted_at' => null,
         ]);
+    }
+
+    public function test_audit_log_inserted_on_team_assignment_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Team::factory()->withName($name)->create();
+
+        $this->service->addModelTo($user, $name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $assignTeamLog = $auditLogs->first();
+        $this->assertEquals(Action::TEAM_ADD, $assignTeamLog->action);
+        $this->assertEquals($name, $assignTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $assignTeamLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_team_assignment_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Team::factory()->withName($name)->create();
+
+        $this->service->addModelTo($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
     }
 
     public function test_add_model_to_team_is_idempotent()

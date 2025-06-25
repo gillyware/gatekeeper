@@ -29,9 +29,9 @@ class RevokeCommandTest extends TestCase
         $permission = Permission::factory()->create();
         $team = Team::factory()->create();
 
-        $user->assignPermission($permission->name);
-        $user->assignRole($role->name);
-        $user->addToTeam($team->name);
+        $user->assignPermission($permission);
+        $user->assignRole($role);
+        $user->addToTeam($team);
 
         Config::set('gatekeeper.features.audit', true);
 
