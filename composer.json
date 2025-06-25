@@ -28,7 +28,8 @@
     "autoload": {
         "psr-4": {
             "Braxey\\Gatekeeper\\": "src/",
-            "Braxey\\Gatekeeper\\Database\\Factories\\": "database/factories/"
+            "Braxey\\Gatekeeper\\Database\\Factories\\": "database/factories/",
+            "Braxey\\Gatekeeper\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {

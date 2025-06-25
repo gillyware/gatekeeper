@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create(config('gatekeeper.tables.teams', 'teams'), function (Blueprint $table) {
             $table->id();
 
-            $table->string('name')->index();
+            $table->string('name')->unique()->index();
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
