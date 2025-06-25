@@ -5,6 +5,9 @@ namespace Braxey\Gatekeeper\Database\Factories;
 use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Team>
+ */
 class TeamFactory extends Factory
 {
     /**

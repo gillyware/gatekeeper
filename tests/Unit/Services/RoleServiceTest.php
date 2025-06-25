@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithRolesException;
 use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
+use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Services\RoleService;
@@ -15,13 +16,19 @@ class RoleServiceTest extends TestCase
 {
     protected RoleService $service;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Config::set('gatekeeper.features.roles', true);
 
+        $this->user = User::factory()->create();
+        Gatekeeper::setActor($this->user);
+
         $this->service = app(RoleService::class);
+        $this->service->actingAs($this->user);
     }
 
     public function test_create_role()

@@ -5,6 +5,9 @@ namespace Braxey\Gatekeeper\Database\Factories;
 use Braxey\Gatekeeper\Models\Permission;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Permission>
+ */
 class PermissionFactory extends Factory
 {
     /**

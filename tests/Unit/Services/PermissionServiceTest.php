@@ -2,7 +2,10 @@
 
 namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
+use Braxey\Gatekeeper\Constants\AuditLog\Action;
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithPermissionsException;
+use Braxey\Gatekeeper\Facades\Gatekeeper;
+use Braxey\Gatekeeper\Models\AuditLog;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -15,11 +18,19 @@ class PermissionServiceTest extends TestCase
 {
     protected PermissionService $service;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        Config::set('gatekeeper.features.audit', true);
+
+        $this->user = User::factory()->create();
+        Gatekeeper::setActor($this->user);
+
         $this->service = app(PermissionService::class);
+        $this->service->actingAs($this->user);
     }
 
     public function test_create_permission()
@@ -30,6 +41,15 @@ class PermissionServiceTest extends TestCase
 
         $this->assertInstanceOf(Permission::class, $permission);
         $this->assertEquals($name, $permission->name);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        $createPermissionLog = $auditLogs->first();
+        $this->assertEquals(Action::PERMISSION_CREATE, $createPermissionLog->action);
+        $this->assertEquals($name, $createPermissionLog->metadata['name']);
+        $this->assertTrue($this->user->is($createPermissionLog->actionBy));
+        $this->assertNull($createPermissionLog->actionTo);
     }
 
     public function test_assign_and_revoke_permission()

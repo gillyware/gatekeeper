@@ -2,31 +2,42 @@
 
 namespace Braxey\Gatekeeper\Services;
 
-use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithPermissionsException;
+use Braxey\Gatekeeper\Dtos\AuditLog\CreatePermissionAuditLogDto;
 use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Repositories\AuditLogRepository;
 use Braxey\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Braxey\Gatekeeper\Repositories\PermissionRepository;
 use Braxey\Gatekeeper\Repositories\RoleRepository;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
-use Braxey\Gatekeeper\Traits\InteractsWithPermissions;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
-class PermissionService
+class PermissionService extends AbstractGatekeeperEntityService
 {
     public function __construct(
         private readonly PermissionRepository $permissionRepository,
         private readonly RoleRepository $roleRepository,
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
+        private readonly AuditLogRepository $auditLogRepository,
     ) {}
 
     public function create(string $permissionName): Permission
     {
-        return $this->permissionRepository->create($permissionName);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+
+        $permission = $this->permissionRepository->create($permissionName);
+
+        if (Config::get('gatekeeper.features.audit', true)) {
+            $this->auditLogRepository->create(new CreatePermissionAuditLogDto($permission));
+        }
+
+        return $permission;
     }
 
     /**
@@ -34,7 +45,9 @@ class PermissionService
      */
     public function assignToModel(Model $model, Role|string $permission): bool
     {
-        $this->forcePermissionInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforcePermissionInteraction($model);
 
         $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
@@ -72,7 +85,9 @@ class PermissionService
      */
     public function revokeFromModel(Model $model, Permission|string $permission): bool
     {
-        $this->forcePermissionInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforcePermissionInteraction($model);
 
         $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
@@ -106,7 +121,7 @@ class PermissionService
      */
     public function modelHas(Model $model, Permission|string $permission): bool
     {
-        $this->forcePermissionInteraction($model);
+        $this->enforcePermissionInteraction($model);
 
         $permissionName = $this->resolvePermissionName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
@@ -190,16 +205,6 @@ class PermissionService
 
         // If the permission is currently directly assigned to the model, return true.
         return $recentPermissionAssignment && ! $recentPermissionAssignment->deleted_at;
-    }
-
-    /**
-     * Force the model to interact with permissions.
-     */
-    private function forcePermissionInteraction(Model $model): void
-    {
-        if (! in_array(InteractsWithPermissions::class, class_uses_recursive($model))) {
-            throw new ModelDoesNotInteractWithPermissionsException($model);
-        }
     }
 
     /**

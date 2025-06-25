@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Route;
 
 class MiddlewareTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.teams', true);
+    }
+
     public function test_has_permission_middleware_allows_access()
     {
         $user = User::factory()->create();

@@ -2,19 +2,16 @@
 
 namespace Braxey\Gatekeeper\Services;
 
-use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithRolesException;
 use Braxey\Gatekeeper\Exceptions\RoleNotFoundException;
-use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Braxey\Gatekeeper\Repositories\RoleRepository;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
-use Braxey\Gatekeeper\Traits\InteractsWithRoles;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 
-class RoleService
+class RoleService extends AbstractGatekeeperEntityService
 {
     public function __construct(
         private readonly RoleRepository $roleRepository,
@@ -24,7 +21,9 @@ class RoleService
 
     public function create(string $roleName): Role
     {
-        $this->forceRolesFeature();
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceRolesFeature();
 
         return $this->roleRepository->create($roleName);
     }
@@ -34,8 +33,10 @@ class RoleService
      */
     public function assignToModel(Model $model, Role|string $role): bool
     {
-        $this->forceRolesFeature();
-        $this->forceRoleInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceRolesFeature();
+        $this->enforceRoleInteraction($model);
 
         $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
@@ -73,8 +74,10 @@ class RoleService
      */
     public function revokeFromModel(Model $model, Role|string $role): bool
     {
-        $this->forceRolesFeature();
-        $this->forceRoleInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceRolesFeature();
+        $this->enforceRoleInteraction($model);
 
         $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
@@ -108,8 +111,8 @@ class RoleService
      */
     public function modelHas(Model $model, Role|string $role): bool
     {
-        $this->forceRolesFeature();
-        $this->forceRoleInteraction($model);
+        $this->enforceRolesFeature();
+        $this->enforceRoleInteraction($model);
 
         $roleName = $this->resolveRoleName($role);
         $role = $this->roleRepository->findByName($roleName);
@@ -176,26 +179,6 @@ class RoleService
 
         // If the role is currently directly assigned to the model, return true.
         return $recentRoleAssignment && ! $recentRoleAssignment->deleted_at;
-    }
-
-    /**
-     * Force the model to interact with roles.
-     */
-    private function forceRoleInteraction(Model $model): void
-    {
-        if (! in_array(InteractsWithRoles::class, class_uses_recursive($model))) {
-            throw new ModelDoesNotInteractWithRolesException($model);
-        }
-    }
-
-    /**
-     * Force the role feature to be enabled.
-     */
-    private function forceRolesFeature(): void
-    {
-        if (! config('gatekeeper.features.roles', false)) {
-            throw new RolesFeatureDisabledException;
-        }
     }
 
     /**

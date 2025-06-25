@@ -12,7 +12,9 @@ class RevokeCommand extends Command
         {--model_class=App\\Models\\User : The fully qualified class of the model}
         {--role= : Role name (or comma-separated role names) to revoke}
         {--permission= : Permission name (or comma-separated permission names) to revoke}
-        {--team= : Team name (or comma-separated team names) to remove the model from}';
+        {--team= : Team name (or comma-separated team names) to remove the model from}
+        {--action_by_model_id= : The ID of the actor model (for audit logging)}
+        {--action_by_model_class=App\\Models\\User : The fully qualified class of the actor model}';
 
     protected $description = 'Revoke one or multiple roles, permissions, and/or teams from a model.';
 
@@ -20,6 +22,8 @@ class RevokeCommand extends Command
     {
         $modelClass = $this->option('model_class');
         $modelId = $this->option('model_id');
+        $actorId = $this->option('action_by_model_id');
+        $actorClass = $this->option('action_by_model_class');
 
         if (! $modelId || ! $modelClass) {
             $this->error('You must provide both --model_id and --model_class.');
@@ -39,6 +43,30 @@ class RevokeCommand extends Command
             $this->error("Model [$modelClass] with ID [$modelId] not found.");
 
             return self::FAILURE;
+        }
+
+        if (config('gatekeeper.features.audit', true)) {
+            if (! $actorId || ! $actorClass) {
+                $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
+
+                return self::FAILURE;
+            }
+
+            if (! class_exists($actorClass)) {
+                $this->error("Actor model class [$actorClass] does not exist.");
+
+                return self::FAILURE;
+            }
+
+            $actor = $actorClass::find($actorId);
+
+            if (! $actor) {
+                $this->error("Actor [$actorClass] with ID [$actorId] not found.");
+
+                return self::FAILURE;
+            }
+
+            Gatekeeper::setActor($actor);
         }
 
         $roles = array_filter(explode(',', (string) $this->option('role')));

@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Tests\Unit\Services;
 
 use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
 use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
+use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Services\TeamService;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
@@ -14,13 +15,19 @@ class TeamServiceTest extends TestCase
 {
     protected TeamService $service;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Config::set('gatekeeper.features.teams', true);
 
+        $this->user = User::factory()->create();
+        Gatekeeper::setActor($this->user);
+
         $this->service = app(TeamService::class);
+        $this->service->actingAs($this->user);
     }
 
     public function test_create_team()

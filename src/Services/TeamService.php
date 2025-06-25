@@ -2,17 +2,14 @@
 
 namespace Braxey\Gatekeeper\Services;
 
-use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
 use Braxey\Gatekeeper\Exceptions\TeamNotFoundException;
-use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
-use Braxey\Gatekeeper\Traits\InteractsWithTeams;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 
-class TeamService
+class TeamService extends AbstractGatekeeperEntityService
 {
     public function __construct(
         private readonly TeamRepository $teamRepository,
@@ -21,7 +18,9 @@ class TeamService
 
     public function create(string $teamName): Team
     {
-        $this->forceTeamsFeature();
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceTeamsFeature();
 
         return $this->teamRepository->create($teamName);
     }
@@ -31,8 +30,10 @@ class TeamService
      */
     public function addModelTo(Model $model, Team|string $team): bool
     {
-        $this->forceTeamsFeature();
-        $this->forceTeamInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceTeamsFeature();
+        $this->enforceTeamInteraction($model);
 
         $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
@@ -72,8 +73,10 @@ class TeamService
      */
     public function removeModelFrom(Model $model, Team|string $team): bool
     {
-        $this->forceTeamsFeature();
-        $this->forceTeamInteraction($model);
+        $this->resolveActingAs();
+        $this->enforceAuditFeature();
+        $this->enforceTeamsFeature();
+        $this->enforceTeamInteraction($model);
 
         $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
@@ -107,8 +110,8 @@ class TeamService
      */
     public function modelOn(Model $model, Team|string $team): bool
     {
-        $this->forceTeamsFeature();
-        $this->forceTeamInteraction($model);
+        $this->enforceTeamsFeature();
+        $this->enforceTeamInteraction($model);
 
         $teamName = $this->resolveTeamName($team);
         $team = $this->teamRepository->findByName($teamName);
@@ -159,26 +162,6 @@ class TeamService
 
         // If the team is currently directly assigned to the model, return true.
         return $recentTeamAssignment && ! $recentTeamAssignment->deleted_at;
-    }
-
-    /**
-     * Force the model to interact with teams.
-     */
-    private function forceTeamInteraction(Model $model): void
-    {
-        if (! in_array(InteractsWithTeams::class, class_uses_recursive($model))) {
-            throw new ModelDoesNotInteractWithTeamsException($model);
-        }
-    }
-
-    /**
-     * Force the team feature to be enabled.
-     */
-    private function forceTeamsFeature(): void
-    {
-        if (! config('gatekeeper.features.teams', false)) {
-            throw new TeamsFeatureDisabledException;
-        }
     }
 
     /**

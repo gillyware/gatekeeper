@@ -4,12 +4,15 @@ namespace Braxey\Gatekeeper\Console;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 
 class AssignCommand extends Command
 {
     protected $signature = 'gatekeeper:assign
-        {--model_id= : The ID of the model to assign to}
-        {--model_class=App\\Models\\User : The fully qualified class of the model}
+        {--action_to_model_id= : The ID of the model to assign to}
+        {--action_to_model_class=App\\Models\\User : The fully qualified class of the model}
+        {--action_by_model_id= : The ID of the actor model (for audit logging)}
+        {--action_by_model_class=App\\Models\\User : The fully qualified class of the actor model}
         {--role= : Role name (or comma-separated role names) to assign}
         {--permission= : Permission name (or comma-separated permission names) to assign}
         {--team= : Team name (or comma-separated team names) to assign}';
@@ -18,14 +21,37 @@ class AssignCommand extends Command
 
     public function handle(): int
     {
-        $modelClass = $this->option('model_class');
-        $modelId = $this->option('model_id');
-        $role = $this->option('role');
-        $permission = $this->option('permission');
-        $team = $this->option('team');
+        $modelClass = $this->option('action_to_model_class');
+        $modelId = $this->option('action_to_model_id');
+
+        $actorClass = $this->option('action_by_model_class');
+        $actorId = $this->option('action_by_model_id');
+
+        if (Config::get('gatekeeper.features.audit', true)) {
+            if (! $actorClass || ! $actorId) {
+                $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
+
+                return self::FAILURE;
+            }
+
+            if (! class_exists($actorClass)) {
+                $this->error("Actor model class [$actorClass] does not exist.");
+
+                return self::FAILURE;
+            }
+
+            $actor = $actorClass::find($actorId);
+            if (! $actor) {
+                $this->error("Actor model [$actorClass] with ID [$actorId] not found.");
+
+                return self::FAILURE;
+            }
+
+            Gatekeeper::setActor($actor);
+        }
 
         if (! $modelId || ! $modelClass) {
-            $this->error('You must provide both --model_id and --model_class.');
+            $this->error('You must provide both --action_to_model_id and --action_to_model_class.');
 
             return self::FAILURE;
         }
@@ -37,7 +63,6 @@ class AssignCommand extends Command
         }
 
         $model = $modelClass::find($modelId);
-
         if (! $model) {
             $this->error("Model [$modelClass] with ID [$modelId] not found.");
 

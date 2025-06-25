@@ -4,45 +4,24 @@ namespace Braxey\Gatekeeper\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * @method static \Illuminate\Database\Eloquent\Builder<\Braxey\Gatekeeper\Models\ModelHasPermission> forModel(Model $model)
+ * @property int $permission_id
+ *
+ * @method static Builder<ModelHasPermission> forModel(Model $model)
  */
-class ModelHasPermission extends Model
+class ModelHasPermission extends AbstractModelHasGatekeeperEntity
 {
-    use SoftDeletes;
-
     /**
      * The database table used by the model.
      */
     protected $table = 'model_has_permissions';
 
     /**
-     * The attributes that are not mass assignable.
-     *
-     * @var array
+     * {@inheritDoc}
      */
-    protected $guarded = [];
-
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
-    ];
-
-    /**
-     * Scope a query to the given model (polymorphic).
-     */
-    public function scopeForModel(Builder $query, Model $model): Builder
+    public function getEntityIdAttribute(): int
     {
-        return $query
-            ->where('model_type', $model->getMorphClass())
-            ->where('model_id', $model->getKey());
+        return $this->permission_id;
     }
 }

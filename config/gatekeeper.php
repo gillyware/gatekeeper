@@ -14,6 +14,7 @@ return [
     */
 
     'features' => [
+        'audit' => true,
         'roles' => true,
         'teams' => false,
     ],

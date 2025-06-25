@@ -16,11 +16,15 @@ class GatekeeperServiceTest extends TestCase
 {
     protected GatekeeperService $service;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->service = app('gatekeeper');
+        $this->user = User::factory()->create();
+        $this->service->setActor($this->user);
     }
 
     public function test_create_permission_delegates_to_permission_service()

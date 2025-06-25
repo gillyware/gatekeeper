@@ -5,16 +5,42 @@ namespace Braxey\Gatekeeper\Services;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Traits\ActsForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 
 class GatekeeperService
 {
+    use ActsForGatekeeper;
+
     public function __construct(
         private readonly PermissionService $permissionService,
         private readonly RoleService $roleService,
         private readonly TeamService $teamService,
     ) {}
+
+    /**
+     * Set the acting as model.
+     */
+    public function setActor(Model $model): static
+    {
+        $this->actingAs($model);
+        $this->permissionService->actingAs($model);
+        $this->roleService->actingAs($model);
+        $this->teamService->actingAs($model);
+
+        return $this;
+    }
+
+    /**
+     * Get the currently acting as model.
+     */
+    public function getActor(): ?Model
+    {
+        $this->resolveActingAs();
+
+        return $this->actingAs;
+    }
 
     /**
      * Create a new permission.

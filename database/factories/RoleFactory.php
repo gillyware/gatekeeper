@@ -5,6 +5,9 @@ namespace Braxey\Gatekeeper\Database\Factories;
 use Braxey\Gatekeeper\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Role>
+ */
 class RoleFactory extends Factory
 {
     /**
