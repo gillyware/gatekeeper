@@ -137,6 +137,20 @@ class PermissionServiceTest extends TestCase
         $this->assertTrue($this->service->modelHasAll($user, $permissions));
     }
 
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_permission_assignment()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $permissions = Permission::factory()->count(3)->create();
+
+        $this->service->assignMultipleToModel($user, $permissions);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
     public function test_revoke_permission()
     {
         $user = User::factory()->create();
@@ -152,6 +166,41 @@ class PermissionServiceTest extends TestCase
         $this->assertFalse($user->hasPermission($name));
     }
 
+    public function test_audit_log_inserted_on_permission_revocation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Permission::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+        $this->service->revokeFromModel($user, $name);
+
+        $auditLogs = AuditLog::query()->where('action', Action::PERMISSION_REVOKE)->get();
+        $this->assertCount(1, $auditLogs);
+
+        $assignPermissionLog = $auditLogs->first();
+        $this->assertEquals(Action::PERMISSION_REVOKE, $assignPermissionLog->action);
+        $this->assertEquals($name, $assignPermissionLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignPermissionLog->actionBy->id);
+        $this->assertEquals($user->id, $assignPermissionLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_permission_revocation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Permission::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+        $this->service->revokeFromModel($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
     public function test_revoke_multiple_permissions()
     {
         $user = User::factory()->create();
@@ -162,6 +211,22 @@ class PermissionServiceTest extends TestCase
         $this->service->revokeMultipleFromModel($user, $permissions);
 
         $this->assertFalse($user->hasAnyPermission($permissions));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_permission_revocation()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $permissions = Permission::factory()->count(3)->create();
+
+        $this->service->assignMultipleToModel($user, $permissions);
+
+        $this->service->revokeMultipleFromModel($user, $permissions);
+
+        $auditLogs = AuditLog::query()->where('action', Action::PERMISSION_REVOKE)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
 
     public function test_model_has_direct_permission()

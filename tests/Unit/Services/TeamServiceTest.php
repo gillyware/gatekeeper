@@ -152,6 +152,20 @@ class TeamServiceTest extends TestCase
         $this->assertTrue($user->onAllTeams($teams));
     }
 
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_assignment()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $teams = Team::factory()->count(3)->create();
+
+        $this->service->addModelToAll($user, $teams);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
     public function test_remove_model_from_team()
     {
         $user = User::factory()->create();
@@ -166,6 +180,41 @@ class TeamServiceTest extends TestCase
             'team_id' => $team->id,
             'model_id' => $user->id,
         ]);
+    }
+
+    public function test_audit_log_inserted_on_team_revocation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Team::factory()->withName($name)->create();
+
+        $this->service->addModelTo($user, $name);
+        $this->service->removeModelFrom($user, $name);
+
+        $auditLogs = AuditLog::query()->where('action', Action::TEAM_REMOVE)->get();
+        $this->assertCount(1, $auditLogs);
+
+        $assignTeamLog = $auditLogs->first();
+        $this->assertEquals(Action::TEAM_REMOVE, $assignTeamLog->action);
+        $this->assertEquals($name, $assignTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $assignTeamLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_team_revocation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Team::factory()->withName($name)->create();
+
+        $this->service->addModelTo($user, $name);
+        $this->service->removeModelFrom($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
     }
 
     public function test_remove_model_from_multiple_teams()
@@ -184,6 +233,22 @@ class TeamServiceTest extends TestCase
                 'model_id' => $user->id,
             ]);
         });
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_revocation()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $teams = Team::factory()->count(3)->create();
+
+        $this->service->addModelToAll($user, $teams);
+
+        $this->service->removeModelFromAll($user, $teams);
+
+        $auditLogs = AuditLog::query()->where('action', Action::TEAM_REMOVE)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
 
     public function test_model_on_team()

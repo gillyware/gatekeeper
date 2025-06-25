@@ -135,6 +135,20 @@ class RoleServiceTest extends TestCase
         $this->assertTrue($user->hasAllRoles($roles));
     }
 
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_assignment()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $roles = Role::factory()->count(3)->create();
+
+        $this->service->assignMultipleToModel($user, $roles);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
     public function test_revoke_role()
     {
         $user = User::factory()->create();
@@ -147,6 +161,41 @@ class RoleServiceTest extends TestCase
         $this->assertFalse($user->hasRole($name));
     }
 
+    public function test_audit_log_inserted_on_role_revocation_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Role::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+        $this->service->revokeFromModel($user, $name);
+
+        $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
+        $this->assertCount(1, $auditLogs);
+
+        $assignRoleLog = $auditLogs->first();
+        $this->assertEquals(Action::ROLE_REVOKE, $assignRoleLog->action);
+        $this->assertEquals($name, $assignRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_role_revocation_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $name = fake()->unique()->word();
+        Role::factory()->withName($name)->create();
+
+        $this->service->assignToModel($user, $name);
+        $this->service->revokeFromModel($user, $name);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
     public function test_revoke_multiple_roles()
     {
         $user = User::factory()->create();
@@ -157,6 +206,22 @@ class RoleServiceTest extends TestCase
         $this->assertTrue($this->service->revokeMultipleFromModel($user, $roles));
 
         $this->assertFalse($user->hasAnyRole($roles));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_revocation()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+        $roles = Role::factory()->count(3)->create();
+
+        $this->service->assignMultipleToModel($user, $roles);
+
+        $this->service->revokeMultipleFromModel($user, $roles);
+
+        $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
 
     public function test_model_has_role_direct()

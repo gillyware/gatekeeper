@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Dtos\AuditLog\AssignTeamAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreateTeamAuditLogDto;
+use Braxey\Gatekeeper\Dtos\AuditLog\RevokeTeamAuditLogDto;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\AuditLogRepository;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -97,6 +98,11 @@ class TeamService extends AbstractGatekeeperEntityService
         $team = $this->teamRepository->findByName($teamName);
 
         if ($this->modelHasTeamRepository->deleteForModelAndTeam($model, $team)) {
+            // Audit log the team revocation if auditing is enabled.
+            if (Config::get('gatekeeper.features.audit', true)) {
+                $this->auditLogRepository->create(new RevokeTeamAuditLogDto($model, $team));
+            }
+
             // Invalidate the teams cache for the model.
             $this->teamRepository->invalidateCacheForModel($model);
 

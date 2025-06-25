@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Dtos\AuditLog\AssignPermissionAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreatePermissionAuditLogDto;
+use Braxey\Gatekeeper\Dtos\AuditLog\RevokePermissionAuditLogDto;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
@@ -98,6 +99,11 @@ class PermissionService extends AbstractGatekeeperEntityService
         $permission = $this->permissionRepository->findByName($permissionName);
 
         if ($this->modelHasPermissionRepository->deleteForModelAndPermission($model, $permission)) {
+            // Audit log the permission revocation if auditing is enabled.
+            if (Config::get('gatekeeper.features.audit', true)) {
+                $this->auditLogRepository->create(new RevokePermissionAuditLogDto($model, $permission));
+            }
+
             // Invalidate the permissions cache for the model.
             $this->permissionRepository->invalidateCacheForModel($model);
 

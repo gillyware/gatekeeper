@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Services;
 
 use Braxey\Gatekeeper\Dtos\AuditLog\AssignRoleAuditLogDto;
 use Braxey\Gatekeeper\Dtos\AuditLog\CreateRoleAuditLogDto;
+use Braxey\Gatekeeper\Dtos\AuditLog\RevokeRoleAuditLogDto;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\AuditLogRepository;
@@ -98,6 +99,11 @@ class RoleService extends AbstractGatekeeperEntityService
         $role = $this->roleRepository->findByName($roleName);
 
         if ($this->modelHasRoleRepository->deleteForModelAndRole($model, $role)) {
+            // Audit log the role revocation if auditing is enabled.
+            if (Config::get('gatekeeper.features.audit', true)) {
+                $this->auditLogRepository->create(new RevokeRoleAuditLogDto($model, $role));
+            }
+
             // Invalidate the roles cache for the model.
             $this->roleRepository->invalidateCacheForModel($model);
 
