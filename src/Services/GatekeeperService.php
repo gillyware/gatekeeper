@@ -186,13 +186,7 @@ class GatekeeperService
 
     private function setLifecycleId(): void
     {
-        if (app()->runningInConsole()) {
-            $this->lifecycleId = 'cli_'.Str::uuid()->toString();
-        } else {
-            $requestId = request()->uuid();
-            $this->lifecycleId = $requestId
-                ? 'request_'.$requestId
-                : 'request_generated_'.Str::uuid()->toString();
-        }
+        $prefix = app()->runningInConsole() ? 'cli_' : 'request_';
+        $this->lifecycleId = $prefix.Str::uuid()->toString();
     }
 }
