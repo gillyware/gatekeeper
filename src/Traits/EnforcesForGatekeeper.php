@@ -9,6 +9,7 @@ use Braxey\Gatekeeper\Exceptions\ModelDoesNotInteractWithTeamsException;
 use Braxey\Gatekeeper\Exceptions\RolesFeatureDisabledException;
 use Braxey\Gatekeeper\Exceptions\TeamsFeatureDisabledException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 trait EnforcesForGatekeeper
 {
@@ -49,7 +50,7 @@ trait EnforcesForGatekeeper
      */
     protected function enforceAuditFeature(): void
     {
-        if (config('gatekeeper.features.audit', true) && (! isset($this->actingAs) || ! $this->actingAs instanceof Model)) {
+        if (Config::get('gatekeeper.features.audit') && (! isset($this->actingAs) || ! $this->actingAs instanceof Model)) {
             throw new MissingActingAsModelException;
         }
     }
@@ -59,7 +60,7 @@ trait EnforcesForGatekeeper
      */
     protected function enforceRolesFeature(): void
     {
-        if (! config('gatekeeper.features.roles', false)) {
+        if (! Config::get('gatekeeper.features.roles')) {
             throw new RolesFeatureDisabledException;
         }
     }
@@ -69,7 +70,7 @@ trait EnforcesForGatekeeper
      */
     protected function enforceTeamsFeature(): void
     {
-        if (! config('gatekeeper.features.teams', false)) {
+        if (! Config::get('gatekeeper.features.teams')) {
             throw new TeamsFeatureDisabledException;
         }
     }

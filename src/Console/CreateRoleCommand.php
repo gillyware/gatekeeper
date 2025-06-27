@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Console;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 
 class CreateRoleCommand extends Command
 {
@@ -20,7 +21,7 @@ class CreateRoleCommand extends Command
         $actorId = $this->option('action_by_model_id');
         $actorClass = $this->option('action_by_model_class');
 
-        if (config('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             if (! $actorId || ! $actorClass) {
                 $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
 

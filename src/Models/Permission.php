@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Models;
 
 use Braxey\Gatekeeper\Database\Factories\PermissionFactory;
+use Illuminate\Support\Facades\Config;
 
 class Permission extends AbstractGatekeeperEntity
 {
@@ -11,7 +12,7 @@ class Permission extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return config('gatekeeper.tables.permissions', 'permissions');
+        return Config::get('gatekeeper.tables.permissions');
     }
 
     /**

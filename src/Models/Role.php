@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Models;
 
 use Braxey\Gatekeeper\Database\Factories\RoleFactory;
 use Braxey\Gatekeeper\Traits\HasPermissions;
+use Illuminate\Support\Facades\Config;
 
 class Role extends AbstractGatekeeperEntity
 {
@@ -14,7 +15,7 @@ class Role extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return config('gatekeeper.tables.roles', 'roles');
+        return Config::get('gatekeeper.tables.roles');
     }
 
     /**

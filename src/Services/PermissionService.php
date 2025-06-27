@@ -34,7 +34,7 @@ class PermissionService extends AbstractGatekeeperEntityService
 
         $permission = $this->permissionRepository->create($permissionName);
 
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new CreatePermissionAuditLogDto($permission));
         }
 
@@ -62,7 +62,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         $this->modelHasPermissionRepository->create($model, $permission);
 
         // Audit log the permission assignment if auditing is enabled.
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new AssignPermissionAuditLogDto($model, $permission));
         }
 
@@ -100,7 +100,7 @@ class PermissionService extends AbstractGatekeeperEntityService
 
         if ($this->modelHasPermissionRepository->deleteForModelAndPermission($model, $permission)) {
             // Audit log the permission revocation if auditing is enabled.
-            if (Config::get('gatekeeper.features.audit', true)) {
+            if (Config::get('gatekeeper.features.audit')) {
                 $this->auditLogRepository->create(new RevokePermissionAuditLogDto($model, $permission));
             }
 
@@ -151,7 +151,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         }
 
         // If roles are enabled, check if the model has the permission through roles.
-        if (config('gatekeeper.features.roles', false)) {
+        if (Config::get('gatekeeper.features.roles')) {
             $hasRoleWithPermission = $this->roleRepository
                 ->getActiveForModel($model)
                 ->some(fn (Role $role) => $role->hasPermission($permission));
@@ -163,7 +163,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         }
 
         // If teams are enabled, check if the model has the permission through the teams roles or permissions.
-        if (config('gatekeeper.features.teams', false)) {
+        if (Config::get('gatekeeper.features.teams')) {
             $onTeamWithPermission = $this->teamRepository
                 ->getActiveForModel($model)
                 ->some(fn (Team $team) => $team->hasPermission($permission));

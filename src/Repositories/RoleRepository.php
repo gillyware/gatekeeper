@@ -7,11 +7,14 @@ use Braxey\Gatekeeper\Models\Role;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ItemNotFoundException;
 use Throwable;
 
 class RoleRepository
 {
+    public function __construct(private readonly CacheRepository $cacheRepository) {}
+
     /**
      * Create a new Role instance.
      */
@@ -20,7 +23,7 @@ class RoleRepository
         $role = new Role(['name' => $roleName]);
 
         if ($role->save()) {
-            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
+            $this->cacheRepository->forget($this->getCacheKeyForAll());
         }
 
         return $role;
@@ -31,7 +34,7 @@ class RoleRepository
      */
     public function all(): Collection
     {
-        $roles = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
+        $roles = $this->cacheRepository->get($this->getCacheKeyForAll());
 
         if ($roles) {
             return collect($roles);
@@ -39,7 +42,7 @@ class RoleRepository
 
         $roles = Role::all();
 
-        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $roles, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($this->getCacheKeyForAll(), $roles);
 
         return $roles;
     }
@@ -91,13 +94,13 @@ class RoleRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activeRoleNames = Cache::tags('gatekeeper')->get($cacheKey);
+        $activeRoleNames = $this->cacheRepository->get($cacheKey);
 
         if ($activeRoleNames) {
             return collect($activeRoleNames);
         }
 
-        $rolesTable = config('gatekeeper.tables.roles', 'roles');
+        $rolesTable = Config::get('gatekeeper.tables.roles');
 
         $activeRoleNames = $model->roles()
             ->select("$rolesTable.*")
@@ -105,7 +108,7 @@ class RoleRepository
             ->whereNull('model_has_roles.deleted_at')
             ->pluck("$rolesTable.name");
 
-        Cache::tags('gatekeeper')->put($cacheKey, $activeRoleNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($cacheKey, $activeRoleNames);
 
         return $activeRoleNames;
     }
@@ -115,7 +118,7 @@ class RoleRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
+        $this->cacheRepository->forget($this->getCacheKeyForModel($model));
     }
 
     /**
@@ -123,7 +126,7 @@ class RoleRepository
      */
     private function getCacheKeyForAll(): string
     {
-        return 'gatekeeper.roles';
+        return 'roles';
     }
 
     /**
@@ -131,6 +134,6 @@ class RoleRepository
      */
     private function getCacheKeyForModel(Model $model): string
     {
-        return "gatekeeper.roles.{$model->getMorphClass()}.{$model->getKey()}";
+        return "roles.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

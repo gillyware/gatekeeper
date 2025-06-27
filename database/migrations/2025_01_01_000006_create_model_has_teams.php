@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('team_id')
-                ->constrained(config('gatekeeper.tables.teams', 'teams'))
+                ->constrained(Config::get('gatekeeper.tables.teams'))
                 ->cascadeOnDelete();
 
             $table->morphs('model');

@@ -4,37 +4,35 @@ namespace Braxey\Gatekeeper\Tests\Unit\Repositories;
 
 use Braxey\Gatekeeper\Exceptions\PermissionNotFoundException;
 use Braxey\Gatekeeper\Models\Permission;
+use Braxey\Gatekeeper\Repositories\CacheRepository;
 use Braxey\Gatekeeper\Repositories\PermissionRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
-use Illuminate\Cache\TaggedCache;
-use Illuminate\Support\Facades\Cache;
 use Mockery;
+use Mockery\MockInterface;
 
 class PermissionRepositoryTest extends TestCase
 {
     protected PermissionRepository $repository;
 
-    protected TaggedCache $taggedCache;
+    protected MockInterface $cacheRepository;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->taggedCache = Mockery::mock(TaggedCache::class);
-        Cache::shouldReceive('tags')->with('gatekeeper')->andReturn($this->taggedCache)->byDefault();
+        $this->cacheRepository = Mockery::mock(CacheRepository::class);
+        $this->app->instance(CacheRepository::class, $this->cacheRepository);
 
-        $this->taggedCache->shouldReceive('get')->andReturn(null)->byDefault();
-        $this->taggedCache->shouldReceive('put')->andReturn(true)->byDefault();
-        $this->taggedCache->shouldReceive('forget')->andReturn(true)->byDefault();
-        $this->taggedCache->shouldReceive('has')->andReturn(false)->byDefault();
-
-        $this->repository = new PermissionRepository;
+        $this->repository = $this->app->make(PermissionRepository::class);
     }
 
     public function test_create_stores_permission_and_forgets_cache()
     {
-        $this->taggedCache->shouldReceive('forget')->once()->with('gatekeeper.permissions');
+        $this->cacheRepository
+            ->shouldReceive('forget')
+            ->once()
+            ->with('permissions');
 
         $name = fake()->unique()->word();
         $permission = $this->repository->create($name);
@@ -46,7 +44,12 @@ class PermissionRepositoryTest extends TestCase
     public function test_all_returns_cached_if_available()
     {
         $cached = Permission::factory()->count(2)->make();
-        $this->taggedCache->shouldReceive('get')->with('gatekeeper.permissions')->once()->andReturn($cached);
+
+        $this->cacheRepository
+            ->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn($cached);
 
         $result = $this->repository->all();
 
@@ -56,10 +59,16 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_all_caches_result_if_not_cached()
     {
-        $this->taggedCache->shouldReceive('get')->once()->andReturn(null);
-        $this->taggedCache->shouldReceive('put')->once();
-
         $permissions = Permission::factory()->count(3)->create();
+
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn(null);
+
+        $this->cacheRepository->shouldReceive('put')
+            ->once()
+            ->with('permissions', Mockery::on(fn ($arg) => $arg->count() === 3));
 
         $this->assertEqualsCanonicalizing(
             $permissions->pluck('id')->toArray(),
@@ -69,23 +78,53 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_find_by_name_throws_when_not_found()
     {
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn(collect());
+
         $this->expectException(PermissionNotFoundException::class);
+
         $this->repository->findByName('nonexistent');
+    }
+
+    public function test_find_by_name_bubbles_unexpected_exceptions()
+    {
+        $this->partialMock(PermissionRepository::class, function ($mock) {
+            $mock->shouldReceive('all')->andThrow(new \RuntimeException('unexpected'));
+        });
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('unexpected');
+
+        app(PermissionRepository::class)->findByName('whatever');
     }
 
     public function test_find_by_name_returns_permission()
     {
         $permission = Permission::factory()->create();
-        $this->repository->all();
+
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn(collect([$permission]));
 
         $result = $this->repository->findByName($permission->name);
+
         $this->assertTrue($permission->is($result));
     }
 
     public function test_get_active_returns_only_active_permissions()
     {
-        Permission::factory()->count(2)->inactive()->create();
+        $inactive = Permission::factory()->count(2)->inactive()->create();
         $active = Permission::factory()->count(2)->create();
+
+        $all = $inactive->concat($active);
+
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn($all);
 
         $result = $this->repository->getActive();
 
@@ -100,6 +139,11 @@ class PermissionRepositoryTest extends TestCase
         $p1 = Permission::factory()->create();
         $p2 = Permission::factory()->inactive()->create();
 
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn(collect([$p1, $p2]));
+
         $result = $this->repository->getActiveWhereNameIn([$p1->name, $p2->name]);
 
         $this->assertCount(1, $result);
@@ -112,16 +156,14 @@ class PermissionRepositoryTest extends TestCase
         $permission = Permission::factory()->create();
         $user->permissions()->attach($permission);
 
-        $key = "gatekeeper.permissions.{$user->getMorphClass()}.{$user->getKey()}";
+        $key = "permissions.{$user->getMorphClass()}.{$user->getKey()}";
 
-        $this->taggedCache->shouldReceive('get')->with($key)->once()->andReturn(null);
-        $this->taggedCache->shouldReceive('put')->once();
-        $this->taggedCache->shouldReceive('has')->with($key)->andReturn(true);
+        $this->cacheRepository->shouldReceive('get')->with($key)->once()->andReturn(null);
+        $this->cacheRepository->shouldReceive('put')->once();
 
         $names = $this->repository->getActiveNamesForModel($user);
 
         $this->assertContains($permission->name, $names->toArray());
-        $this->assertTrue(Cache::tags('gatekeeper')->has($key));
     }
 
     public function test_get_active_for_model_returns_active_permissions()
@@ -132,7 +174,14 @@ class PermissionRepositoryTest extends TestCase
 
         $user->permissions()->attach([$active->id, $inactive->id]);
 
-        $this->repository->getActiveNamesForModel($user);
+        $key = "permissions.{$user->getMorphClass()}.{$user->getKey()}";
+
+        $this->cacheRepository->shouldReceive('get')->with($key)->once()->andReturn(collect([$active->name]));
+
+        $this->cacheRepository->shouldReceive('get')
+            ->once()
+            ->with('permissions')
+            ->andReturn(collect([$active, $inactive]));
 
         $permissions = $this->repository->getActiveForModel($user);
 
@@ -143,9 +192,9 @@ class PermissionRepositoryTest extends TestCase
     public function test_invalidate_cache_for_model()
     {
         $user = User::factory()->create();
-        $key = "gatekeeper.permissions.{$user->getMorphClass()}.{$user->getKey()}";
+        $key = "permissions.{$user->getMorphClass()}.{$user->getKey()}";
 
-        $this->taggedCache->shouldReceive('forget')->once()->with($key);
+        $this->cacheRepository->shouldReceive('forget')->once()->with($key);
 
         $this->repository->invalidateCacheForModel($user);
     }

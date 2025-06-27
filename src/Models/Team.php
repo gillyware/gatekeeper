@@ -5,6 +5,7 @@ namespace Braxey\Gatekeeper\Models;
 use Braxey\Gatekeeper\Database\Factories\TeamFactory;
 use Braxey\Gatekeeper\Traits\HasPermissions;
 use Braxey\Gatekeeper\Traits\HasRoles;
+use Illuminate\Support\Facades\Config;
 
 class Team extends AbstractGatekeeperEntity
 {
@@ -16,7 +17,7 @@ class Team extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return config('gatekeeper.tables.teams', 'teams');
+        return Config::get('gatekeeper.tables.teams');
     }
 
     /**
