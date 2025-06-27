@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Console;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 
 class RevokeCommand extends Command
 {
@@ -45,7 +46,7 @@ class RevokeCommand extends Command
             return self::FAILURE;
         }
 
-        if (config('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             if (! $actorId || ! $actorClass) {
                 $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
 

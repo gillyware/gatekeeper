@@ -34,6 +34,10 @@ return [
         'permissions' => 'permissions',
         'roles' => 'roles',
         'teams' => 'teams',
+        'model_has_permissions' => 'model_has_permissions',
+        'model_has_roles' => 'model_has_roles',
+        'model_has_teams' => 'model_has_teams',
+        'audit_logs' => 'gatekeeper_audit_logs',
     ],
 
     /*
@@ -43,6 +47,7 @@ return [
     */
 
     'cache' => [
+        'prefix' => env('GATEKEEPER_CACHE_PREFIX', 'gatekeeper'),
         'ttl' => env('GATEKEEPER_CACHE_TTL', 2 * 60 * 60),
     ],
 

@@ -7,11 +7,14 @@ use Braxey\Gatekeeper\Models\Permission;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ItemNotFoundException;
 use Throwable;
 
 class PermissionRepository
 {
+    public function __construct(private readonly CacheRepository $cacheRepository) {}
+
     /**
      * Create a new Permission instance.
      */
@@ -20,7 +23,7 @@ class PermissionRepository
         $permission = new Permission(['name' => $permissionName]);
 
         if ($permission->save()) {
-            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
+            $this->cacheRepository->forget($this->getCacheKeyForAll());
         }
 
         return $permission;
@@ -31,7 +34,7 @@ class PermissionRepository
      */
     public function all(): Collection
     {
-        $permissions = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
+        $permissions = $this->cacheRepository->get($this->getCacheKeyForAll());
 
         if ($permissions) {
             return collect($permissions);
@@ -39,7 +42,7 @@ class PermissionRepository
 
         $permissions = Permission::all();
 
-        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $permissions, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($this->getCacheKeyForAll(), $permissions);
 
         return $permissions;
     }
@@ -91,13 +94,13 @@ class PermissionRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activePermissionNames = Cache::tags('gatekeeper')->get($cacheKey);
+        $activePermissionNames = $this->cacheRepository->get($cacheKey);
 
         if ($activePermissionNames) {
             return collect($activePermissionNames);
         }
 
-        $permissionsTable = config('gatekeeper.tables.permissions', 'permissions');
+        $permissionsTable = Config::get('gatekeeper.tables.permissions');
 
         $activePermissionNames = $model->permissions()
             ->select("$permissionsTable.*")
@@ -105,7 +108,7 @@ class PermissionRepository
             ->whereNull('model_has_permissions.deleted_at')
             ->pluck("$permissionsTable.name");
 
-        Cache::tags('gatekeeper')->put($cacheKey, $activePermissionNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($cacheKey, $activePermissionNames);
 
         return $activePermissionNames;
     }
@@ -115,7 +118,7 @@ class PermissionRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
+        $this->cacheRepository->forget($this->getCacheKeyForModel($model));
     }
 
     /**
@@ -123,7 +126,7 @@ class PermissionRepository
      */
     private function getCacheKeyForAll(): string
     {
-        return 'gatekeeper.permissions';
+        return 'permissions';
     }
 
     /**
@@ -131,6 +134,6 @@ class PermissionRepository
      */
     private function getCacheKeyForModel(Model $model): string
     {
-        return "gatekeeper.permissions.{$model->getMorphClass()}.{$model->getKey()}";
+        return "permissions.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

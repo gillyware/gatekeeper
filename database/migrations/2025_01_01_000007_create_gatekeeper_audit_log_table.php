@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = Config::get('gatekeeper.tables.audit_log', 'gatekeeper_audit_log');
+        $tableName = Config::get('gatekeeper.tables.audit_logs');
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->id();
@@ -34,7 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = Config::get('gatekeeper.tables.audit_log', 'gatekeeper_audit_log');
+        $tableName = Config::get('gatekeeper.tables.audit_logs');
 
         Schema::dropIfExists($tableName);
     }

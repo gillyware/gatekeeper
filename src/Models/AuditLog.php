@@ -5,6 +5,7 @@ namespace Braxey\Gatekeeper\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Config;
 
 class AuditLog extends Model
 {
@@ -34,7 +35,7 @@ class AuditLog extends Model
      */
     public function getTable(): string
     {
-        return config('gatekeeper.tables.audit_log', 'gatekeeper_audit_log');
+        return Config::get('gatekeeper.tables.audit_logs');
     }
 
     public function actionBy(): MorphTo

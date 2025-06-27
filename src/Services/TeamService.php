@@ -29,7 +29,7 @@ class TeamService extends AbstractGatekeeperEntityService
 
         $team = $this->teamRepository->create($teamName);
 
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new CreateTeamAuditLogDto($team));
         }
 
@@ -60,7 +60,7 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->modelHasTeamRepository->create($model, $team);
 
         // Audit log the team assignment if auditing is enabled.
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new AssignTeamAuditLogDto($model, $team));
         }
 
@@ -99,7 +99,7 @@ class TeamService extends AbstractGatekeeperEntityService
 
         if ($this->modelHasTeamRepository->deleteForModelAndTeam($model, $team)) {
             // Audit log the team revocation if auditing is enabled.
-            if (Config::get('gatekeeper.features.audit', true)) {
+            if (Config::get('gatekeeper.features.audit')) {
                 $this->auditLogRepository->create(new RevokeTeamAuditLogDto($model, $team));
             }
 

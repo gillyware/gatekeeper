@@ -27,7 +27,7 @@ class AssignCommand extends Command
         $actorClass = $this->option('action_by_model_class');
         $actorId = $this->option('action_by_model_id');
 
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             if (! $actorClass || ! $actorId) {
                 $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
 

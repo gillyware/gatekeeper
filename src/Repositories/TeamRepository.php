@@ -7,11 +7,14 @@ use Braxey\Gatekeeper\Models\Team;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ItemNotFoundException;
 use Throwable;
 
 class TeamRepository
 {
+    public function __construct(private readonly CacheRepository $cacheRepository) {}
+
     /**
      * Create a new Team instance.
      */
@@ -20,7 +23,7 @@ class TeamRepository
         $team = new Team(['name' => $teamName]);
 
         if ($team->save()) {
-            Cache::tags('gatekeeper')->forget($this->getCacheKeyForAll());
+            $this->cacheRepository->forget($this->getCacheKeyForAll());
         }
 
         return $team;
@@ -31,7 +34,7 @@ class TeamRepository
      */
     public function all(): Collection
     {
-        $teams = Cache::tags('gatekeeper')->get($this->getCacheKeyForAll());
+        $teams = $this->cacheRepository->get($this->getCacheKeyForAll());
 
         if ($teams) {
             return collect($teams);
@@ -39,7 +42,7 @@ class TeamRepository
 
         $teams = Team::all();
 
-        Cache::tags('gatekeeper')->put($this->getCacheKeyForAll(), $teams, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($this->getCacheKeyForAll(), $teams);
 
         return $teams;
     }
@@ -91,13 +94,13 @@ class TeamRepository
     {
         $cacheKey = $this->getCacheKeyForModel($model);
 
-        $activeTeamNames = Cache::tags('gatekeeper')->get($cacheKey);
+        $activeTeamNames = $this->cacheRepository->get($cacheKey);
 
         if ($activeTeamNames) {
             return collect($activeTeamNames);
         }
 
-        $teamsTable = config('gatekeeper.tables.teams', 'teams');
+        $teamsTable = Config::get('gatekeeper.tables.teams');
 
         $activeTeamNames = $model->teams()
             ->select("$teamsTable.*")
@@ -105,7 +108,7 @@ class TeamRepository
             ->whereNull('model_has_teams.deleted_at')
             ->pluck("$teamsTable.name");
 
-        Cache::tags('gatekeeper')->put($cacheKey, $activeTeamNames, config('gatekeeper.cache.ttl', 2 * 60 * 60));
+        $this->cacheRepository->put($cacheKey, $activeTeamNames);
 
         return $activeTeamNames;
     }
@@ -115,7 +118,7 @@ class TeamRepository
      */
     public function invalidateCacheForModel(Model $model): void
     {
-        Cache::tags('gatekeeper')->forget($this->getCacheKeyForModel($model));
+        $this->cacheRepository->forget($this->getCacheKeyForModel($model));
     }
 
     /**
@@ -123,7 +126,7 @@ class TeamRepository
      */
     private function getCacheKeyForAll(): string
     {
-        return 'gatekeeper.teams';
+        return 'teams';
     }
 
     /**
@@ -131,6 +134,6 @@ class TeamRepository
      */
     private function getCacheKeyForModel(Model $model): string
     {
-        return "gatekeeper.teams.{$model->getMorphClass()}.{$model->getKey()}";
+        return "teams.{$model->getMorphClass()}.{$model->getKey()}";
     }
 }

@@ -32,7 +32,7 @@ class RoleService extends AbstractGatekeeperEntityService
 
         $role = $this->roleRepository->create($roleName);
 
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new CreateRoleAuditLogDto($role));
         }
 
@@ -61,7 +61,7 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->modelHasRoleRepository->create($model, $role);
 
         // Audit log the role assignment if auditing is enabled.
-        if (Config::get('gatekeeper.features.audit', true)) {
+        if (Config::get('gatekeeper.features.audit')) {
             $this->auditLogRepository->create(new AssignRoleAuditLogDto($model, $role));
         }
 
@@ -100,7 +100,7 @@ class RoleService extends AbstractGatekeeperEntityService
 
         if ($this->modelHasRoleRepository->deleteForModelAndRole($model, $role)) {
             // Audit log the role revocation if auditing is enabled.
-            if (Config::get('gatekeeper.features.audit', true)) {
+            if (Config::get('gatekeeper.features.audit')) {
                 $this->auditLogRepository->create(new RevokeRoleAuditLogDto($model, $role));
             }
 
@@ -149,7 +149,7 @@ class RoleService extends AbstractGatekeeperEntityService
         }
 
         // If teams are enabled, check if the model has the role through teams.
-        if (config('gatekeeper.features.teams', false)) {
+        if (Config::get('gatekeeper.features.teams')) {
             $onTeamWithRole = $this->teamRepository
                 ->getActiveForModel($model)
                 ->some(fn (Team $team) => $team->hasRole($role));
