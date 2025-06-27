@@ -42,7 +42,7 @@ class AssignCommandTest extends TestCase
         $this->assertTrue($user->onTeam($team->name));
     }
 
-    public function test_assigns_with_audit_enabled(): void
+    public function test_assigns_with_audit_enabled_and_explicit_actor(): void
     {
         Config::set('gatekeeper.features.audit', true);
 
@@ -62,19 +62,21 @@ class AssignCommandTest extends TestCase
         $this->assertTrue($user->hasPermission($permission->name));
     }
 
-    public function test_fails_if_audit_enabled_and_action_by_missing(): void
+    public function test_assigns_with_audit_enabled_and_no_actor_defaults_to_system(): void
     {
         Config::set('gatekeeper.features.audit', true);
 
         $user = User::factory()->create();
+        $permission = Permission::factory()->create();
 
         $exitCode = Artisan::call('gatekeeper:assign', [
             '--action_to_model_id' => $user->id,
             '--action_to_model_class' => User::class,
-            '--permission' => 'some-permission',
+            '--permission' => $permission->name,
         ]);
 
-        $this->assertEquals(1, $exitCode);
+        $this->assertEquals(0, $exitCode);
+        $this->assertTrue($user->hasPermission($permission->name));
     }
 
     public function test_fails_if_action_by_model_class_does_not_exist(): void

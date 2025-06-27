@@ -19,7 +19,7 @@ return new class extends Migration
 
             $table->string('action')->index();
 
-            $table->morphs('action_by_model');
+            $table->nullableMorphs('action_by_model');
             $table->nullableMorphs('action_to_model');
 
             $table->json('metadata')->nullable();
