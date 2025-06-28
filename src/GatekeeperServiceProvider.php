@@ -76,10 +76,6 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->{$publishesMigrationsMethod}([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'gatekeeper-migrations');
-
-        $this->publishes([
-            __DIR__.'/../database/seeders/GatekeeperPermissionsSeeder.php' => database_path('seeders/GatekeeperPermissionsSeeder.php'),
-        ], 'gatekeeper-seeders');
     }
 
     /**
