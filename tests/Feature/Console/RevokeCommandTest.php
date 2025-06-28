@@ -16,133 +16,157 @@ class RevokeCommandTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.audit', false);
         Config::set('gatekeeper.features.roles', true);
         Config::set('gatekeeper.features.teams', true);
     }
 
     public function test_revokes_single_role_permission_and_team(): void
     {
+        Config::set('gatekeeper.features.audit', false);
+
         $user = User::factory()->create();
-        $actor = User::factory()->create();
         $role = Role::factory()->create();
         $permission = Permission::factory()->create();
         $team = Team::factory()->create();
 
-        $user->assignPermission($permission);
         $user->assignRole($role);
-        $user->addToTeam($team);
-
-        Config::set('gatekeeper.features.audit', true);
+        $user->assignPermission($permission);
+        $user->teams()->attach($team);
 
         Artisan::call('gatekeeper:revoke', [
-            '--model_id' => $user->id,
-            '--model_class' => User::class,
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
             '--role' => $role->name,
             '--permission' => $permission->name,
             '--team' => $team->name,
-            '--action_by_model_id' => $actor->id,
-            '--action_by_model_class' => User::class,
         ]);
 
-        $this->assertFalse($user->hasPermission($permission));
-        $this->assertFalse($user->hasRole($role));
-        $this->assertFalse($user->onTeam($team));
+        $this->assertFalse($user->hasRole($role->name));
+        $this->assertFalse($user->hasPermission($permission->name));
+        $this->assertFalse($user->onTeam($team->name));
+    }
+
+    public function test_revokes_with_audit_enabled_and_explicit_actor(): void
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $actor = User::factory()->create();
+        $user = User::factory()->create();
+        $permission = Permission::factory()->create();
+
+        $user->assignPermission($permission);
+
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:revoke', [
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
+            '--action_by_model_id' => $actor->id,
+            '--action_by_model_class' => User::class,
+            '--permission' => $permission->name,
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertFalse($user->hasPermission($permission->name));
+    }
+
+    public function test_revokes_with_audit_enabled_and_no_actor_defaults_to_system(): void
+    {
+        Config::set('gatekeeper.features.audit', false);
+
+        $user = User::factory()->create();
+        $permission = Permission::factory()->create();
+
+        $user->assignPermission($permission);
+
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:revoke', [
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
+            '--permission' => $permission->name,
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertFalse($user->hasPermission($permission->name));
+    }
+
+    public function test_fails_if_action_by_model_class_does_not_exist(): void
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $user = User::factory()->create();
+
+        $exitCode = Artisan::call('gatekeeper:revoke', [
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
+            '--action_by_model_id' => 123,
+            '--action_by_model_class' => 'Fake\\Actor',
+            '--permission' => 'some-permission',
+        ]);
+
+        $this->assertEquals(1, $exitCode);
     }
 
     public function test_revokes_multiple_roles_permissions_and_teams(): void
     {
+        Config::set('gatekeeper.features.audit', false);
+
         $user = User::factory()->create();
-        $actor = User::factory()->create();
         $roles = Role::factory()->count(2)->create();
         $permissions = Permission::factory()->count(2)->create();
         $teams = Team::factory()->count(2)->create();
 
-        $user->assignPermissions($permissions);
         $user->assignRoles($roles);
-        $user->addToTeams($teams);
-
-        Config::set('gatekeeper.features.audit', true);
-
-        $roleNames = $roles->pluck('name')->implode(',');
-        $permissionNames = $permissions->pluck('name')->implode(',');
-        $teamNames = $teams->pluck('name')->implode(',');
+        $user->assignPermissions($permissions);
+        $user->teams()->attach($teams);
 
         Artisan::call('gatekeeper:revoke', [
-            '--model_id' => $user->id,
-            '--model_class' => User::class,
-            '--role' => $roleNames,
-            '--permission' => $permissionNames,
-            '--team' => $teamNames,
-            '--action_by_model_id' => $actor->id,
-            '--action_by_model_class' => User::class,
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
+            '--role' => $roles->pluck('name')->implode(','),
+            '--permission' => $permissions->pluck('name')->implode(','),
+            '--team' => $teams->pluck('name')->implode(','),
         ]);
 
-        $this->assertFalse($user->hasAnyPermission($permissions));
-        $this->assertFalse($user->hasAnyRole($roles));
-        $this->assertFalse($user->onAnyTeam($teams));
+        $this->assertFalse($user->hasAnyRole($roles->pluck('name')));
+        $this->assertFalse($user->hasAnyPermission($permissions->pluck('name')));
+        $this->assertFalse($user->onAnyTeam($teams->pluck('name')));
     }
 
-    public function test_fails_if_model_class_does_not_exist()
+    public function test_fails_if_model_class_does_not_exist(): void
     {
-        Config::set('gatekeeper.features.audit', true);
-
-        $actor = User::factory()->create();
+        Config::set('gatekeeper.features.audit', false);
 
         $exitCode = Artisan::call('gatekeeper:revoke', [
-            '--model_id' => 1,
-            '--model_class' => 'Fake\\Class',
-            '--action_by_model_id' => $actor->id,
-            '--action_by_model_class' => User::class,
+            '--action_to_model_id' => 1,
+            '--action_to_model_class' => 'Fake\\Class',
         ]);
 
         $this->assertEquals(1, $exitCode);
     }
 
-    public function test_fails_if_model_is_not_found()
+    public function test_fails_if_model_is_not_found(): void
     {
-        Config::set('gatekeeper.features.audit', true);
-
-        $actor = User::factory()->create();
+        Config::set('gatekeeper.features.audit', false);
 
         $exitCode = Artisan::call('gatekeeper:revoke', [
-            '--model_id' => 999,
-            '--model_class' => User::class,
-            '--action_by_model_id' => $actor->id,
-            '--action_by_model_class' => User::class,
+            '--action_to_model_id' => 999,
+            '--action_to_model_class' => User::class,
         ]);
 
         $this->assertEquals(1, $exitCode);
     }
 
-    public function test_fails_if_nothing_to_revoke()
+    public function test_fails_if_nothing_to_revoke(): void
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit', false);
 
         $user = User::factory()->create();
-        $actor = User::factory()->create();
 
         $exitCode = Artisan::call('gatekeeper:revoke', [
-            '--model_id' => $user->id,
-            '--model_class' => User::class,
-            '--action_by_model_id' => $actor->id,
-            '--action_by_model_class' => User::class,
-        ]);
-
-        $this->assertEquals(1, $exitCode);
-    }
-
-    public function test_fails_if_audit_enabled_but_no_actor()
-    {
-        Config::set('gatekeeper.features.audit', true);
-
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
-
-        $exitCode = Artisan::call('gatekeeper:revoke', [
-            '--model_id' => $user->id,
-            '--model_class' => User::class,
-            '--role' => $role->name,
+            '--action_to_model_id' => $user->id,
+            '--action_to_model_class' => User::class,
         ]);
 
         $this->assertEquals(1, $exitCode);

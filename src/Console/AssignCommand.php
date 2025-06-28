@@ -3,7 +3,6 @@
 namespace Braxey\Gatekeeper\Console;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
-use Braxey\Gatekeeper\Support\SystemActor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 
@@ -29,8 +28,6 @@ class AssignCommand extends Command
         $actorId = $this->option('action_by_model_id');
 
         if (Config::get('gatekeeper.features.audit')) {
-            $actor = null;
-
             if ($actorClass && $actorId) {
                 if (! class_exists($actorClass)) {
                     $this->components->error("[FAIL] Actor model class [$actorClass] does not exist.");
@@ -39,19 +36,19 @@ class AssignCommand extends Command
                 }
 
                 $actor = $actorClass::find($actorId);
+
                 if (! $actor) {
                     $this->components->error("[FAIL] Actor model [$actorClass] with ID [$actorId] not found.");
 
                     return self::FAILURE;
                 }
-            }
 
-            if (! $actor) {
-                $actor = new SystemActor;
+                Gatekeeper::setActor($actor);
+            } else {
                 $this->components->info('[INFO] No actor specified. This action will be attributed to the system.');
-            }
 
-            Gatekeeper::setActor($actor);
+                Gatekeeper::systemActor();
+            }
         }
 
         if (! $modelId || ! $modelClass) {
@@ -67,6 +64,7 @@ class AssignCommand extends Command
         }
 
         $model = $modelClass::find($modelId);
+
         if (! $model) {
             $this->components->error("[FAIL] Model [$modelClass] with ID [$modelId] not found.");
 

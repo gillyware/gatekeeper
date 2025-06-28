@@ -5,6 +5,7 @@ namespace Braxey\Gatekeeper\Services;
 use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Models\Team;
+use Braxey\Gatekeeper\Support\SystemActor;
 use Braxey\Gatekeeper\Traits\ActsForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
@@ -25,19 +26,6 @@ class GatekeeperService
     }
 
     /**
-     * Set the acting as model.
-     */
-    public function setActor(Model $model): static
-    {
-        $this->actingAs($model);
-        $this->permissionService->actingAs($model);
-        $this->roleService->actingAs($model);
-        $this->teamService->actingAs($model);
-
-        return $this;
-    }
-
-    /**
      * Get the currently acting as model.
      */
     public function getActor(): ?Model
@@ -53,6 +41,27 @@ class GatekeeperService
     public function getLifecycleId(): string
     {
         return $this->lifecycleId;
+    }
+
+    /**
+     * Set the acting as model.
+     */
+    public function setActor(Model $model): static
+    {
+        $this->actingAs($model);
+        $this->permissionService->actingAs($model);
+        $this->roleService->actingAs($model);
+        $this->teamService->actingAs($model);
+
+        return $this;
+    }
+
+    /**
+     * Set the actor to a system actor.
+     */
+    public function systemActor(): static
+    {
+        return $this->setActor(new SystemActor);
     }
 
     /**

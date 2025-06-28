@@ -4,41 +4,76 @@ namespace Braxey\Gatekeeper\Tests\Feature\Console;
 
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 
 class CreatePermissionCommandTest extends TestCase
 {
-    protected function setUp(): void
+    public function test_permission_is_created_without_audit()
     {
-        parent::setUp();
+        Config::set('gatekeeper.features.audit', false);
 
-        Config::set('gatekeeper.features.audit', true);
+        $exitCode = Artisan::call('gatekeeper:create-permission', [
+            'name' => 'example-permission',
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('permissions', ['name' => 'example-permission']);
     }
 
-    public function test_create_permission_command_creates_permission()
+    public function test_permission_is_created_with_audit_and_actor()
     {
-        $name = fake()->unique()->word();
+        Config::set('gatekeeper.features.audit', true);
+
         $actor = User::factory()->create();
 
-        $this->artisan('gatekeeper:create-permission', [
-            'name' => $name,
+        $exitCode = Artisan::call('gatekeeper:create-permission', [
+            'name' => 'audited-permission',
             '--action_by_model_id' => $actor->id,
             '--action_by_model_class' => User::class,
-        ])->expectsOutput("Permission [{$name}] created.")
-            ->assertExitCode(0);
+        ]);
 
-        $this->assertDatabaseHas('permissions', ['name' => $name]);
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('permissions', ['name' => 'audited-permission']);
     }
 
-    public function test_create_permission_command_throws_if_audit_enabled_but_no_actor()
+    public function test_permission_is_created_with_audit_and_fallback_actor()
     {
-        $name = fake()->unique()->word();
+        Config::set('gatekeeper.features.audit', true);
 
-        $this->artisan('gatekeeper:create-permission', [
-            'name' => $name,
-        ])->expectsOutput('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.')
-            ->assertExitCode(1);
+        $exitCode = Artisan::call('gatekeeper:create-permission', [
+            'name' => 'system-actor-permission',
+        ]);
 
-        $this->assertDatabaseMissing('permissions', ['name' => $name]);
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('permissions', ['name' => 'system-actor-permission']);
+    }
+
+    public function test_fails_if_actor_class_does_not_exist()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:create-permission', [
+            'name' => 'fail-permission',
+            '--action_by_model_id' => 1,
+            '--action_by_model_class' => 'Invalid\\Class',
+        ]);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertDatabaseMissing('permissions', ['name' => 'fail-permission']);
+    }
+
+    public function test_fails_if_actor_not_found()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:create-permission', [
+            'name' => 'fail-permission',
+            '--action_by_model_id' => 999,
+            '--action_by_model_class' => User::class,
+        ]);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertDatabaseMissing('permissions', ['name' => 'fail-permission']);
     }
 }

@@ -3,6 +3,7 @@
 namespace Braxey\Gatekeeper\Console;
 
 use Braxey\Gatekeeper\Facades\Gatekeeper;
+use Braxey\Gatekeeper\Support\SystemActor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 
@@ -15,38 +16,40 @@ class CreateRoleCommand extends Command
 
     protected $description = 'Create a new role';
 
-    public function handle()
+    public function handle(): int
     {
         $name = $this->argument('name');
         $actorId = $this->option('action_by_model_id');
         $actorClass = $this->option('action_by_model_class');
 
         if (Config::get('gatekeeper.features.audit')) {
-            if (! $actorId || ! $actorClass) {
-                $this->error('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.');
+            $actor = null;
 
-                return self::FAILURE;
+            if ($actorId && $actorClass) {
+                if (! class_exists($actorClass)) {
+                    $this->error("Actor model class [$actorClass] does not exist.");
+
+                    return self::FAILURE;
+                }
+
+                $actor = $actorClass::find($actorId);
+                if (! $actor) {
+                    $this->error("Actor [$actorClass] with ID [$actorId] not found.");
+
+                    return self::FAILURE;
+                }
             }
-
-            if (! class_exists($actorClass)) {
-                $this->error("Actor model class [$actorClass] does not exist.");
-
-                return self::FAILURE;
-            }
-
-            $actor = $actorClass::find($actorId);
 
             if (! $actor) {
-                $this->error("Actor [$actorClass] with ID [$actorId] not found.");
-
-                return self::FAILURE;
+                $actor = new SystemActor;
+                $this->info('No actor specified. This action will be attributed to the system.');
             }
 
             Gatekeeper::setActor($actor);
         }
 
         $role = Gatekeeper::createRole($name);
-        $this->info("Role [{$role->name}] created.");
+        $this->info("[OK] Role [{$role->name}] created.");
 
         return self::SUCCESS;
     }

@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static GatekeeperService setActor(Model $model)
  * @method static Model|null getActor()
  * @method static string getLifecycleId()
+ * @method static GatekeeperService setActor(Model $model)
+ * @method static GatekeeperService systemActor()
  * @method static Permission createPermission(string $permissionName)
  * @method static bool assignPermissionToModel(Model $model, Permission|string $permission)
  * @method static bool assignPermissionsToModel(Model $model, array|Arrayable $permissions)

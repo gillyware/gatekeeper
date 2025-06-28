@@ -4,42 +4,78 @@ namespace Braxey\Gatekeeper\Tests\Feature\Console;
 
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 
 class CreateTeamCommandTest extends TestCase
 {
-    protected function setUp(): void
+    public function test_team_is_created_without_audit()
     {
-        parent::setUp();
+        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.audit', false);
 
+        $exitCode = Artisan::call('gatekeeper:create-team', [
+            'name' => 'basic-team',
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('teams', ['name' => 'basic-team']);
+    }
+
+    public function test_team_is_created_with_audit_and_actor()
+    {
         Config::set('gatekeeper.features.audit', true);
         Config::set('gatekeeper.features.teams', true);
-    }
-
-    public function test_create_team_command_creates_team()
-    {
-        $name = fake()->unique()->word();
         $actor = User::factory()->create();
 
-        $this->artisan('gatekeeper:create-team', [
-            'name' => $name,
+        $exitCode = Artisan::call('gatekeeper:create-team', [
+            'name' => 'audited-team',
             '--action_by_model_id' => $actor->id,
             '--action_by_model_class' => User::class,
-        ])->expectsOutput("Team [{$name}] created.")
-            ->assertExitCode(0);
+        ]);
 
-        $this->assertDatabaseHas('teams', ['name' => $name]);
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('teams', ['name' => 'audited-team']);
     }
 
-    public function test_create_team_command_throws_if_audit_enabled_but_no_actor()
+    public function test_team_is_created_with_audit_and_fallback_actor()
     {
-        $name = fake()->unique()->word();
+        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.teams', true);
 
-        $this->artisan('gatekeeper:create-team', [
-            'name' => $name,
-        ])->expectsOutput('Audit logging is enabled. You must provide --action_by_model_id and --action_by_model_class.')
-            ->assertExitCode(1);
+        $exitCode = Artisan::call('gatekeeper:create-team', [
+            'name' => 'system-actor-team',
+        ]);
 
-        $this->assertDatabaseMissing('teams', ['name' => $name]);
+        $this->assertEquals(0, $exitCode);
+        $this->assertDatabaseHas('teams', ['name' => 'system-actor-team']);
+    }
+
+    public function test_fails_if_actor_class_does_not_exist()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:create-team', [
+            'name' => 'invalid-class-team',
+            '--action_by_model_id' => 1,
+            '--action_by_model_class' => 'Invalid\\Class',
+        ]);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertDatabaseMissing('teams', ['name' => 'invalid-class-team']);
+    }
+
+    public function test_fails_if_actor_not_found()
+    {
+        Config::set('gatekeeper.features.audit', true);
+
+        $exitCode = Artisan::call('gatekeeper:create-team', [
+            'name' => 'missing-actor-team',
+            '--action_by_model_id' => 999,
+            '--action_by_model_class' => User::class,
+        ]);
+
+        $this->assertEquals(1, $exitCode);
+        $this->assertDatabaseMissing('teams', ['name' => 'missing-actor-team']);
     }
 }
