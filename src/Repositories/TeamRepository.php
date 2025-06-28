@@ -101,11 +101,12 @@ class TeamRepository
         }
 
         $teamsTable = Config::get('gatekeeper.tables.teams');
+        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams');
 
         $activeTeamNames = $model->teams()
             ->select("$teamsTable.*")
             ->where('is_active', true)
-            ->whereNull('model_has_teams.deleted_at')
+            ->whereNull("$modelHasTeamsTable.deleted_at")
             ->pluck("$teamsTable.name");
 
         $this->cacheRepository->put($cacheKey, $activeTeamNames);

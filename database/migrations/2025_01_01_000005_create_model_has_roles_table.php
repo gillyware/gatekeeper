@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('model_has_roles', function (Blueprint $table) {
+        Schema::create(Config::get('gatekeeper.tables.model_has_roles'), function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('role_id')
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('model_has_roles');
+        Schema::dropIfExists(Config::get('gatekeeper.tables.model_has_roles'));
     }
 };

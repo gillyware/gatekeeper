@@ -4,6 +4,7 @@ namespace Braxey\Gatekeeper\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 
 /**
  * @property int $permission_id
@@ -13,9 +14,12 @@ use Illuminate\Database\Eloquent\Model;
 class ModelHasPermission extends AbstractModelHasGatekeeperEntity
 {
     /**
-     * The database table used by the model.
+     * Get the table associated with the model.
      */
-    protected $table = 'model_has_permissions';
+    public function getTable(): string
+    {
+        return Config::get('gatekeeper.tables.model_has_permissions');
+    }
 
     /**
      * {@inheritDoc}

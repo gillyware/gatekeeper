@@ -6,6 +6,7 @@ use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Repositories\PermissionRepository;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 trait InteractsWithPermissions
 {
@@ -22,7 +23,9 @@ trait InteractsWithPermissions
      */
     public function permissions(): MorphToMany
     {
-        return $this->morphToMany(Permission::class, 'model', 'model_has_permissions', 'model_id', 'permission_id');
+        $modelHasPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions');
+
+        return $this->morphToMany(Permission::class, 'model', $modelHasPermissionsTable, 'model_id', 'permission_id');
     }
 
     /**

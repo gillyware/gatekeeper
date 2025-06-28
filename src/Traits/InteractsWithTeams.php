@@ -6,6 +6,7 @@ use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 trait InteractsWithTeams
 {
@@ -22,7 +23,9 @@ trait InteractsWithTeams
      */
     public function teams(): MorphToMany
     {
-        return $this->morphToMany(Team::class, 'model', 'model_has_teams', 'model_id', 'team_id');
+        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams');
+
+        return $this->morphToMany(Team::class, 'model', $modelHasTeamsTable, 'model_id', 'team_id');
     }
 
     /**

@@ -101,11 +101,12 @@ class RoleRepository
         }
 
         $rolesTable = Config::get('gatekeeper.tables.roles');
+        $modelHasRolesTable = Config::get('gatekeeper.tables.model_has_roles');
 
         $activeRoleNames = $model->roles()
             ->select("$rolesTable.*")
             ->where('is_active', true)
-            ->whereNull('model_has_roles.deleted_at')
+            ->whereNull("$modelHasRolesTable.deleted_at")
             ->pluck("$rolesTable.name");
 
         $this->cacheRepository->put($cacheKey, $activeRoleNames);

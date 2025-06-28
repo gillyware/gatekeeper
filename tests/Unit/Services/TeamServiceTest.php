@@ -89,7 +89,7 @@ class TeamServiceTest extends TestCase
         $result = $this->service->addModelTo($user, $name);
 
         $this->assertTrue($result);
-        $this->assertDatabaseHas('model_has_teams', [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams'), [
             'model_id' => $user->id,
             'model_type' => $user->getMorphClass(),
             'team_id' => $team->id,
@@ -176,7 +176,7 @@ class TeamServiceTest extends TestCase
         $result = $this->service->removeModelFrom($user, $name);
 
         $this->assertTrue($result);
-        $this->assertSoftDeleted('model_has_teams', [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
             'team_id' => $team->id,
             'model_id' => $user->id,
         ]);
@@ -228,7 +228,7 @@ class TeamServiceTest extends TestCase
 
         $this->assertTrue($result);
         $teams->each(function ($team) use ($user) {
-            $this->assertSoftDeleted('model_has_teams', [
+            $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
                 'team_id' => $team->id,
                 'model_id' => $user->id,
             ]);

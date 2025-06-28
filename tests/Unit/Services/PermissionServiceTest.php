@@ -160,7 +160,7 @@ class PermissionServiceTest extends TestCase
         $this->service->assignToModel($user, $name);
 
         $this->assertTrue($this->service->revokeFromModel($user, $name));
-        $this->assertSoftDeleted('model_has_permissions', [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions'), [
             'model_id' => $user->id,
         ]);
         $this->assertFalse($user->hasPermission($name));

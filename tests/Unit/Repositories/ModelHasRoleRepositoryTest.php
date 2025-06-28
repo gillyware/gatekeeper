@@ -7,6 +7,7 @@ use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Support\Facades\Config;
 
 class ModelHasRoleRepositoryTest extends TestCase
 {
@@ -26,7 +27,7 @@ class ModelHasRoleRepositoryTest extends TestCase
 
         $record = $this->repository->create($user, $role);
 
-        $this->assertDatabaseHas('model_has_roles', [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_roles'), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'role_id' => $role->id,
@@ -70,7 +71,7 @@ class ModelHasRoleRepositoryTest extends TestCase
 
         $this->assertTrue($this->repository->deleteForModelAndRole($user, $role));
 
-        $this->assertSoftDeleted('model_has_roles', [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_roles'), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'role_id' => $role->id,

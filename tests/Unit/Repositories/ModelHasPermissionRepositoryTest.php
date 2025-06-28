@@ -7,6 +7,7 @@ use Braxey\Gatekeeper\Models\Permission;
 use Braxey\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Support\Facades\Config;
 
 class ModelHasPermissionRepositoryTest extends TestCase
 {
@@ -26,7 +27,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $record = $this->repository->create($user, $permission);
 
         $this->assertInstanceOf(ModelHasPermission::class, $record);
-        $this->assertDatabaseHas('model_has_permissions', [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_permissions'), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'permission_id' => $permission->id,
@@ -66,7 +67,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
 
         $this->assertTrue($this->repository->deleteForModelAndPermission($user, $permission));
 
-        $this->assertSoftDeleted('model_has_permissions', [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions'), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'permission_id' => $permission->id,

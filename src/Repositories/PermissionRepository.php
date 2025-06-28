@@ -101,11 +101,12 @@ class PermissionRepository
         }
 
         $permissionsTable = Config::get('gatekeeper.tables.permissions');
+        $modelHasPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions');
 
         $activePermissionNames = $model->permissions()
             ->select("$permissionsTable.*")
             ->where('is_active', true)
-            ->whereNull('model_has_permissions.deleted_at')
+            ->whereNull("$modelHasPermissionsTable.deleted_at")
             ->pluck("$permissionsTable.name");
 
         $this->cacheRepository->put($cacheKey, $activePermissionNames);

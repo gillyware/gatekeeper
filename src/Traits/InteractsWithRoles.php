@@ -6,6 +6,7 @@ use Braxey\Gatekeeper\Models\Role;
 use Braxey\Gatekeeper\Repositories\RoleRepository;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 
 trait InteractsWithRoles
 {
@@ -22,7 +23,9 @@ trait InteractsWithRoles
      */
     public function roles(): MorphToMany
     {
-        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'model_id', 'role_id');
+        $modelHasRolesTable = Config::get('gatekeeper.tables.model_has_roles');
+
+        return $this->morphToMany(Role::class, 'model', $modelHasRolesTable, 'model_id', 'role_id');
     }
 
     /**

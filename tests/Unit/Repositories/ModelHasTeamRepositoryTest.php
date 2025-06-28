@@ -7,6 +7,7 @@ use Braxey\Gatekeeper\Models\Team;
 use Braxey\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Braxey\Gatekeeper\Tests\Fixtures\User;
 use Braxey\Gatekeeper\Tests\TestCase;
+use Illuminate\Support\Facades\Config;
 
 class ModelHasTeamRepositoryTest extends TestCase
 {
@@ -27,7 +28,7 @@ class ModelHasTeamRepositoryTest extends TestCase
         $assignment = $this->repository->create($user, $team);
 
         $this->assertInstanceOf(ModelHasTeam::class, $assignment);
-        $this->assertDatabaseHas('model_has_teams', [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams'), [
             'team_id' => $team->id,
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
@@ -71,7 +72,7 @@ class ModelHasTeamRepositoryTest extends TestCase
 
         $this->assertTrue($result);
 
-        $this->assertSoftDeleted('model_has_teams', [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
             'team_id' => $team->id,
             'model_id' => $user->id,
         ]);
