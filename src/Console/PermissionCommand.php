@@ -10,12 +10,10 @@ use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Validation\Rule;
 use Throwable;
 
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\text;
 
 class PermissionCommand extends AbstractBaseEntityCommand
 {
@@ -62,17 +60,35 @@ class PermissionCommand extends AbstractBaseEntityCommand
     }
 
     /**
-     * Handle the creation of a new permission.
+     * Handle the creation of one or more new permissions.
      */
     private function handleCreate(): void
     {
-        $permissionName = $this->gatherEntityName();
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
 
         $this->resolveActor();
 
-        Gatekeeper::createPermission($permissionName);
+        [$successes, $failures] = $names->partition(function (string $name) {
+            try {
+                Gatekeeper::createPermission($name);
 
-        info("Permission '$permissionName' created successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
+
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' created successfully.");
+        }
+
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to create permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -80,15 +96,11 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleUpdate(): void
     {
-        $permissionName = $this->gatherEntityName();
+        $permissionName = $this->gatherOneExistingEntityName();
 
         $permission = $this->permissionRepository->findOrFailByName($permissionName);
 
-        $newPermissionName = text(
-            label: "What will be the new {$this->entity} name?",
-            required: "A {$this->entity} name is required.",
-            validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
-        );
+        $newPermissionName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
 
         $this->resolveActor();
 
@@ -102,7 +114,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleDeactivate(): void
     {
-        $permissionNames = $this->gatherMultipleEntityNames();
+        $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $permissions = $permissionNames->map(
             fn (string $name) => $this->permissionRepository->findOrFailByName($name)
@@ -127,7 +139,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleReactivate(): void
     {
-        $permissionNames = $this->gatherMultipleEntityNames();
+        $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $permissions = $permissionNames->map(
             fn (string $name) => $this->permissionRepository->findOrFailByName($name)
@@ -152,7 +164,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleDelete(): void
     {
-        $permissionNames = $this->gatherMultipleEntityNames();
+        $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $permissions = $permissionNames->map(
             fn (string $name) => $this->permissionRepository->findOrFailByName($name)
@@ -177,7 +189,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleAssign(): void
     {
-        $permissionNames = $this->gatherMultipleEntityNames();
+        $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $permissions = $permissionNames->map(
             fn (string $name) => $this->permissionRepository->findOrFailByName($name)
@@ -204,7 +216,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleRevoke(): void
     {
-        $permissionNames = $this->gatherMultipleEntityNames();
+        $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $permissions = $permissionNames->map(
             fn (string $name) => $this->permissionRepository->findOrFailByName($name)
@@ -232,7 +244,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::PERMISSION_CREATE => 'Create a new permission',
+            Action::PERMISSION_CREATE => 'Create one or more new permissions',
             Action::PERMISSION_UPDATE => 'Update an existing permission',
             Action::PERMISSION_DEACTIVATE => 'Deactivate one or more active permissions',
             Action::PERMISSION_REACTIVATE => 'Reactivate one or more inactive permissions',

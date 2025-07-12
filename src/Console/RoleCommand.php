@@ -11,12 +11,10 @@ use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Validation\Rule;
 use Throwable;
 
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\text;
 
 class RoleCommand extends AbstractBaseEntityCommand
 {
@@ -63,17 +61,35 @@ class RoleCommand extends AbstractBaseEntityCommand
     }
 
     /**
-     * Handle the creation of a new role.
+     * Handle the creation of one or more new roles.
      */
     private function handleCreate(): void
     {
-        $roleName = $this->gatherEntityName();
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
 
         $this->resolveActor();
 
-        Gatekeeper::createRole($roleName);
+        [$successes, $failures] = $names->partition(function (string $name) {
+            try {
+                Gatekeeper::createRole($name);
 
-        info("Role '$roleName' created successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
+
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' created successfully.");
+        }
+
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to create role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -81,15 +97,11 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleUpdate(): void
     {
-        $roleName = $this->gatherEntityName();
+        $roleName = $this->gatherOneExistingEntityName();
 
         $role = $this->roleRepository->findOrFailByName($roleName);
 
-        $newRoleName = text(
-            label: "What will be the new {$this->entity} name?",
-            required: "A {$this->entity} name is required.",
-            validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
-        );
+        $newRoleName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
 
         $this->resolveActor();
 
@@ -103,7 +115,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleDeactivate(): void
     {
-        $roleNames = $this->gatherMultipleEntityNames();
+        $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $roles = $roleNames->map(
             fn (string $name) => $this->roleRepository->findOrFailByName($name)
@@ -128,7 +140,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleReactivate(): void
     {
-        $roleNames = $this->gatherMultipleEntityNames();
+        $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $roles = $roleNames->map(
             fn (string $name) => $this->roleRepository->findOrFailByName($name)
@@ -153,7 +165,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleDelete(): void
     {
-        $roleNames = $this->gatherMultipleEntityNames();
+        $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $roles = $roleNames->map(
             fn (string $name) => $this->roleRepository->findOrFailByName($name)
@@ -178,7 +190,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleAssign(): void
     {
-        $roleNames = $this->gatherMultipleEntityNames();
+        $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $roles = $roleNames->map(
             fn (string $name) => $this->roleRepository->findOrFailByName($name)
@@ -205,7 +217,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleRevoke(): void
     {
-        $roleNames = $this->gatherMultipleEntityNames();
+        $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $roles = $roleNames->map(
             fn (string $name) => $this->roleRepository->findOrFailByName($name)
@@ -233,7 +245,7 @@ class RoleCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::ROLE_CREATE => 'Create a new role',
+            Action::ROLE_CREATE => 'Create one or more new roles',
             Action::ROLE_UPDATE => 'Update an existing role',
             Action::ROLE_DEACTIVATE => 'Deactivate one or more active roles',
             Action::ROLE_REACTIVATE => 'Reactivate one or more inactive roles',
