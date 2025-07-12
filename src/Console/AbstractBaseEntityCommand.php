@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Console;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
+use Gillyware\Gatekeeper\Services\ModelService;
 use Gillyware\Gatekeeper\Support\SystemActor;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
@@ -28,8 +29,10 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 
     protected string $action;
 
-    public function __construct(private readonly ModelMetadataService $modelMetadataService)
-    {
+    public function __construct(
+        private readonly ModelService $modelService,
+        private readonly ModelMetadataService $modelMetadataService,
+    ) {
         parent::__construct();
     }
 
@@ -181,7 +184,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             scroll: 10,
         );
 
-        $actor = $this->resolveModel($actorLabel, 'What is the primary key of the actor?');
+        $actor = $this->resolveModel($actorLabel);
 
         [$actorClass, $actorPrimaryKey] = [$actor::class, $actor->getKey()];
         info("Actor [$actorClass] with primary key [$actorPrimaryKey] will be attributed to this action.");
@@ -209,7 +212,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             scroll: 10,
         );
 
-        $actee = $this->resolveModel($acteeLabel, 'What is the primary key of the model being acted upon?');
+        $actee = $this->resolveModel($acteeLabel);
 
         [$acteeClass, $acteePrimaryKey] = [$actee::class, $actee->getKey()];
         info("Actee [$acteeClass] with primary key [$acteePrimaryKey] will be acted upon.");
@@ -220,23 +223,58 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     /**
      * Resolve a model instance based on the label and primary key.
      */
-    private function resolveModel(string $label, string $prompt): Model
+    private function resolveModel(string $label): Model
     {
         $class = $this->modelMetadataService->getClassFromLabel($label);
+        $modelData = $this->modelMetadataService->getModelDataByLabel($label);
+        $searchable = $modelData['searchable'] ?? [];
+        $instance = new $class;
 
         if (! $class) {
             throw new GatekeeperConsoleException("Model class for label [$label] does not exist.");
         }
 
-        $instance = new $class;
+        if (empty($searchable)) {
+            throw new GatekeeperConsoleException("No columns are searchable for [$label] models");
+        }
 
-        $primaryKey = text(
-            label: $prompt,
-            required: 'A primary key is required.',
-            validate: ['string', 'regex:/^[\w-]+$/', Rule::exists($instance->getTable(), $instance->getKeyName())],
+        $searchableList = implode(', ', array_values($searchable));
+
+        $primaryKey = search(
+            label: "Search by {$searchableList}",
+            options: fn (string $value) => $this->modelService->searchModels($label, $value)->mapWithKeys(function (array $model) {
+                $displayable = $model['displayable'] ?? [];
+                $result = [];
+
+                foreach ($displayable as $displayableField => $displayableFieldLabel) {
+                    $result[] = $this->formatDisplayField($displayableFieldLabel, $model['display'][$displayableField]);
+                }
+
+                if (empty($result)) {
+                    $result[] = $this->formatDisplayField($model['model_label'], $model['model_pk']);
+                }
+
+                return [(string) $model['model_pk'] => implode(' | ', $result)];
+            })->all(),
+            required: 'A model is required.',
+            validate: [Rule::exists($instance->getTable(), $instance->getKeyName())],
         );
 
         return $class::where($instance->getKeyName(), $primaryKey)->firstOrFail();
+    }
+
+    /**
+     * Fix strings to let columns line up across rows.
+     */
+    private function formatDisplayField(string $label, string $value, int $width = 25): string
+    {
+        $line = "{$label}: {$value}";
+
+        if (strlen($line) > $width) {
+            $line = substr($line, 0, $width - 3).'...';
+        }
+
+        return str_pad($line, $width);
     }
 
     /**

@@ -9,6 +9,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
+use Gillyware\Gatekeeper\Services\ModelService;
 use Illuminate\Support\Facades\Config;
 use Throwable;
 
@@ -22,10 +23,11 @@ class TeamCommand extends AbstractBaseEntityCommand
     protected $description = 'Manage teams';
 
     public function __construct(
+        ModelService $modelService,
         ModelMetadataService $modelMetadataService,
         private readonly TeamRepository $teamRepository,
     ) {
-        parent::__construct($modelMetadataService);
+        parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::TEAM;
         $this->entityTable = Config::get('gatekeeper.tables.teams');
