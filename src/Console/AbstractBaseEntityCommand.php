@@ -7,9 +7,9 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Support\SystemActor;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
-use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 use function Laravel\Prompts\confirm;
@@ -58,19 +58,11 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     }
 
     /**
-     * Gather the name of an entity for a specific action.
+     * Gather one existing entity name.
      */
-    protected function gatherEntityName(): string
+    protected function gatherOneExistingEntityName(): string
     {
         $actionVerb = str($this->action)->after('_')->toString();
-
-        if (str_contains($this->action, 'create')) {
-            return text(
-                label: "What is the name of the {$this->entity} you want to create?",
-                required: "A {$this->entity} name is required.",
-                validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
-            );
-        }
 
         return search(
             label: "Search for the {$this->entity} to $actionVerb",
@@ -82,9 +74,9 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     }
 
     /**
-     * Gather multiple entity names for a specific action.
+     * Gather one or more existing entity names.
      */
-    protected function gatherMultipleEntityNames(): Collection
+    protected function gatherOneOrMoreExistingEntityNames(): Collection
     {
         $actionVerb = str($this->action)->after('_')->toString();
 
@@ -92,10 +84,59 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             label: "Search for the {$this->entity}s to $actionVerb",
             options: fn (string $value) => $this->filterEntityNamesForAction($value),
             required: "At least one {$this->entity} name is required.",
-            validate: ['array', 'min:1', Rule::exists($this->entityTable, 'name')],
+            validate: ['array', 'min:1', 'max:100', Rule::exists($this->entityTable, 'name')],
             scroll: 10,
             hint: 'Select options with the space bar and confirm with enter.',
         ));
+    }
+
+    /**
+     * Gather one non-existing entity name.
+     */
+    protected function gatherOneNonExistingEntityName(string $label): string
+    {
+        return text(
+            label: $label,
+            required: "A {$this->entity} name is required.",
+            validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
+        );
+    }
+
+    /**
+     * Gather one ore more non-existing entity names.
+     */
+    protected function gatherOneOrMoreNonExistingEntityNames(string $label): Collection
+    {
+        $names = collect();
+
+        text(
+            label: $label,
+            required: "A {$this->entity} name is required.",
+            hint: 'For more than one, separate names with commas.',
+            validate: function (string $value) use (&$names) {
+                $names = collect(explode(',', $value))->map(fn ($name) => trim($name))->filter()->unique()->values();
+
+                if ($names->isEmpty()) {
+                    return "A {$this->entity} name is required";
+                }
+                if ($names->count() > 100) {
+                    return "Must not exceed more than 100 {$this->entity}s at a time";
+                }
+
+                foreach ($names as $name) {
+                    if (strlen($name) > 100) {
+                        return 'Names must not exceed 255 characters';
+                    }
+                    if (DB::table($this->entityTable)->where('name', $name)->whereNull('deleted_at')->exists()) {
+                        return ucfirst($this->entity)." $name already exists";
+                    }
+                }
+
+                return null;
+            }
+        );
+
+        return $names;
     }
 
     /**

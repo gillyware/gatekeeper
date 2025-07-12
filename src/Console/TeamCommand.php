@@ -10,12 +10,10 @@ use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Validation\Rule;
 use Throwable;
 
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\text;
 
 class TeamCommand extends AbstractBaseEntityCommand
 {
@@ -62,17 +60,35 @@ class TeamCommand extends AbstractBaseEntityCommand
     }
 
     /**
-     * Handle the creation of a new team.
+     * Handle the creation of one or more new teams.
      */
     private function handleCreate(): void
     {
-        $teamName = $this->gatherEntityName();
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
 
         $this->resolveActor();
 
-        Gatekeeper::createTeam($teamName);
+        [$successes, $failures] = $names->partition(function (string $name) {
+            try {
+                Gatekeeper::createTeam($name);
 
-        info("Team '$teamName' created successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
+
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' created successfully.");
+        }
+
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to create team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -80,15 +96,11 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleUpdate(): void
     {
-        $teamName = $this->gatherEntityName();
+        $teamName = $this->gatherOneExistingEntityName();
 
         $team = $this->teamRepository->findOrFailByName($teamName);
 
-        $newTeamName = text(
-            label: "What will be the new {$this->entity} name?",
-            required: "A {$this->entity} name is required.",
-            validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
-        );
+        $newTeamName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
 
         $this->resolveActor();
 
@@ -102,7 +114,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleDeactivate(): void
     {
-        $teamNames = $this->gatherMultipleEntityNames();
+        $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $teams = $teamNames->map(
             fn (string $name) => $this->teamRepository->findOrFailByName($name)
@@ -127,7 +139,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleReactivate(): void
     {
-        $teamNames = $this->gatherMultipleEntityNames();
+        $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $teams = $teamNames->map(
             fn (string $name) => $this->teamRepository->findOrFailByName($name)
@@ -152,7 +164,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleDelete(): void
     {
-        $teamNames = $this->gatherMultipleEntityNames();
+        $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $teams = $teamNames->map(
             fn (string $name) => $this->teamRepository->findOrFailByName($name)
@@ -177,7 +189,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleAdd(): void
     {
-        $teamNames = $this->gatherMultipleEntityNames();
+        $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $teams = $teamNames->map(
             fn (string $name) => $this->teamRepository->findOrFailByName($name)
@@ -204,7 +216,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleRemove(): void
     {
-        $teamNames = $this->gatherMultipleEntityNames();
+        $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
         $teams = $teamNames->map(
             fn (string $name) => $this->teamRepository->findOrFailByName($name)
@@ -232,7 +244,7 @@ class TeamCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::TEAM_CREATE => 'Create a new team',
+            Action::TEAM_CREATE => 'Create one or more new teams',
             Action::TEAM_UPDATE => 'Update an existing team',
             Action::TEAM_DEACTIVATE => 'Deactivate one or more active teams',
             Action::TEAM_REACTIVATE => 'Reactivate one or more inactive teams',
