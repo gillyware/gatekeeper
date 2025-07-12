@@ -9,6 +9,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
+use Gillyware\Gatekeeper\Services\ModelService;
 use Illuminate\Support\Facades\Config;
 use Throwable;
 
@@ -22,10 +23,11 @@ class PermissionCommand extends AbstractBaseEntityCommand
     protected $description = 'Manage permissions';
 
     public function __construct(
+        ModelService $modelService,
         ModelMetadataService $modelMetadataService,
         private readonly PermissionRepository $permissionRepository,
     ) {
-        parent::__construct($modelMetadataService);
+        parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::PERMISSION;
         $this->entityTable = Config::get('gatekeeper.tables.permissions');

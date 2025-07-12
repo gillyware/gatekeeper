@@ -10,6 +10,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
+use Gillyware\Gatekeeper\Services\ModelService;
 use Illuminate\Support\Facades\Config;
 use Throwable;
 
@@ -23,10 +24,11 @@ class RoleCommand extends AbstractBaseEntityCommand
     protected $description = 'Manage roles';
 
     public function __construct(
+        ModelService $modelService,
         ModelMetadataService $modelMetadataService,
         private readonly RoleRepository $roleRepository,
     ) {
-        parent::__construct($modelMetadataService);
+        parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::ROLE;
         $this->entityTable = Config::get('gatekeeper.tables.roles');
