@@ -1,5 +1,6 @@
 <?php
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
@@ -12,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create(Config::get('gatekeeper.tables.roles'), function (Blueprint $table) {
+        Schema::create(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES), function (Blueprint $table) {
             $table->id();
 
             $table->string('name')->index();
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(Config::get('gatekeeper.tables.roles'));
+        Schema::dropIfExists(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES));
     }
 };

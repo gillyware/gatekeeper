@@ -21,7 +21,7 @@ class RoleControllerTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $this->seed(GatekeeperPermissionsSeeder::class);
         $this->user = User::factory()->create();

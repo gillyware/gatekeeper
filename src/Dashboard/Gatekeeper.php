@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Dashboard;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Config;
@@ -53,10 +54,10 @@ class Gatekeeper
 
         return [
             'config' => [
-                'path' => Config::get('gatekeeper.path'),
-                'audit_enabled' => Config::get('gatekeeper.features.audit'),
-                'roles_enabled' => Config::get('gatekeeper.features.roles'),
-                'teams_enabled' => Config::get('gatekeeper.features.teams'),
+                'path' => Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH),
+                'audit_enabled' => Config::get('gatekeeper.features.audit.enabled', GatekeeperConfigDefault::FEATURES_AUDIT_ENABLED),
+                'roles_enabled' => Config::get('gatekeeper.features.roles.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED),
+                'teams_enabled' => Config::get('gatekeeper.features.teams.enabled', GatekeeperConfigDefault::FEATURES_TEAMS_ENABLED),
             ],
             'user' => [
                 'name' => (string) $user?->name,

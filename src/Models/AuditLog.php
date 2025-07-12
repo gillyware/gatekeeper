@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,7 +37,7 @@ class AuditLog extends Model
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.audit_logs');
+        return Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS);
     }
 
     public function actionBy(): MorphTo
@@ -54,6 +55,6 @@ class AuditLog extends Model
      */
     public static function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.audit_logs'));
+        return Schema::hasTable(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
     }
 }

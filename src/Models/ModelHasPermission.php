@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +28,7 @@ class ModelHasPermission extends AbstractModelHasGatekeeperEntity
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.model_has_permissions');
+        return Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
     }
 
     /**

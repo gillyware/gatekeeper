@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -84,8 +85,8 @@ class ModelHasPermissionRepository
         $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
         $className = $this->modelMetadataService->getClassFromModelData($modelData);
 
-        $searchableColumns = array_keys($modelData['searchable'] ?? []);
-        $displayableColumns = array_keys($modelData['displayable'] ?? []);
+        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
+        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
         $primaryKey = (new $className)->getKeyName();
 
         $permissionIds = Permission::query()
@@ -117,8 +118,8 @@ class ModelHasPermissionRepository
      */
     public function searchAssignmentsByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $permissionsTable = Config::get('gatekeeper.tables.permissions');
-        $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions');
+        $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
+        $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 
         $query = ModelHasPermission::query()
             ->select("$modelPermissionsTable.*")
@@ -141,7 +142,7 @@ class ModelHasPermissionRepository
      */
     public function searchUnassignedByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions');
+        $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 
         $query = Permission::query()
             ->where('name', 'like', "%{$permissionNameSearchTerm}%")

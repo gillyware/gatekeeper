@@ -1,10 +1,9 @@
-import { GatekeeperConfig } from '@/types';
 import axios, { AxiosInstance } from 'axios';
 
 let axiosInstance: AxiosInstance | null = null;
 
-export function initializeAxios(config: GatekeeperConfig) {
-    const baseUrl = `/${config.path}/api`.replace(/\/+/g, '/');
+export function initializeAxios() {
+    const baseUrl = `/gatekeeper/api`.replace(/\/+/g, '/');
 
     axiosInstance = axios.create({
         baseURL: baseUrl,

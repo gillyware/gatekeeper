@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Traits;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Model\MissingActingAsModelException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
@@ -84,7 +85,7 @@ trait EnforcesForGatekeeper
      */
     protected function auditFeatureEnabled(): bool
     {
-        return Config::get('gatekeeper.features.audit');
+        return Config::get('gatekeeper.features.audit.enabled', GatekeeperConfigDefault::FEATURES_AUDIT_ENABLED);
     }
 
     /**
@@ -102,7 +103,7 @@ trait EnforcesForGatekeeper
      */
     protected function rolesFeatureEnabled(): bool
     {
-        return Config::get('gatekeeper.features.roles');
+        return Config::get('gatekeeper.features.roles.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED);
     }
 
     /**
@@ -120,6 +121,6 @@ trait EnforcesForGatekeeper
      */
     protected function teamsFeatureEnabled(): bool
     {
-        return Config::get('gatekeeper.features.teams');
+        return Config::get('gatekeeper.features.teams.enabled', GatekeeperConfigDefault::FEATURES_TEAMS_ENABLED);
     }
 }

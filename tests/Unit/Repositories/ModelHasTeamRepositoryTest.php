@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -52,7 +53,7 @@ class ModelHasTeamRepositoryTest extends TestCase
         $record = $this->repository->create($user, $team);
 
         $this->assertInstanceOf(ModelHasTeam::class, $record);
-        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams'), [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'team_id' => $team->id,
@@ -96,7 +97,7 @@ class ModelHasTeamRepositoryTest extends TestCase
 
         $this->assertTrue($this->repository->deleteForModelAndTeam($user, $team));
 
-        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'team_id' => $team->id,

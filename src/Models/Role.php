@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Factories\RoleFactory;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Illuminate\Support\Facades\Config;
@@ -16,7 +17,7 @@ class Role extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.roles');
+        return Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
     }
 
     /**
@@ -32,6 +33,6 @@ class Role extends AbstractGatekeeperEntity
      */
     public static function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.roles'));
+        return Schema::hasTable(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES));
     }
 }

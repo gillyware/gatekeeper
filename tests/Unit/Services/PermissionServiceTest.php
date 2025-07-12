@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
 use Gillyware\Gatekeeper\Exceptions\Permission\DeletingAssignedPermissionException;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
@@ -28,7 +29,7 @@ class PermissionServiceTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $this->user = User::factory()->create();
         Gatekeeper::setActor($this->user);
@@ -74,7 +75,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_creation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
 
@@ -92,7 +93,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_creation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
 
@@ -117,7 +118,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_update_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $newName = fake()->unique()->word();
@@ -139,7 +140,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_update_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $newName = fake()->unique()->word();
@@ -165,7 +166,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_deactivate_permission_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $permission = Permission::factory()->create();
 
@@ -177,7 +178,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_deactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->create();
@@ -196,7 +197,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_deactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->create();
@@ -220,7 +221,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_reactivate_permission_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $permission = Permission::factory()->inactive()->create();
 
@@ -232,7 +233,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_reactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->inactive()->create();
@@ -251,7 +252,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_reactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->inactive()->create();
@@ -288,7 +289,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_deletion_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->create();
@@ -307,7 +308,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_deletion_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $permission = Permission::factory()->withName($name)->create();
@@ -329,7 +330,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_assign_permission_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -345,7 +346,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_assignment_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -365,7 +366,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_assignment_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -400,7 +401,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_permission_assignment()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
@@ -421,7 +422,7 @@ class PermissionServiceTest extends TestCase
         $this->service->assignToModel($user, $name);
 
         $this->assertTrue($this->service->revokeFromModel($user, $name));
-        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions'), [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
             'model_id' => $user->id,
         ]);
         $this->assertFalse($user->hasPermission($name));
@@ -429,7 +430,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_permission_revocation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -450,7 +451,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_permission_revocation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -476,7 +477,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_permission_revocation()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
@@ -514,7 +515,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_model_has_permission_through_role()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $perm = Permission::factory()->create();
@@ -528,7 +529,7 @@ class PermissionServiceTest extends TestCase
 
     public function test_model_has_permission_through_team_permission()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $perm = Permission::factory()->create();
@@ -542,8 +543,8 @@ class PermissionServiceTest extends TestCase
 
     public function test_model_has_permission_through_team_role_permission()
     {
-        Config::set('gatekeeper.features.teams', true);
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $perm = Permission::factory()->create();
@@ -641,8 +642,8 @@ class PermissionServiceTest extends TestCase
 
     public function test_get_effective_permissions_for_model()
     {
-        Config::set('gatekeeper.features.roles', true);
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $directPermission = Permission::factory()->create();

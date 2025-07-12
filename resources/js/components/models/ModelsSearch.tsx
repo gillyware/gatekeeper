@@ -1,6 +1,7 @@
 import { DebouncedInput } from '@/components/ui/debounced-input';
 import { useGatekeeper } from '@/context/GatekeeperContext';
 import { useApi } from '@/lib/api';
+import { fetchConfiguredModels } from '@/lib/models';
 import { cn } from '@/lib/utils';
 import { ConfiguredModelMetadata, ConfiguredModelSearchResult } from '@/types/api/model';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
@@ -33,7 +34,7 @@ export default function ModelsSearch() {
             return 0;
         }
 
-        return Object.keys(configuredModel?.searchable || {}).length;
+        return (configuredModel?.searchable || []).length;
     }, [configuredModel]) as number;
 
     const searchPlaceholder = useMemo(() => {
@@ -41,7 +42,7 @@ export default function ModelsSearch() {
             return 'Search...';
         }
 
-        const searchableLabels = Object.values(configuredModel.searchable || {});
+        const searchableLabels = (configuredModel?.searchable || []).map((x) => x.label);
 
         if (searchableLabels.length === 0) {
             return 'Search...';
@@ -51,22 +52,17 @@ export default function ModelsSearch() {
     }, [configuredModel]);
 
     useEffect(() => {
-        const fetchModelTypes = async () => {
-            const response = await api.getConfiguredModels();
-
-            if (response.status >= 400) {
-                setError(response.errors?.general || 'Failed to fetch configured models.');
-                return;
-            }
-
-            const configured = response.data as ConfiguredModelMetadata[];
-            setConfiguredModels(configured);
-            if (configured.length > 0) {
-                setConfiguredModelLabel(configured[0].model_label);
-            }
-        };
-
-        fetchModelTypes();
+        fetchConfiguredModels(
+            api,
+            (models) => {
+                setConfiguredModels(models);
+                if (models.length > 0) {
+                    setConfiguredModelLabel(models[0].model_label);
+                }
+            },
+            setLoading,
+            setError,
+        );
     }, []);
 
     useEffect(() => {
@@ -122,9 +118,9 @@ export default function ModelsSearch() {
                 <table className="w-full text-sm">
                     <thead className="bg-muted">
                         <tr>
-                            {Object.values(configuredModel?.displayable || {}).map((label) => (
-                                <th key={label} className="px-4 py-2 text-left font-semibold">
-                                    {label}
+                            {(configuredModel?.displayable || []).map((x) => (
+                                <th key={x.label} className="px-4 py-2 text-left font-semibold">
+                                    {x.label}
                                 </th>
                             ))}
                         </tr>
@@ -168,9 +164,9 @@ export default function ModelsSearch() {
                                         'cursor-pointer border-t transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800',
                                     )}
                                 >
-                                    {Object.keys(modelSearchResult.displayable).map((displayableField) => (
-                                        <td key={displayableField} className="px-4 py-2">
-                                            {modelSearchResult.display[displayableField] || 'N/A'}
+                                    {modelSearchResult.displayable.map((x) => (
+                                        <td key={x.column} className="px-4 py-2">
+                                            {modelSearchResult.display[x.column] || 'N/A'}
                                         </td>
                                     ))}
                                 </tr>

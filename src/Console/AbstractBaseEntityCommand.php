@@ -227,7 +227,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     {
         $class = $this->modelMetadataService->getClassFromLabel($label);
         $modelData = $this->modelMetadataService->getModelDataByLabel($label);
-        $searchable = $modelData['searchable'] ?? [];
+        $searchable = collect($modelData['searchable'] ?? []);
         $instance = new $class;
 
         if (! $class) {
@@ -238,20 +238,20 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             throw new GatekeeperConsoleException("No columns are searchable for [$label] models");
         }
 
-        $searchableList = implode(', ', array_values($searchable));
+        $searchableList = $searchable->pluck('label')->implode(',');
 
         $primaryKey = search(
             label: "Search by {$searchableList}",
-            options: fn (string $value) => $this->modelService->searchModels($label, $value)->mapWithKeys(function (array $model) {
+            options: fn (string $value) => $this->modelService->searchModels($label, trim($value))->mapWithKeys(function (array $model) {
                 $displayable = $model['displayable'] ?? [];
                 $result = [];
 
-                foreach ($displayable as $displayableField => $displayableFieldLabel) {
-                    $result[] = $this->formatDisplayField($displayableFieldLabel, $model['display'][$displayableField]);
+                foreach ($displayable as $x) {
+                    $result[] = $this->formatDisplayField($x['label'], $model['display'][$x['column']], $x['cli_width'] ?? null);
                 }
 
                 if (empty($result)) {
-                    $result[] = $this->formatDisplayField($model['model_label'], $model['model_pk']);
+                    $result[] = $this->formatDisplayField($model['model_label'], $model['model_pk'], $x['cli_width'] ?? null);
                 }
 
                 return [(string) $model['model_pk'] => implode(' | ', $result)];
@@ -266,9 +266,10 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     /**
      * Fix strings to let columns line up across rows.
      */
-    private function formatDisplayField(string $label, string $value, int $width = 25): string
+    private function formatDisplayField(string $label, string $value, ?int $width): string
     {
         $line = "{$label}: {$value}";
+        $width = $width ?: 25;
 
         if (strlen($line) > $width) {
             $line = substr($line, 0, $width - 3).'...';

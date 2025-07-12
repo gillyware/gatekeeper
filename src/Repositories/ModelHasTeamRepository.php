@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -84,8 +85,8 @@ class ModelHasTeamRepository
         $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
         $className = $this->modelMetadataService->getClassFromModelData($modelData);
 
-        $searchableColumns = array_keys($modelData['searchable'] ?? []);
-        $displayableColumns = array_keys($modelData['displayable'] ?? []);
+        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
+        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
         $primaryKey = (new $className)->getKeyName();
 
         $teamIds = Team::query()
@@ -117,8 +118,8 @@ class ModelHasTeamRepository
      */
     public function searchAssignmentsByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $teamsTable = Config::get('gatekeeper.tables.teams');
-        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams');
+        $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
+        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 
         $query = ModelHasTeam::query()
             ->select("$modelTeamsTable.*")
@@ -141,7 +142,7 @@ class ModelHasTeamRepository
      */
     public function searchUnassignedByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams');
+        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 
         $query = Team::query()
             ->where('name', 'like', "%{$teamNameSearchTerm}%")

@@ -21,7 +21,7 @@ class TeamControllerTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $this->seed(GatekeeperPermissionsSeeder::class);
         $this->user = User::factory()->create();

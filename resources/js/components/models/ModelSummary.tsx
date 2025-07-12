@@ -15,10 +15,10 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                     <span>{model.model_label}</span>
                 </div>
 
-                {Object.entries(model.displayable).map(([displayableField, displayableFieldLabel]) => (
+                {model.displayable.map((x) => (
                     <div className="flex flex-row items-center justify-start gap-2">
-                        <span className="min-w-[60px] font-bold">{displayableFieldLabel}:</span>
-                        <span>{model.display[displayableField] ?? 'N/A'}</span>
+                        <span className="min-w-[60px] font-bold">{x.label}:</span>
+                        <span>{model.display[x.column] ?? 'N/A'}</span>
                     </div>
                 ))}
             </CardContent>

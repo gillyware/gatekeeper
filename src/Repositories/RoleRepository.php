@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -152,8 +153,8 @@ class RoleRepository
             return $allRoleNames;
         }
 
-        $rolesTable = Config::get('gatekeeper.tables.roles');
-        $modelHasRolesTable = Config::get('gatekeeper.tables.model_has_roles');
+        $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
+        $modelHasRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 
         $allRoleNames = $model->roles()
             ->select("$rolesTable.*")

@@ -97,7 +97,7 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                             <tr>
                                 <th className="px-4 py-2 text-left font-semibold">Team Name</th>
                                 <th className="px-4 py-2 text-center font-semibold">Team Status</th>
-                                <th className="hidden px-4 py-2 text-center font-semibold sm:inline-flex">Assigned Date/Time</th>
+                                <th className="hidden px-4 py-2 text-center font-semibold sm:table-cell">Assigned Date/Time</th>
                                 {user.permissions.can_manage && <th className="px-4 py-2 text-center font-semibold">Action</th>}
                             </tr>
                         </thead>
@@ -141,7 +141,7 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="hidden px-4 py-2 text-center sm:flex">{assignment.assigned_at || 'N/A'}</td>
+                                        <td className="hidden px-4 py-2 text-center sm:table-cell">{assignment.assigned_at || 'N/A'}</td>
                                         {user.permissions.can_manage && (
                                             <td className="px-4 py-2">
                                                 <Button

@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -152,8 +153,8 @@ class PermissionRepository
             return $allPermissionNames;
         }
 
-        $permissionsTable = Config::get('gatekeeper.tables.permissions');
-        $modelHasPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions');
+        $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
+        $modelHasPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 
         $allPermissionNames = $model->permissions()
             ->select("$permissionsTable.*")

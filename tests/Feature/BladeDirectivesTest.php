@@ -33,7 +33,7 @@ class BladeDirectivesTest extends TestCase
 
     public function test_has_role_directives()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $this->be($user);
@@ -55,7 +55,7 @@ class BladeDirectivesTest extends TestCase
 
     public function test_on_team_directives()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $this->be($user);
