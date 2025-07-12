@@ -27,14 +27,14 @@ class ModelControllerTest extends TestCase
                 'label' => 'User',
                 'class' => User::class,
                 'searchable' => [
-                    'id' => 'ID',
-                    'name' => 'Name',
-                    'email' => 'Email',
+                    ['column' => 'id', 'label' => 'ID'],
+                    ['column' => 'name', 'label' => 'name'],
+                    ['column' => 'email', 'label' => 'email'],
                 ],
-                'display' => [
-                    'id' => 'ID',
-                    'name' => 'Name',
-                    'email' => 'Email',
+                'displayable' => [
+                    ['column' => 'id', 'label' => 'ID'],
+                    ['column' => 'name', 'label' => 'Name'],
+                    ['column' => 'email', 'label' => 'Email'],
                 ],
             ],
         ]);

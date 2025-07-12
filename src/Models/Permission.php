@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Factories\PermissionFactory;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,7 @@ class Permission extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.permissions');
+        return Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
     }
 
     /**
@@ -29,6 +30,6 @@ class Permission extends AbstractGatekeeperEntity
      */
     public static function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.permissions'));
+        return Schema::hasTable(Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS));
     }
 }

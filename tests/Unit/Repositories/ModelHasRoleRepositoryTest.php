@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
@@ -52,7 +53,7 @@ class ModelHasRoleRepositoryTest extends TestCase
         $record = $this->repository->create($user, $role);
 
         $this->assertInstanceOf(ModelHasRole::class, $record);
-        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_roles'), [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'role_id' => $role->id,
@@ -96,7 +97,7 @@ class ModelHasRoleRepositoryTest extends TestCase
 
         $this->assertTrue($this->repository->deleteForModelAndRole($user, $role));
 
-        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_roles'), [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'role_id' => $role->id,

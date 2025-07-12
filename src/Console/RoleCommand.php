@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
@@ -31,7 +32,7 @@ class RoleCommand extends AbstractBaseEntityCommand
         parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::ROLE;
-        $this->entityTable = Config::get('gatekeeper.tables.roles');
+        $this->entityTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
     }
 
     public function handle(): int

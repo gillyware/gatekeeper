@@ -50,7 +50,7 @@ class ModelService
             throw new GatekeeperException("Model with label '{$modelLabel}' not found or not manageable.");
         }
 
-        $searchableColumns = array_keys($modelData['searchable'] ?? []);
+        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
         $query = $className::query();
 
         foreach ($searchableColumns as $column) {
@@ -108,8 +108,8 @@ class ModelService
     {
         $result = [];
 
-        foreach ($modelData['displayable'] ?? [] as $column => $label) {
-            $result[$column] = $model->{$column};
+        foreach (($modelData['displayable'] ?? []) as $x) {
+            $result[$x['column']] = $model->{$x['column']};
         }
 
         return $result;

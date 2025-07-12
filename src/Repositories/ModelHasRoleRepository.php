@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -84,8 +85,8 @@ class ModelHasRoleRepository
         $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
         $className = $this->modelMetadataService->getClassFromModelData($modelData);
 
-        $searchableColumns = array_keys($modelData['searchable'] ?? []);
-        $displayableColumns = array_keys($modelData['displayable'] ?? []);
+        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
+        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
         $primaryKey = (new $className)->getKeyName();
 
         $roleIds = Role::query()
@@ -117,8 +118,8 @@ class ModelHasRoleRepository
      */
     public function searchAssignmentsByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $rolesTable = Config::get('gatekeeper.tables.roles');
-        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles');
+        $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
+        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 
         $query = ModelHasRole::query()
             ->select("$modelRolesTable.*")
@@ -141,7 +142,7 @@ class ModelHasRoleRepository
      */
     public function searchUnassignedByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles');
+        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 
         $query = Role::query()
             ->where('name', 'like', "%{$roleNameSearchTerm}%")

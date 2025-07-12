@@ -21,7 +21,7 @@ class TeamRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $cacheMock = $this->createMock(CacheService::class);
         $this->cacheService = $cacheMock;

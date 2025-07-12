@@ -4,8 +4,8 @@ import { Permission, Role, Team } from '@/types/models';
 
 export interface ConfiguredModelMetadata {
     model_label: string;
-    searchable: { [key: string]: string };
-    displayable: { [key: string]: string };
+    searchable: { column: string; label: string }[];
+    displayable: { column: string; label: string; cli_width: number }[];
     has_permissions: boolean;
     has_roles: boolean;
     has_teams: boolean;

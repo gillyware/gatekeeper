@@ -13,7 +13,7 @@ if (container) {
     const root = createRoot(container);
 
     initializeTheme();
-    initializeAxios(props.config);
+    initializeAxios();
 
     root.render(
         <GatekeeperProvider props={props}>

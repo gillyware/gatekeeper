@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Factories\TeamFactory;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Gillyware\Gatekeeper\Traits\HasRoles;
@@ -18,7 +19,7 @@ class Team extends AbstractGatekeeperEntity
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.teams');
+        return Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
     }
 
     /**
@@ -34,6 +35,6 @@ class Team extends AbstractGatekeeperEntity
      */
     public static function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.teams'));
+        return Schema::hasTable(Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS));
     }
 }

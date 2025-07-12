@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -30,7 +31,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
         parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::PERMISSION;
-        $this->entityTable = Config::get('gatekeeper.tables.permissions');
+        $this->entityTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
     }
 
     public function handle(): int

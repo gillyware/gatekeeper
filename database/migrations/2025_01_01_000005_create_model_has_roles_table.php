@@ -1,5 +1,6 @@
 <?php
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
@@ -12,11 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create(Config::get('gatekeeper.tables.model_has_roles'), function (Blueprint $table) {
+        Schema::create(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('role_id')
-                ->constrained(Config::get('gatekeeper.tables.roles'))
+                ->constrained(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES))
                 ->cascadeOnDelete();
 
             $table->morphs('model');
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(Config::get('gatekeeper.tables.model_has_roles'));
+        Schema::dropIfExists(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES));
     }
 };

@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
@@ -52,7 +53,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $record = $this->repository->create($user, $permission);
 
         $this->assertInstanceOf(ModelHasPermission::class, $record);
-        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_permissions'), [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'permission_id' => $permission->id,
@@ -96,7 +97,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
 
         $this->assertTrue($this->repository->deleteForModelAndPermission($user, $permission));
 
-        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions'), [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
             'model_type' => $user->getMorphClass(),
             'model_id' => $user->id,
             'permission_id' => $permission->id,

@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
 use Gillyware\Gatekeeper\Exceptions\Team\DeletingAssignedTeamException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
@@ -27,7 +28,7 @@ class TeamServiceTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $this->user = User::factory()->create();
         Gatekeeper::setActor($this->user);
@@ -48,7 +49,7 @@ class TeamServiceTest extends TestCase
 
     public function test_create_team_fails_if_teams_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
 
         $this->expectException(TeamsFeatureDisabledException::class);
 
@@ -66,7 +67,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_creation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
 
@@ -84,7 +85,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_creation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
 
@@ -106,7 +107,7 @@ class TeamServiceTest extends TestCase
 
     public function test_update_team_fails_if_teams_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
 
         $this->expectException(TeamsFeatureDisabledException::class);
 
@@ -116,7 +117,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_update_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $team = Team::factory()->withName($name)->create();
@@ -137,7 +138,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_update_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
@@ -159,7 +160,7 @@ class TeamServiceTest extends TestCase
 
     public function test_deactivate_team_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $team = Team::factory()->create();
 
@@ -171,7 +172,7 @@ class TeamServiceTest extends TestCase
 
     public function test_deactivate_team_succeeds_if_teams_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
         $team = Team::factory()->create();
 
         $deactivatedTeam = $this->service->deactivate($team);
@@ -182,7 +183,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_deactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $team = Team::factory()->create();
 
@@ -200,7 +201,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_deactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $team = Team::factory()->create();
 
@@ -221,7 +222,7 @@ class TeamServiceTest extends TestCase
 
     public function test_reactivate_team_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $team = Team::factory()->inactive()->create();
 
@@ -233,7 +234,7 @@ class TeamServiceTest extends TestCase
 
     public function test_reactivate_team_fails_if_teams_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
 
         $team = Team::factory()->inactive()->create();
 
@@ -243,7 +244,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_reactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $team = Team::factory()->inactive()->create();
 
@@ -261,7 +262,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_reactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $team = Team::factory()->inactive()->create();
 
@@ -282,7 +283,7 @@ class TeamServiceTest extends TestCase
 
     public function test_delete_team_succeeds_if_teams_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
 
         $team = Team::factory()->create();
 
@@ -306,7 +307,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_deletion_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $team = Team::factory()->withName($name)->create();
@@ -325,7 +326,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_deletion_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $team = Team::factory()->withName($name)->create();
@@ -344,7 +345,7 @@ class TeamServiceTest extends TestCase
         $result = $this->service->addModelTo($user, $name);
 
         $this->assertTrue($result);
-        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams'), [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'model_id' => $user->id,
             'model_type' => $user->getMorphClass(),
             'team_id' => $team->id,
@@ -368,7 +369,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_assignment_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -388,7 +389,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_assignment_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -423,7 +424,7 @@ class TeamServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_assignment()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $teams = Team::factory()->count(3)->create();
@@ -445,7 +446,7 @@ class TeamServiceTest extends TestCase
         $result = $this->service->removeModelFrom($user, $name);
 
         $this->assertTrue($result);
-        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
+        $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'team_id' => $team->id,
             'model_id' => $user->id,
         ]);
@@ -453,7 +454,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_team_revocation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -474,7 +475,7 @@ class TeamServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_team_revocation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -497,7 +498,7 @@ class TeamServiceTest extends TestCase
 
         $this->assertTrue($result);
         $teams->each(function ($team) use ($user) {
-            $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams'), [
+            $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
                 'team_id' => $team->id,
                 'model_id' => $user->id,
             ]);
@@ -506,7 +507,7 @@ class TeamServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_revocation()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $teams = Team::factory()->count(3)->create();
@@ -579,7 +580,7 @@ class TeamServiceTest extends TestCase
 
     public function test_add_model_to_team_throws_if_feature_disabled()
     {
-        Config::set('gatekeeper.features.teams', false);
+        Config::set('gatekeeper.features.teams.enabled', false);
 
         $this->expectException(TeamsFeatureDisabledException::class);
 

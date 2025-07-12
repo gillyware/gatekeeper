@@ -16,9 +16,9 @@ class MiddlewareTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.audit', false);
-        Config::set('gatekeeper.features.roles', true);
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.audit.enabled', false);
+        Config::set('gatekeeper.features.roles.enabled', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
     }
 
     public function test_has_permission_middleware_allows_access()
@@ -77,7 +77,7 @@ class MiddlewareTest extends TestCase
 
     public function test_has_role_middleware_allows_access()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $roleName = fake()->unique()->word();
@@ -93,7 +93,7 @@ class MiddlewareTest extends TestCase
 
     public function test_has_role_middleware_denies_access()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $roleName = fake()->unique()->word();
@@ -107,7 +107,7 @@ class MiddlewareTest extends TestCase
 
     public function test_has_any_role_middleware_allows_access()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         [$r1, $r2] = [fake()->unique()->word(), fake()->unique()->word()];
@@ -124,7 +124,7 @@ class MiddlewareTest extends TestCase
 
     public function test_has_any_role_middleware_denies_access()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         [$r1, $r2] = [fake()->unique()->word(), fake()->unique()->word()];
@@ -139,7 +139,7 @@ class MiddlewareTest extends TestCase
 
     public function test_on_team_middleware_allows_access()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $teamName = fake()->unique()->word();
@@ -155,7 +155,7 @@ class MiddlewareTest extends TestCase
 
     public function test_on_team_middleware_denies_access()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $teamName = fake()->unique()->word();
@@ -169,7 +169,7 @@ class MiddlewareTest extends TestCase
 
     public function test_on_any_team_middleware_allows_access()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         [$t1, $t2] = [fake()->unique()->word(), fake()->unique()->word()];
@@ -186,7 +186,7 @@ class MiddlewareTest extends TestCase
 
     public function test_on_any_team_middleware_denies_access()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         [$t1, $t2] = [fake()->unique()->word(), fake()->unique()->word()];

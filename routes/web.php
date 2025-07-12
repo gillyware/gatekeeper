@@ -1,5 +1,6 @@
 <?php
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Http\Controllers\AuditLogController;
 use Gillyware\Gatekeeper\Http\Controllers\HomeController;
@@ -7,11 +8,12 @@ use Gillyware\Gatekeeper\Http\Controllers\ModelController;
 use Gillyware\Gatekeeper\Http\Controllers\PermissionController;
 use Gillyware\Gatekeeper\Http\Controllers\RoleController;
 use Gillyware\Gatekeeper\Http\Controllers\TeamController;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', HomeController::class)->name('home');
+Route::get(Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH), HomeController::class)->name('home');
 
-Route::prefix('api')->name('api.')->group(function () {
+Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
     /**
      * ******************************************************************

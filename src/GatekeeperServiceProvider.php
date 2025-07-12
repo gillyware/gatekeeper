@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -72,7 +71,6 @@ class GatekeeperServiceProvider extends ServiceProvider
         }
 
         Route::middleware(['web', 'auth', 'has_permission:'.GatekeeperPermissionName::VIEW])
-            ->prefix(Config::get('gatekeeper.path'))
             ->namespace('Gillyware\Gatekeeper\Http\Controllers')
             ->name('gatekeeper.')
             ->group(__DIR__.'/../routes/web.php');

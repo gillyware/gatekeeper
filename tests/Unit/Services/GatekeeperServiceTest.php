@@ -76,7 +76,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_create_role_delegates_to_role_service()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $roleName = fake()->unique()->word();
 
@@ -88,7 +88,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_update_role_delegates_to_role_service()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
@@ -101,7 +101,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_deactivate_role_delegates_to_role_service()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $role = Role::factory()->create();
 
@@ -112,7 +112,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_reactivate_role_delegates_to_role_service()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $role = Role::factory()->inactive()->create();
 
@@ -123,7 +123,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_delete_role_delegates_to_role_service()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $role = Role::factory()->create();
 
@@ -135,7 +135,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_create_team_delegates_to_team_service()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $teamName = fake()->unique()->word();
 
@@ -147,7 +147,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_update_team_delegates_to_team_service()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
@@ -160,7 +160,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_deactivate_team_delegates_to_team_service()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $team = Team::factory()->create();
 
@@ -171,7 +171,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_reactivate_team_delegates_to_team_service()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $team = Team::factory()->inactive()->create();
 
@@ -182,7 +182,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_delete_team_delegates_to_team_service()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $team = Team::factory()->create();
 
@@ -209,7 +209,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_model_role_methods_delegate()
     {
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $user = User::factory()->create();
         $role1 = Role::factory()->create(['name' => fake()->unique()->word()]);
@@ -226,7 +226,7 @@ class GatekeeperServiceTest extends TestCase
 
     public function test_model_team_methods_delegate()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $team1 = Team::factory()->create(['name' => fake()->unique()->word()]);

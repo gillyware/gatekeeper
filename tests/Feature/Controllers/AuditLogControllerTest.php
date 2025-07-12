@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -74,7 +75,7 @@ class AuditLogControllerTest extends TestCase
     {
         $this->user->assignPermission(GatekeeperPermissionName::VIEW);
 
-        Schema::drop(Config::get('gatekeeper.tables.audit_logs'));
+        Schema::drop(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
 
         $response = $this->getJson(route('gatekeeper.api.audit-logs.index', [
             'page' => 1,

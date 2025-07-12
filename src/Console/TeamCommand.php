@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -30,7 +31,7 @@ class TeamCommand extends AbstractBaseEntityCommand
         parent::__construct($modelService, $modelMetadataService);
 
         $this->entity = GatekeeperEntity::TEAM;
-        $this->entityTable = Config::get('gatekeeper.tables.teams');
+        $this->entityTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
     }
 
     public function handle(): int

@@ -28,7 +28,7 @@ class RoleServiceTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.roles', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
 
         $this->user = User::factory()->create();
         Gatekeeper::setActor($this->user);
@@ -73,7 +73,7 @@ class RoleServiceTest extends TestCase
 
     public function test_create_role_fails_if_roles_feature_disabled()
     {
-        Config::set('gatekeeper.features.roles', false);
+        Config::set('gatekeeper.features.roles.enabled', false);
 
         $name = fake()->unique()->word();
 
@@ -83,7 +83,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_creation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
 
@@ -101,7 +101,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_creation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
 
@@ -123,7 +123,7 @@ class RoleServiceTest extends TestCase
 
     public function test_update_role_fails_if_roles_feature_disabled()
     {
-        Config::set('gatekeeper.features.roles', false);
+        Config::set('gatekeeper.features.roles.enabled', false);
 
         $name = fake()->unique()->word();
         $role = Role::factory()->withName($name)->create();
@@ -136,7 +136,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_update_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $role = Role::factory()->create();
         $oldName = $role->name;
@@ -157,7 +157,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_update_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
@@ -180,7 +180,7 @@ class RoleServiceTest extends TestCase
 
     public function test_deactivate_role_succeeds_if_roles_feature_disabled()
     {
-        Config::set('gatekeeper.features.roles', false);
+        Config::set('gatekeeper.features.roles.enabled', false);
 
         $role = Role::factory()->create();
         $role = $this->service->deactivate($role);
@@ -190,7 +190,7 @@ class RoleServiceTest extends TestCase
 
     public function test_deactivate_role_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $role = Role::factory()->create();
 
@@ -202,7 +202,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_deactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $role = Role::factory()->create();
 
@@ -220,7 +220,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_deactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $role = Role::factory()->create();
 
@@ -242,7 +242,7 @@ class RoleServiceTest extends TestCase
 
     public function test_reactivate_role_fails_if_roles_feature_disabled()
     {
-        Config::set('gatekeeper.features.roles', false);
+        Config::set('gatekeeper.features.roles.enabled', false);
 
         $role = Role::factory()->inactive()->create();
 
@@ -254,7 +254,7 @@ class RoleServiceTest extends TestCase
 
     public function test_reactivate_role_is_idempotent()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $role = Role::factory()->inactive()->create();
 
@@ -266,7 +266,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_reactivation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $role = Role::factory()->inactive()->create();
 
@@ -284,7 +284,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_reactivation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $role = Role::factory()->inactive()->create();
 
@@ -320,7 +320,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_deletion_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
         $role = Role::factory()->withName($name)->create();
@@ -339,7 +339,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_deletion_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $name = fake()->unique()->word();
         $role = Role::factory()->withName($name)->create();
@@ -375,7 +375,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_assignment_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -395,7 +395,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_assignment_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -428,7 +428,7 @@ class RoleServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_assignment()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
@@ -454,7 +454,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_inserted_on_role_revocation_when_auditing_enabled()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -475,7 +475,7 @@ class RoleServiceTest extends TestCase
 
     public function test_audit_log_not_inserted_on_role_revocation_when_auditing_disabled()
     {
-        Config::set('gatekeeper.features.audit', false);
+        Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
         $name = fake()->unique()->word();
@@ -501,7 +501,7 @@ class RoleServiceTest extends TestCase
 
     public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_revocation()
     {
-        Config::set('gatekeeper.features.audit', true);
+        Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
@@ -528,7 +528,7 @@ class RoleServiceTest extends TestCase
 
     public function test_model_has_role_through_team()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $role = Role::factory()->create();
@@ -578,7 +578,7 @@ class RoleServiceTest extends TestCase
 
     public function test_model_has_returns_false_if_team_inactive()
     {
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $role = Role::factory()->create();
@@ -604,7 +604,7 @@ class RoleServiceTest extends TestCase
 
     public function test_throws_if_roles_feature_disabled()
     {
-        Config::set('gatekeeper.features.roles', false);
+        Config::set('gatekeeper.features.roles.enabled', false);
 
         $this->expectException(RolesFeatureDisabledException::class);
 
@@ -658,8 +658,8 @@ class RoleServiceTest extends TestCase
 
     public function test_get_effective_roles_for_model()
     {
-        Config::set('gatekeeper.features.roles', true);
-        Config::set('gatekeeper.features.teams', true);
+        Config::set('gatekeeper.features.roles.enabled', true);
+        Config::set('gatekeeper.features.teams.enabled', true);
 
         $user = User::factory()->create();
         $directRole = Role::factory()->create();

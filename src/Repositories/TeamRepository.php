@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -152,8 +153,8 @@ class TeamRepository
             return $allTeamNames;
         }
 
-        $teamsTable = Config::get('gatekeeper.tables.teams');
-        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams');
+        $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
+        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 
         $allTeamNames = $model->teams()
             ->select("$teamsTable.*")

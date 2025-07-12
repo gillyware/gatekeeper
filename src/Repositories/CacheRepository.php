@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
@@ -15,8 +16,8 @@ class CacheRepository
 
     public function __construct()
     {
-        $this->prefix = Config::get('gatekeeper.cache.prefix');
-        $this->ttl = (int) Config::get('gatekeeper.cache.ttl');
+        $this->prefix = Config::get('gatekeeper.cache.prefix', GatekeeperConfigDefault::CACHE_PREFIX);
+        $this->ttl = (int) Config::get('gatekeeper.cache.ttl', GatekeeperConfigDefault::CACHE_TTL);
     }
 
     /**
