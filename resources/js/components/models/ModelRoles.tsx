@@ -10,6 +10,7 @@ import { Button } from '@components/ui/button';
 import HeadingSmall from '@components/ui/heading-small';
 import { CheckCircle, Loader, PauseCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 interface ModelRolesProps {
     model: ConfiguredModel;
@@ -19,6 +20,7 @@ export default function ModelRoles({ model }: ModelRolesProps) {
     const api = useApi();
     const isMobile = useIsMobile();
     const { user } = useGatekeeper();
+    const navigate = useNavigate();
 
     const [roleAssignments, setRoleAssignments] = useState<Pagination<RoleAssignment> | null>(null);
     const [roleAssignmentsSearchTerm, setRoleAssignmentsSearchTerm] = useState<string>('');
@@ -131,7 +133,16 @@ export default function ModelRoles({ model }: ModelRolesProps) {
                             ) : (
                                 roleAssignments.data.map((assignment) => (
                                     <tr key={assignment.role.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{assignment.role.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/roles/${assignment.role.id}/manage`);
+                                                }}
+                                            >
+                                                {assignment.role.name}
+                                            </Button>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {assignment.role.is_active ? (
@@ -305,7 +316,16 @@ export default function ModelRoles({ model }: ModelRolesProps) {
                             ) : (
                                 unassignedRoles.data.map((role) => (
                                     <tr key={role.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{role.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/roles/${role.id}/manage`);
+                                                }}
+                                            >
+                                                {role.name}
+                                            </Button>
+                                        </td>
                                         <td className="flex items-center justify-center px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {role.is_active ? (
