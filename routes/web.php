@@ -114,15 +114,9 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('/search', 'search')->name('search');
 
-        Route::get('/search-by-permission', 'searchByPermission')->name('search-by-permission');
-
-        Route::get('/search-by-role', 'searchByRole')->name('search-by-role');
-
         Route::get('/search-entity-assignments-for-model', 'searchEntityAssignmentsForModel')->name('search-entity-assignments-for-model');
 
         Route::get('/search-unassigned-entities-for-model', 'searchUnassignedEntitiesForModel')->name('search-unassigned-entities-for-model');
-
-        Route::get('/search-by-team', 'searchByTeam')->name('search-by-team');
 
         Route::get('/lookup', 'lookup')->name('lookup');
 

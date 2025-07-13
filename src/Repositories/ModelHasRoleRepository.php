@@ -66,42 +66,6 @@ class ModelHasRoleRepository
     }
 
     /**
-     * Search for models by role name and model searchables.
-     */
-    public function searchByRole(string $modelLabel, string $roleNameSearchTerm, string $modelSearchTerm, int $page): LengthAwarePaginator
-    {
-        $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
-        $className = $this->modelMetadataService->getClassFromModelData($modelData);
-
-        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
-        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
-        $primaryKey = (new $className)->getKeyName();
-
-        $roleIds = Role::query()
-            ->where('name', 'like', "%{$roleNameSearchTerm}%")
-            ->pluck('id');
-
-        $query = ModelHasRole::query()
-            ->where('model_type', $className)
-            ->whereIn('role_id', $roleIds)
-            ->whereHasMorph('model', $className, function ($query) use ($searchableColumns, $modelSearchTerm) {
-                $query->where(function ($query) use ($searchableColumns, $modelSearchTerm) {
-                    foreach ($searchableColumns as $column) {
-                        $query->orWhere($column, 'like', "%{$modelSearchTerm}%");
-                    }
-                });
-            })
-            ->with([
-                'role:id,name,is_active',
-                'model' => function ($query) use ($displayableColumns, $primaryKey) {
-                    $query->select(array_merge([$primaryKey], $displayableColumns));
-                },
-            ]);
-
-        return $query->paginate(10, ['*'], 'page', $page);
-    }
-
-    /**
      * Search model role assignments by role name.
      */
     public function searchAssignmentsByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator

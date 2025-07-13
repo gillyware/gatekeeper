@@ -66,42 +66,6 @@ class ModelHasTeamRepository
     }
 
     /**
-     * Search for models by team name and model searchables.
-     */
-    public function searchByTeam(string $modelLabel, string $teamNameSearchTerm, string $modelSearchTerm, int $page): LengthAwarePaginator
-    {
-        $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
-        $className = $this->modelMetadataService->getClassFromModelData($modelData);
-
-        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
-        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
-        $primaryKey = (new $className)->getKeyName();
-
-        $teamIds = Team::query()
-            ->where('name', 'like', "%{$teamNameSearchTerm}%")
-            ->pluck('id');
-
-        $query = ModelHasTeam::query()
-            ->where('model_type', $className)
-            ->whereIn('team_id', $teamIds)
-            ->whereHasMorph('model', $className, function ($query) use ($searchableColumns, $modelSearchTerm) {
-                $query->where(function ($query) use ($searchableColumns, $modelSearchTerm) {
-                    foreach ($searchableColumns as $column) {
-                        $query->orWhere($column, 'like', "%{$modelSearchTerm}%");
-                    }
-                });
-            })
-            ->with([
-                'team:id,name,is_active',
-                'model' => function ($query) use ($displayableColumns, $primaryKey) {
-                    $query->select(array_merge([$primaryKey], $displayableColumns));
-                },
-            ]);
-
-        return $query->paginate(10, ['*'], 'page', $page);
-    }
-
-    /**
      * Search model team assignments by team name.
      */
     public function searchAssignmentsByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator

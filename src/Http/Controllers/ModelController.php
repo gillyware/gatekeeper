@@ -9,9 +9,6 @@ use Gillyware\Gatekeeper\Http\Requests\Model\AssignEntityToModelRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\LookupModelRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\RevokeEntityFromModelRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\SearchEntitiesForModelRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\SearchModelsByPermissionRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\SearchModelsByRoleRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\SearchModelsByTeamRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\SearchModelsRequest;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Services\ModelPermissionService;
@@ -74,72 +71,6 @@ class ModelController extends Controller
             return Response::json($this->modelService->searchModels(
                 $request->validated('model_label'),
                 (string) $request->validated('search_term')
-            ));
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Search for models by permission name and model search term.
-     */
-    public function searchByPermission(SearchModelsByPermissionRequest $request): JsonResponse
-    {
-        try {
-            $label = $request->validated('model_label');
-            $permissionNameSearchTerm = (string) $request->validated('permission_name_search_term');
-            $modelSearchTerm = (string) $request->validated('search_term');
-            $page = $request->validated('page');
-
-            return Response::json($this->modelService->searchByPermission(
-                $label,
-                $permissionNameSearchTerm,
-                $modelSearchTerm,
-                $page
-            ));
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Search for models by role name and model search term.
-     */
-    public function searchByRole(SearchModelsByRoleRequest $request): JsonResponse
-    {
-        try {
-            $label = $request->validated('model_label');
-            $roleNameSearchTerm = (string) $request->validated('role_name_search_term');
-            $modelSearchTerm = (string) $request->validated('search_term');
-            $page = $request->validated('page');
-
-            return Response::json($this->modelService->searchByRole(
-                $label,
-                $roleNameSearchTerm,
-                $modelSearchTerm,
-                $page
-            ));
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Search for models by team name and model search term.
-     */
-    public function searchByTeam(SearchModelsByTeamRequest $request): JsonResponse
-    {
-        try {
-            $label = $request->validated('model_label');
-            $teamNameSearchTerm = (string) $request->validated('team_name_search_term');
-            $modelSearchTerm = (string) $request->validated('search_term');
-            $page = $request->validated('page');
-
-            return Response::json($this->modelService->searchByTeam(
-                $label,
-                $teamNameSearchTerm,
-                $modelSearchTerm,
-                $page
             ));
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());

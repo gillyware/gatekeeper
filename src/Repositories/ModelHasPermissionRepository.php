@@ -66,42 +66,6 @@ class ModelHasPermissionRepository
     }
 
     /**
-     * Search for models by permission name and model searchables.
-     */
-    public function searchByPermission(string $modelLabel, string $permissionNameSearchTerm, string $modelSearchTerm, int $page): LengthAwarePaginator
-    {
-        $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
-        $className = $this->modelMetadataService->getClassFromModelData($modelData);
-
-        $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
-        $displayableColumns = collect($modelData['displayable'] ?? [])->pluck('column')->values()->all();
-        $primaryKey = (new $className)->getKeyName();
-
-        $permissionIds = Permission::query()
-            ->where('name', 'like', "%{$permissionNameSearchTerm}%")
-            ->pluck('id');
-
-        $query = ModelHasPermission::query()
-            ->where('model_type', $className)
-            ->whereIn('permission_id', $permissionIds)
-            ->whereHasMorph('model', $className, function ($query) use ($searchableColumns, $modelSearchTerm) {
-                $query->where(function ($query) use ($searchableColumns, $modelSearchTerm) {
-                    foreach ($searchableColumns as $column) {
-                        $query->orWhere($column, 'like', "%{$modelSearchTerm}%");
-                    }
-                });
-            })
-            ->with([
-                'permission:id,name,is_active',
-                'model' => function ($query) use ($displayableColumns, $primaryKey) {
-                    $query->select(array_merge([$primaryKey], $displayableColumns));
-                },
-            ]);
-
-        return $query->paginate(10, ['*'], 'page', $page);
-    }
-
-    /**
      * Search model permission assignments by permission name.
      */
     public function searchAssignmentsByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
