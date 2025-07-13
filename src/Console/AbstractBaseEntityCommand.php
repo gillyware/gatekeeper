@@ -84,7 +84,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $actionVerb = str($this->action)->after('_')->toString();
 
         return collect(multisearch(
-            label: "Search for the {$this->entity}s to $actionVerb",
+            label: "Search for the {$this->entity}(s) to $actionVerb",
             options: fn (string $value) => $this->filterEntityNamesForAction($value),
             required: "At least one {$this->entity} name is required.",
             validate: ['array', 'min:1', 'max:100', Rule::exists($this->entityTable, 'name')],

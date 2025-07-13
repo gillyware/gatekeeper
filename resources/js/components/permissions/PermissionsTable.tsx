@@ -52,9 +52,6 @@ export default function PermissionsTable({ className = '', ...props }: HTMLAttri
                     <thead className="bg-muted">
                         <tr>
                             <th className="px-4 py-2 text-left font-semibold">
-                                <span className="inline-flex items-center gap-1">PK</span>
-                            </th>
-                            <th className="px-4 py-2 text-left font-semibold">
                                 <span className="inline-flex items-center gap-1">
                                     Name
                                     <ArrowUpDown
@@ -91,19 +88,19 @@ export default function PermissionsTable({ className = '', ...props }: HTMLAttri
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={3} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
                                     <Loader className="mx-auto h-5 w-5 animate-spin text-gray-500 dark:text-gray-400" />
                                 </td>
                             </tr>
                         ) : error ? (
                             <tr>
-                                <td colSpan={3} className="px-4 py-6 text-center text-red-500">
+                                <td colSpan={2} className="px-4 py-6 text-center text-red-500">
                                     {error}
                                 </td>
                             </tr>
                         ) : permissions.length === 0 ? (
                             <tr>
-                                <td colSpan={3} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
                                     No permissions found.
                                 </td>
                             </tr>
@@ -127,7 +124,6 @@ export default function PermissionsTable({ className = '', ...props }: HTMLAttri
                                         'cursor-pointer border-t transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800',
                                     )}
                                 >
-                                    <td className="px-4 py-2">{permission.id}</td>
                                     <td className="px-4 py-2">{permission.name}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center gap-2">
