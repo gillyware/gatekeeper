@@ -164,6 +164,8 @@ class RoleService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
         $this->enforceRoleInteraction($model);
+        $this->enforceModelIsNotRole($model, 'Roles cannot be assigned to other roles');
+        $this->enforceModelIsNotPermission($model, 'Roles cannot be assigned to permissions');
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findOrFailByName($roleName);

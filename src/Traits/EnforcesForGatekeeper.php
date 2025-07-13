@@ -3,12 +3,16 @@
 namespace Gillyware\Gatekeeper\Traits;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Exceptions\Model\InvalidEntityAssignmentException;
 use Gillyware\Gatekeeper\Exceptions\Model\MissingActingAsModelException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
 use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamsFeatureDisabledException;
+use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Models\Team;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 
@@ -35,6 +39,24 @@ trait EnforcesForGatekeeper
     }
 
     /**
+     * Enforce that the model is not a permission.
+     */
+    protected function enforceModelIsNotPermission(Model $model, string $message): void
+    {
+        if ($this->modelIsPermission($model)) {
+            throw new InvalidEntityAssignmentException($message);
+        }
+    }
+
+    /**
+     * Check if the model is a permission.
+     */
+    protected function modelIsPermission(Model|string $model): bool
+    {
+        return $model instanceof Permission || $model === Permission::class;
+    }
+
+    /**
      * Enforce that the model interacts with roles.
      */
     protected function enforceRoleInteraction(Model $model): void
@@ -53,6 +75,24 @@ trait EnforcesForGatekeeper
     }
 
     /**
+     * Enforce that the model is not a role.
+     */
+    protected function enforceModelIsNotRole(Model $model, string $message): void
+    {
+        if ($this->modelIsRole($model)) {
+            throw new InvalidEntityAssignmentException($message);
+        }
+    }
+
+    /**
+     * Check if the model is a role.
+     */
+    protected function modelIsRole(Model|string $model): bool
+    {
+        return $model instanceof Role || $model === Role::class;
+    }
+
+    /**
      * Enforce that the model interacts with teams.
      */
     protected function enforceTeamInteraction(Model $model): void
@@ -68,6 +108,24 @@ trait EnforcesForGatekeeper
     protected function modelInteractsWithTeams(Model|string $model): bool
     {
         return in_array(HasTeams::class, class_uses_recursive($model));
+    }
+
+    /**
+     * Enforce that the model is not a team.
+     */
+    protected function enforceModelIsNotTeam(Model $model, string $message): void
+    {
+        if ($this->modelIsTeam($model)) {
+            throw new InvalidEntityAssignmentException($message);
+        }
+    }
+
+    /**
+     * Check if the model is a team.
+     */
+    protected function modelIsTeam(Model|string $model): bool
+    {
+        return $model instanceof Team || $model === Team::class;
     }
 
     /**

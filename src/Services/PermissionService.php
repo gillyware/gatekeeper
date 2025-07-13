@@ -167,6 +167,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforcePermissionInteraction($model);
+        $this->enforceModelIsNotPermission($model, 'Permissions cannot be assigned to other permissions');
 
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findOrFailByName($permissionName);

@@ -161,6 +161,9 @@ class TeamService extends AbstractGatekeeperEntityService
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
         $this->enforceTeamInteraction($model);
+        $this->enforceModelIsNotTeam($model, 'Teams cannot be assigned to other teams');
+        $this->enforceModelIsNotRole($model, 'Teams cannot be assigned to roles');
+        $this->enforceModelIsNotPermission($model, 'Teams cannot be assigned to permissions');
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);

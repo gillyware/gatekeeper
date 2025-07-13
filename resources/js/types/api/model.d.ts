@@ -6,6 +6,9 @@ export interface ConfiguredModelMetadata {
     model_label: string;
     searchable: { column: string; label: string }[];
     displayable: { column: string; label: string; cli_width: number }[];
+    is_permission: boolean;
+    is_role: boolean;
+    is_team: boolean;
     has_permissions: boolean;
     has_roles: boolean;
     has_teams: boolean;

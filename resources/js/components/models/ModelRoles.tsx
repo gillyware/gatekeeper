@@ -19,7 +19,7 @@ interface ModelRolesProps {
 export default function ModelRoles({ model }: ModelRolesProps) {
     const api = useApi();
     const isMobile = useIsMobile();
-    const { user } = useGatekeeper();
+    const { config, user } = useGatekeeper();
     const navigate = useNavigate();
 
     const [roleAssignments, setRoleAssignments] = useState<Pagination<RoleAssignment> | null>(null);
@@ -39,6 +39,8 @@ export default function ModelRoles({ model }: ModelRolesProps) {
     const numberOfColumns = useMemo(() => {
         return user.permissions.can_manage ? 3 : 2;
     }, [user]) as number;
+
+    const entitySupported: boolean = useMemo(() => config.roles_enabled && model.has_roles && !model.is_role && !model.is_permission, [model]);
 
     useEffect(() => {
         fetchEntityAssignmentsForModel(
@@ -289,7 +291,7 @@ export default function ModelRoles({ model }: ModelRolesProps) {
                             <tr>
                                 <th className="px-4 py-2 text-left font-semibold">Role Name</th>
                                 <th className="px-4 py-2 text-center font-semibold">Role Status</th>
-                                {user.permissions.can_manage && <th className="px-7 py-2 text-left font-semibold">Action</th>}
+                                {user.permissions.can_manage && entitySupported && <th className="px-7 py-2 text-left font-semibold">Action</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -335,7 +337,7 @@ export default function ModelRoles({ model }: ModelRolesProps) {
                                                 )}
                                             </div>
                                         </td>
-                                        {user.permissions.can_manage && (
+                                        {user.permissions.can_manage && entitySupported && (
                                             <td className="px-4 py-2">
                                                 <Button
                                                     variant="ghost"
