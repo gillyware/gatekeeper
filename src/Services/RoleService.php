@@ -272,9 +272,7 @@ class RoleService extends AbstractGatekeeperEntityService
      */
     public function modelHasDirectly(Model $model, Role $role): bool
     {
-        $recentRoleAssignment = $this->modelHasRoleRepository->getRecentForModelAndRoleIncludingTrashed($model, $role);
-
-        return $recentRoleAssignment && ! $recentRoleAssignment->deleted_at;
+        return $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $role->is($r));
     }
 
     /**

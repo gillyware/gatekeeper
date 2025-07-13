@@ -15,16 +15,17 @@ class ModelMetadataService
 
     protected Collection $models;
 
-    public function __construct()
-    {
-        $this->models = collect(Config::get('gatekeeper.models.manageable', []));
-    }
-
     /**
      * Get all configured manageable models.
      */
     public function getConfiguredModels(): Collection
     {
+        if (isset($this->models)) {
+            return $this->models;
+        }
+
+        $this->models = collect(Config::get('gatekeeper.models.manageable', []));
+
         return $this->models;
     }
 
@@ -33,7 +34,7 @@ class ModelMetadataService
      */
     public function getConfiguredModelLabels(): Collection
     {
-        return $this->models->pluck('label');
+        return $this->getConfiguredModels()->pluck('label');
     }
 
     /**
@@ -41,7 +42,7 @@ class ModelMetadataService
      */
     public function getModelDataByLabel(string $label): array
     {
-        $data = $this->models->first(fn ($model) => $model['label'] === $label);
+        $data = $this->getConfiguredModels()->first(fn ($model) => $model['label'] === $label);
 
         if (! $data) {
             throw new ModelConfigurationException("Model with label '{$label}' not found in configuration.");

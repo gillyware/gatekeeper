@@ -52,18 +52,6 @@ class ModelHasTeamRepository
     }
 
     /**
-     * Get the most recent ModelHasTeam instance for a given model and team, including trashed instances.
-     */
-    public function getRecentForModelAndTeamIncludingTrashed(Model $model, Team $team): ?ModelHasTeam
-    {
-        return ModelHasTeam::forModel($model)
-            ->where('team_id', $team->id)
-            ->withTrashed()
-            ->latest()
-            ->first();
-    }
-
-    /**
      * Delete all ModelHasTeam instances for a given model and team.
      */
     public function deleteForModelAndTeam(Model $model, Team $team): bool

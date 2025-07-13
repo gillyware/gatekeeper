@@ -69,6 +69,7 @@ return [
     */
 
     'cache' => [
+        'enabled' => env('GATEKEEPER_CACHE_ENABLED', GatekeeperConfigDefault::CACHE_ENABLED),
         'prefix' => env('GATEKEEPER_CACHE_PREFIX', GatekeeperConfigDefault::CACHE_PREFIX),
         'ttl' => env('GATEKEEPER_CACHE_TTL', GatekeeperConfigDefault::CACHE_TTL),
     ],

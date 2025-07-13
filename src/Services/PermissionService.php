@@ -289,9 +289,7 @@ class PermissionService extends AbstractGatekeeperEntityService
      */
     public function modelHasDirectly(Model $model, Permission $permission): bool
     {
-        $recentPermissionAssignment = $this->modelHasPermissionRepository->getRecentForModelAndPermissionIncludingTrashed($model, $permission);
-
-        return $recentPermissionAssignment && ! $recentPermissionAssignment->deleted_at;
+        return $this->permissionRepository->activeForModel($model)->some(fn (Permission $p) => $permission->is($p));
     }
 
     /**

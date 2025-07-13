@@ -73,17 +73,6 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $this->assertInstanceOf(ModelHasPermission::class, $records->first());
     }
 
-    public function test_it_can_get_most_recent_model_permission_including_trashed()
-    {
-        $user = User::factory()->create();
-        $permission = Permission::factory()->create();
-
-        $this->repository->create($user, $permission);
-        $record = $this->repository->getRecentForModelAndPermissionIncludingTrashed($user, $permission);
-
-        $this->assertInstanceOf(ModelHasPermission::class, $record);
-    }
-
     public function test_it_can_soft_delete_model_permission()
     {
         $user = User::factory()->create();

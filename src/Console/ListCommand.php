@@ -36,7 +36,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($permissions->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $permissions->map(fn (Permission $p) => [
-                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->format('Y-m-d H:i:s T'), $p->updated_at->format('Y-m-d H:i:s T')
+                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->format('Y-m-d H:i:s T'), $p->updated_at->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No permissions found.');
@@ -53,7 +53,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($roles->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $roles->map(fn (Role $r) => [
-                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->format('Y-m-d H:i:s T'), $r->updated_at->format('Y-m-d H:i:s T')
+                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->format('Y-m-d H:i:s T'), $r->updated_at->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No roles found.');
@@ -70,7 +70,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($teams->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $teams->map(fn (Team $t) => [
-                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->format('Y-m-d H:i:s T'), $t->updated_at->format('Y-m-d H:i:s T')
+                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->format('Y-m-d H:i:s T'), $t->updated_at->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No teams found.');

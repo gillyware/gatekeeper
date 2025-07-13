@@ -52,18 +52,6 @@ class ModelHasPermissionRepository
     }
 
     /**
-     * Get the most recent ModelHasPermission instance for a given model and permission, including trashed instances.
-     */
-    public function getRecentForModelAndPermissionIncludingTrashed(Model $model, Permission $permission): ?ModelHasPermission
-    {
-        return ModelHasPermission::forModel($model)
-            ->where('permission_id', $permission->id)
-            ->withTrashed()
-            ->latest()
-            ->first();
-    }
-
-    /**
      * Delete all ModelHasPermission instances for a given model and permission.
      */
     public function deleteForModelAndPermission(Model $model, Permission $permission): bool
