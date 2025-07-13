@@ -1,3 +1,4 @@
+import { useGatekeeper } from '@/context/GatekeeperContext';
 import { ConfiguredModel } from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
 import { Ban, CheckCircle } from 'lucide-react';
@@ -14,6 +15,8 @@ interface SupportIndicatorProps {
 }
 
 export default function ModelSummary({ model }: ModelSummaryProps) {
+    const { config } = useGatekeeper();
+
     return (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card>
@@ -46,8 +49,12 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                         <span className="font-bold">Permissions:</span>
                         <span>
                             <SupportIndicator
-                                supported={model.has_permissions}
-                                tooltip="Add the `HasPermissions` trait to this model to enable permission assignment."
+                                supported={model.has_permissions && !model.is_permission}
+                                tooltip={
+                                    model.is_permission
+                                        ? 'Permissions cannot be assigned to other permissions'
+                                        : 'Add the `HasPermissions` trait to this model to enable permission assignment.'
+                                }
                             />
                         </span>
                     </div>
@@ -56,8 +63,16 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                         <span className="font-bold">Roles:</span>
                         <span>
                             <SupportIndicator
-                                supported={model.has_roles}
-                                tooltip="Add the `HasRoles` trait to this model to enable role assignment."
+                                supported={config.roles_enabled && model.has_roles && !model.is_role && !model.is_permission}
+                                tooltip={
+                                    !config.roles_enabled
+                                        ? "The 'roles' feature is disabled in the configuration"
+                                        : model.is_role
+                                          ? 'Roles cannot be assigned to other roles'
+                                          : model.is_permission
+                                            ? 'Roles cannot be assigned to permissions'
+                                            : 'Add the `HasRoles` trait to this model to enable role assignment.'
+                                }
                             />
                         </span>
                     </div>
@@ -66,8 +81,18 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                         <span className="font-bold">Teams:</span>
                         <span>
                             <SupportIndicator
-                                supported={model.has_teams}
-                                tooltip="Add the `HasTeams` trait to this model to enable team assignment."
+                                supported={config.teams_enabled && model.has_teams && !model.is_team && !model.is_role && !model.is_permission}
+                                tooltip={
+                                    !config.teams_enabled
+                                        ? "The 'teams' feature is disabled in the configuration"
+                                        : model.is_team
+                                          ? 'Teams cannot be assigned to other teams.'
+                                          : model.is_role
+                                            ? 'Teams cannot be assigned to roles'
+                                            : model.is_permission
+                                              ? 'Teams cannot be assigned to permissions'
+                                              : 'Add the `HasTeams` trait to this model to enable team assignment.'
+                                }
                             />
                         </span>
                     </div>

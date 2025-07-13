@@ -49,6 +49,9 @@ class ModelController extends Controller
                             'model_label' => $modelData['label'],
                             'searchable' => $modelData['searchable'] ?? [],
                             'displayable' => $modelData['displayable'] ?? [],
+                            'is_permission' => $this->modelIsPermission($className),
+                            'is_role' => $this->modelIsRole($className),
+                            'is_team' => $this->modelIsTeam($className),
                             'has_permissions' => $this->modelInteractsWithPermissions($className),
                             'has_roles' => $this->modelInteractsWithRoles($className),
                             'has_teams' => $this->modelInteractsWithTeams($className),
@@ -217,6 +220,10 @@ class ModelController extends Controller
                 'displayable' => $modelData['displayable'] ?? [],
 
                 'display' => $this->modelService->prepareModelForDisplay($modelData, $model),
+
+                'is_permission' => $this->modelIsPermission($model),
+                'is_role' => $this->modelIsRole($model),
+                'is_team' => $this->modelIsTeam($model),
 
                 'has_permissions' => $this->modelInteractsWithPermissions($model),
                 'has_roles' => $this->modelInteractsWithRoles($model),

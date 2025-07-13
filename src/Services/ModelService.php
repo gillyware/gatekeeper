@@ -65,6 +65,10 @@ class ModelService
 
             'display' => $this->prepareModelForDisplay($modelData, $model),
 
+            'is_permission' => $this->modelIsPermission($model),
+            'is_role' => $this->modelIsRole($model),
+            'is_team' => $this->modelIsTeam($model),
+
             'has_permissions' => $this->modelInteractsWithPermissions($model),
             'has_roles' => $this->modelInteractsWithRoles($model),
             'has_teams' => $this->modelInteractsWithTeams($model),
@@ -131,6 +135,10 @@ class ModelService
             'displayable' => $modelData['displayable'] ?? [],
 
             'display' => $this->prepareModelForDisplay($modelData, $modelHasEntity->model),
+
+            'is_permission' => $this->modelIsPermission($modelHasEntity->model),
+            'is_role' => $this->modelIsRole($modelHasEntity->model),
+            'is_team' => $this->modelIsTeam($modelHasEntity->model),
 
             'has_permissions' => $modelInteractsWithPermissions,
             'has_roles' => $modelInteractsWithRoles,

@@ -40,6 +40,8 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
         return user.permissions.can_manage ? 3 : 2;
     }, [user]) as number;
 
+    const entitySupported: boolean = useMemo(() => model.has_permissions && !model.is_permission, [model]);
+
     useEffect(() => {
         fetchEntityAssignmentsForModel(
             api,
@@ -289,7 +291,7 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
                             <tr>
                                 <th className="px-4 py-2 text-left font-semibold">Permission Name</th>
                                 <th className="px-4 py-2 text-center font-semibold">Permission Status</th>
-                                {user.permissions.can_manage && <th className="px-7 py-2 text-left font-semibold">Action</th>}
+                                {user.permissions.can_manage && entitySupported && <th className="px-7 py-2 text-left font-semibold">Action</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -335,7 +337,7 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
                                                 )}
                                             </div>
                                         </td>
-                                        {user.permissions.can_manage && (
+                                        {user.permissions.can_manage && entitySupported && (
                                             <td className="px-4 py-2">
                                                 <Button
                                                     variant="ghost"

@@ -19,7 +19,7 @@ interface ModelTeamsProps {
 export default function ModelTeams({ model }: ModelTeamsProps) {
     const api = useApi();
     const isMobile = useIsMobile();
-    const { user } = useGatekeeper();
+    const { config, user } = useGatekeeper();
     const navigate = useNavigate();
 
     const [teamAssignments, setTeamAssignments] = useState<Pagination<TeamAssignment> | null>(null);
@@ -39,6 +39,11 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
     const numberOfColumns = useMemo(() => {
         return user.permissions.can_manage ? 3 : 2;
     }, [user]) as number;
+
+    const entitySupported: boolean = useMemo(
+        () => config.teams_enabled && model.has_teams && !model.is_team && !model.is_role && !model.is_permission,
+        [model],
+    );
 
     useEffect(() => {
         fetchEntityAssignmentsForModel(
@@ -289,7 +294,7 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                             <tr>
                                 <th className="px-4 py-2 text-left font-semibold">Team Name</th>
                                 <th className="px-4 py-2 text-center font-semibold">Team Status</th>
-                                {user.permissions.can_manage && <th className="px-7 py-2 text-left font-semibold">Action</th>}
+                                {user.permissions.can_manage && entitySupported && <th className="px-7 py-2 text-left font-semibold">Action</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -335,7 +340,7 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                                                 )}
                                             </div>
                                         </td>
-                                        {user.permissions.can_manage && (
+                                        {user.permissions.can_manage && entitySupported && (
                                             <td className="px-4 py-2">
                                                 <Button
                                                     variant="ghost"
