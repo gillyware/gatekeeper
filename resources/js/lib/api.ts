@@ -1,71 +1,40 @@
 import { useAxios } from '@/lib/axios';
-import { GatekeeperEntity, GatekeeperEntityAssignmentMap } from '@/types';
-import { GatekeeperError, GatekeeperResponse } from '@/types/api';
-import { AuditLogPageRequest, AuditLogPageResponse } from '@/types/api/audit';
+import { apiText } from '@/lib/lang/en/api';
+import { GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type GatekeeperEntity, type GatekeeperEntityAssignmentMap } from '@/types';
+import { type GatekeeperError, type GatekeeperResponse } from '@/types/api';
+import { type AuditLogPageRequest, type AuditLogPageResponse } from '@/types/api/audit';
 import {
-    AssignEntityToModelRequest,
-    AssignEntityToModelResponse,
-    GetConfiguredModelsResponse,
-    LookupModelRequest,
-    LookupModelResponse,
-    RevokeEntityFromModelRequest,
-    RevokeEntityFromModelResponse,
-    SearchEntityAssignmentsForModelRequest,
-    SearchEntityAssignmentsForModelResponse,
-    SearchModelsRequest,
-    SearchModelsResponse,
-    SearchUnassignedEntitiesForModelRequest,
-    SearchUnassignedEntitiesForModelResponse,
+    type DeactivateEntityRequest,
+    type DeactivateEntityResponse,
+    type DeleteEntityRequest,
+    type DeleteEntityResponse,
+    type EntityPageRequest,
+    type EntityPageResponse,
+    type ReactivateEntityRequest,
+    type ReactivateEntityResponse,
+    type ShowEntityRequest,
+    type ShowEntityResponse,
+    type StoreEntityRequest,
+    type StoreEntityResponse,
+    type UpdateEntityRequest,
+    type UpdateEntityResponse,
+} from '@/types/api/entity';
+import {
+    type AssignEntityToModelRequest,
+    type AssignEntityToModelResponse,
+    type GetConfiguredModelsResponse,
+    type LookupModelRequest,
+    type LookupModelResponse,
+    type RevokeEntityFromModelRequest,
+    type RevokeEntityFromModelResponse,
+    type SearchEntityAssignmentsForModelRequest,
+    type SearchEntityAssignmentsForModelResponse,
+    type SearchModelsRequest,
+    type SearchModelsResponse,
+    type SearchUnassignedEntitiesForModelRequest,
+    type SearchUnassignedEntitiesForModelResponse,
 } from '@/types/api/model';
-import {
-    DeactivatePermissionRequest,
-    DeactivatePermissionResponse,
-    DeletePermissionRequest,
-    DeletePermissionResponse,
-    PermissionPageRequest,
-    PermissionPageResponse,
-    ReactivatePermissionRequest,
-    ReactivatePermissionResponse,
-    ShowPermissionRequest,
-    ShowPermissionResponse,
-    StorePermissionRequest,
-    StorePermissionResponse,
-    UpdatePermissionRequest,
-    UpdatePermissionResponse,
-} from '@/types/api/permission';
-import {
-    DeactivateRoleRequest,
-    DeactivateRoleResponse,
-    DeleteRoleRequest,
-    DeleteRoleResponse,
-    ReactivateRoleRequest,
-    ReactivateRoleResponse,
-    RolePageRequest,
-    RolePageResponse,
-    ShowRoleRequest,
-    ShowRoleResponse,
-    StoreRoleRequest,
-    StoreRoleResponse,
-    UpdateRoleRequest,
-    UpdateRoleResponse,
-} from '@/types/api/role';
-import {
-    DeactivateTeamRequest,
-    DeactivateTeamResponse,
-    DeleteTeamRequest,
-    DeleteTeamResponse,
-    ReactivateTeamRequest,
-    ReactivateTeamResponse,
-    ShowTeamRequest,
-    ShowTeamResponse,
-    StoreTeamRequest,
-    StoreTeamResponse,
-    TeamPageRequest,
-    TeamPageResponse,
-    UpdateTeamRequest,
-    UpdateTeamResponse,
-} from '@/types/api/team';
-import { AxiosError, AxiosResponse } from 'axios';
+import { type AxiosError, type AxiosResponse } from 'axios';
 import { useMemo } from 'react';
 
 export type FormResponse = {
@@ -78,127 +47,127 @@ export function useApi() {
 
     const api = useMemo(
         () => ({
-            getPermissions: async (params: PermissionPageRequest): Promise<PermissionPageResponse> => {
+            getPermissions: async (params: EntityPageRequest): Promise<EntityPageResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.get('/permissions', { params });
                 });
             },
 
-            getPermission: async (params: ShowPermissionRequest): Promise<ShowPermissionResponse> => {
+            getPermission: async (params: ShowEntityRequest): Promise<ShowEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.get(`/permissions/${params.id}`);
                 });
             },
 
-            storePermission: async (data: StorePermissionRequest): Promise<StorePermissionResponse> => {
+            storePermission: async (data: StoreEntityRequest): Promise<StoreEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.post('/permissions', data);
                 });
             },
 
-            updatePermission: async (data: UpdatePermissionRequest): Promise<UpdatePermissionResponse> => {
+            updatePermission: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.put(`/permissions/${data.id}`, { name: data.name });
                 });
             },
 
-            deactivatePermission: async (data: DeactivatePermissionRequest): Promise<DeactivatePermissionResponse> => {
+            deactivatePermission: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.patch(`/permissions/${data.id}/deactivate`);
                 });
             },
 
-            reactivatePermission: async (data: ReactivatePermissionRequest): Promise<ReactivatePermissionResponse> => {
+            reactivatePermission: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
                     return axios.patch(`/permissions/${data.id}/reactivate`);
                 });
             },
 
-            deletePermission: async (data: DeletePermissionRequest): Promise<DeletePermissionResponse> => {
+            deletePermission: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
                 return handleResponse(() => {
                     return axios.delete(`/permissions/${data.id}`);
                 });
             },
 
-            getRoles: async (params: RolePageRequest): Promise<RolePageResponse> => {
+            getRoles: async (params: EntityPageRequest): Promise<EntityPageResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.get('/roles', { params });
                 });
             },
 
-            getRole: async (params: ShowRoleRequest): Promise<ShowRoleResponse> => {
+            getRole: async (params: ShowEntityRequest): Promise<ShowEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.get(`/roles/${params.id}`);
                 });
             },
 
-            storeRole: async (data: StoreRoleRequest): Promise<StoreRoleResponse> => {
+            storeRole: async (data: StoreEntityRequest): Promise<StoreEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.post('/roles', data);
                 });
             },
 
-            updateRole: async (data: UpdateRoleRequest): Promise<UpdateRoleResponse> => {
+            updateRole: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.put(`/roles/${data.id}`, { name: data.name });
                 });
             },
 
-            deactivateRole: async (data: DeactivateRoleRequest): Promise<DeactivateRoleResponse> => {
+            deactivateRole: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.patch(`/roles/${data.id}/deactivate`);
                 });
             },
 
-            reactivateRole: async (data: ReactivateRoleRequest): Promise<ReactivateRoleResponse> => {
+            reactivateRole: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
                     return axios.patch(`/roles/${data.id}/reactivate`);
                 });
             },
 
-            deleteRole: async (data: DeleteRoleRequest): Promise<DeleteRoleResponse> => {
+            deleteRole: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
                 return handleResponse(() => {
                     return axios.delete(`/roles/${data.id}`);
                 });
             },
 
-            getTeams: async (params: TeamPageRequest): Promise<TeamPageResponse> => {
+            getTeams: async (params: EntityPageRequest): Promise<EntityPageResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.get('/teams', { params });
                 });
             },
 
-            getTeam: async (params: ShowTeamRequest): Promise<ShowTeamResponse> => {
+            getTeam: async (params: ShowEntityRequest): Promise<ShowEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.get(`/teams/${params.id}`);
                 });
             },
 
-            storeTeam: async (data: StoreTeamRequest): Promise<StoreTeamResponse> => {
+            storeTeam: async (data: StoreEntityRequest): Promise<StoreEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.post('/teams', data);
                 });
             },
 
-            updateTeam: async (data: UpdateTeamRequest): Promise<UpdateTeamResponse> => {
+            updateTeam: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.put(`/teams/${data.id}`, { name: data.name });
                 });
             },
 
-            deactivateTeam: async (data: DeactivateTeamRequest): Promise<DeactivateTeamResponse> => {
+            deactivateTeam: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.patch(`/teams/${data.id}/deactivate`);
                 });
             },
 
-            reactivateTeam: async (data: ReactivateTeamRequest): Promise<ReactivateTeamResponse> => {
+            reactivateTeam: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
                     return axios.patch(`/teams/${data.id}/reactivate`);
                 });
             },
 
-            deleteTeam: async (data: DeleteTeamRequest): Promise<DeleteTeamResponse> => {
+            deleteTeam: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
                 return handleResponse(() => {
                     return axios.delete(`/teams/${data.id}`);
                 });
@@ -250,9 +219,9 @@ export function useApi() {
                 });
             },
 
-            getAuditLogs: async (params: AuditLogPageRequest): Promise<AuditLogPageResponse> => {
+            getAuditLog: async (params: AuditLogPageRequest): Promise<AuditLogPageResponse> => {
                 return handleResponse(() => {
-                    return axios.get('/audit-logs', { params });
+                    return axios.get('/audit-log', { params });
                 });
             },
         }),
@@ -279,11 +248,10 @@ function handleError(error: AxiosError): GatekeeperResponse {
     const status = error.response?.status || 500;
 
     if (![400, 422].includes(status || 500)) {
-        console.error('Unexpected error:', error);
         return {
             status: 500,
             errors: {
-                general: 'An unexpected error occurred.',
+                general: apiText.unexpectedError,
             },
         };
     }
@@ -310,7 +278,7 @@ function handleError(error: AxiosError): GatekeeperResponse {
         return {
             status: 400,
             errors: {
-                general: e.message || 'Bad request.',
+                general: e.message || apiText.badRequest,
             },
         };
     }
@@ -318,7 +286,7 @@ function handleError(error: AxiosError): GatekeeperResponse {
     return {
         status: status,
         errors: {
-            general: 'An unexpected error occurred.',
+            general: apiText.unexpectedError,
         },
     };
 }

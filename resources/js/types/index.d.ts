@@ -1,4 +1,4 @@
-import { Permission, Role, Team } from '@/types/models';
+import { type Permission, type Role, type Team } from '@/types/models';
 import { LucideIcon } from 'lucide-react';
 
 export type GatekeeperSharedData = {
@@ -39,7 +39,13 @@ export interface NavItem {
     isActive?: boolean;
 }
 
-export type GatekeeperEntity = 'permission' | 'role' | 'team';
+export type GatekeeperPermission = 'permission';
+
+export type GatekeeperRole = 'role';
+
+export type GatekeeperTeam = 'team';
+
+export type GatekeeperEntity = GatekeeperPermission | GatekeeperRole | GatekeeperTeam;
 
 export type GatekeeperEntityAssignmentMap = {
     permission: PermissionAssignment;

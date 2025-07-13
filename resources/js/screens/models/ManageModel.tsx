@@ -1,13 +1,13 @@
-import ModelManagement from '@/components/models/ModelManagement';
+import ModelManagement from '@/components/model/ModelManagement';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
-import ModelsLayout from '@/layouts/models-layout';
+import ModelLayout from '@/layouts/model-layout';
 
 export default function ManageModel() {
     return (
         <GatekeeperLayout>
-            <ModelsLayout>
+            <ModelLayout>
                 <ModelManagement />
-            </ModelsLayout>
+            </ModelLayout>
         </GatekeeperLayout>
     );
 }

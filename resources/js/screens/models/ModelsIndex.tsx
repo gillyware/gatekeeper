@@ -1,13 +1,13 @@
-import ModelsSearch from '@/components/models/ModelsSearch';
+import ModelsSearch from '@/components/model/ModelsSearch';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
-import ModelsLayout from '@/layouts/models-layout';
+import ModelLayout from '@/layouts/model-layout';
 
 export default function ModelsIndex() {
     return (
         <GatekeeperLayout>
-            <ModelsLayout>
+            <ModelLayout>
                 <ModelsSearch />
-            </ModelsLayout>
+            </ModelLayout>
         </GatekeeperLayout>
     );
 }

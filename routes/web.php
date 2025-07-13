@@ -20,7 +20,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
      * Audit Logs
      * ******************************************************************
      */
-    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 
     /**
      * ******************************************************************
