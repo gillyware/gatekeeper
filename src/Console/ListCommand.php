@@ -30,13 +30,13 @@ class ListCommand extends AbstractBaseGatekeeperCommand
             $permissions = Permission::query()
                 ->orderByDesc('is_active')
                 ->orderBy('name')
-                ->get(['name', 'is_active', 'created_at']);
+                ->get(['name', 'is_active', 'created_at', 'updated_at']);
 
             $this->info('Permissions');
 
             if ($permissions->isNotEmpty()) {
-                table(['Name', 'Active', 'Created'], $permissions->map(fn (Permission $p) => [
-                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->toDateTimeString(),
+                table(['Name', 'Active', 'Created', 'Updated'], $permissions->map(fn (Permission $p) => [
+                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->format('Y-m-d H:i:s T'), $p->updated_at->format('Y-m-d H:i:s T')
                 ]));
             } else {
                 warning('No permissions found.');
@@ -47,13 +47,13 @@ class ListCommand extends AbstractBaseGatekeeperCommand
             $roles = Role::query()
                 ->orderByDesc('is_active')
                 ->orderBy('name')
-                ->get(['name', 'is_active', 'created_at']);
+                ->get(['name', 'is_active', 'created_at', 'updated_at']);
 
             $this->info('Roles');
 
             if ($roles->isNotEmpty()) {
-                table(['Name', 'Active', 'Created'], $roles->map(fn (Role $r) => [
-                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->toDateTimeString(),
+                table(['Name', 'Active', 'Created', 'Updated'], $roles->map(fn (Role $r) => [
+                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->format('Y-m-d H:i:s T'), $r->updated_at->format('Y-m-d H:i:s T')
                 ]));
             } else {
                 warning('No roles found.');
@@ -64,13 +64,13 @@ class ListCommand extends AbstractBaseGatekeeperCommand
             $teams = Team::query()
                 ->orderByDesc('is_active')
                 ->orderBy('name')
-                ->get(['name', 'is_active', 'created_at']);
+                ->get(['name', 'is_active', 'created_at', 'updated_at']);
 
             $this->info('Teams');
 
             if ($teams->isNotEmpty()) {
-                table(['Name', 'Active', 'Created'], $teams->map(fn (Team $t) => [
-                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->toDateTimeString(),
+                table(['Name', 'Active', 'Created', 'Updated'], $teams->map(fn (Team $t) => [
+                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->format('Y-m-d H:i:s T'), $t->updated_at->format('Y-m-d H:i:s T')
                 ]));
             } else {
                 warning('No teams found.');

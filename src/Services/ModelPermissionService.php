@@ -22,7 +22,7 @@ class ModelPermissionService
         $paginator = $this->modelHasPermissionRepository->searchAssignmentsByPermissionNameForModel($model, $permissionNameSearchTerm, $pageNumber);
 
         return $paginator->through(function (ModelHasPermission $modelHasPermission) {
-            $modelHasPermission->offsetSet('assigned_at', $modelHasPermission->created_at?->format('Y-m-d H:i:s T'));
+            $modelHasPermission->offsetSet('assigned_at', $modelHasPermission->created_at->format('Y-m-d H:i:s T'));
 
             return $modelHasPermission;
         });
