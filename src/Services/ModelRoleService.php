@@ -22,7 +22,7 @@ class ModelRoleService
         $paginator = $this->modelHasRoleRepository->searchAssignmentsByRoleNameForModel($model, $roleNameSearchTerm, $pageNumber);
 
         return $paginator->through(function (ModelHasRole $modelHasRole) {
-            $modelHasRole->offsetSet('assigned_at', $modelHasRole->created_at?->format('Y-m-d H:i:s T'));
+            $modelHasRole->offsetSet('assigned_at', $modelHasRole->created_at->format('Y-m-d H:i:s T'));
 
             return $modelHasRole;
         });

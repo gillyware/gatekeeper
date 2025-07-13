@@ -22,7 +22,7 @@ class ModelTeamService
         $paginator = $this->modelHasTeamRepository->searchAssignmentsByTeamNameForModel($model, $teamNameSearchTerm, $pageNumber);
 
         return $paginator->through(function (ModelHasTeam $modelHasTeam) {
-            $modelHasTeam->offsetSet('assigned_at', $modelHasTeam->created_at?->format('Y-m-d H:i:s T'));
+            $modelHasTeam->offsetSet('assigned_at', $modelHasTeam->created_at->format('Y-m-d H:i:s T'));
 
             return $modelHasTeam;
         });
