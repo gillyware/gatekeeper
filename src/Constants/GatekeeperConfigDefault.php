@@ -46,6 +46,8 @@ class GatekeeperConfigDefault
      * Cache
      * ******************************************************************
      */
+    public const CACHE_ENABLED = true;
+
     public const CACHE_PREFIX = 'gatekeeper';
 
     public const CACHE_TTL = 2 * 60 * 60;

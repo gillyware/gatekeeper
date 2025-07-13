@@ -10,12 +10,15 @@ class CacheRepository
 {
     private array $localCache = [];
 
+    private bool $cachingEnabled;
+
     private string $prefix;
 
     private int $ttl;
 
     public function __construct()
     {
+        $this->cachingEnabled = (bool) Config::get('gatekeeper.cache.enabled', GatekeeperConfigDefault::CACHE_ENABLED);
         $this->prefix = Config::get('gatekeeper.cache.prefix', GatekeeperConfigDefault::CACHE_PREFIX);
         $this->ttl = (int) Config::get('gatekeeper.cache.ttl', GatekeeperConfigDefault::CACHE_TTL);
     }
@@ -29,6 +32,10 @@ class CacheRepository
 
         if (isset($this->localCache[$cacheKey])) {
             return $this->localCache[$cacheKey];
+        }
+
+        if (! $this->cachingEnabled) {
+            return null;
         }
 
         $cachedValue = Cache::get($cacheKey);
@@ -49,6 +56,11 @@ class CacheRepository
     {
         $cacheKey = $this->buildCacheKey($key);
         $this->localCache[$cacheKey] = $value;
+
+        if (! $this->cachingEnabled) {
+            return;
+        }
+
         Cache::put($cacheKey, $value, $this->ttl);
     }
 
@@ -59,6 +71,11 @@ class CacheRepository
     {
         $cacheKey = $this->buildCacheKey($key);
         unset($this->localCache[$cacheKey]);
+
+        if (! $this->cachingEnabled) {
+            return;
+        }
+
         Cache::forget($cacheKey);
     }
 
@@ -69,6 +86,11 @@ class CacheRepository
     {
         $cacheKey = "{$this->prefix}.cache.version";
         $newCacheVersion = $this->getCacheVersion() + 1;
+
+        if (! $this->cachingEnabled) {
+            return;
+        }
+
         Cache::put($cacheKey, $newCacheVersion, $this->ttl);
     }
 

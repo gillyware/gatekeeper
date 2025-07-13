@@ -73,17 +73,6 @@ class ModelHasRoleRepositoryTest extends TestCase
         $this->assertInstanceOf(ModelHasRole::class, $records->first());
     }
 
-    public function test_it_can_get_most_recent_model_role_including_trashed()
-    {
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
-
-        $this->repository->create($user, $role);
-        $record = $this->repository->getRecentForModelAndRoleIncludingTrashed($user, $role);
-
-        $this->assertInstanceOf(ModelHasRole::class, $record);
-    }
-
     public function test_it_can_soft_delete_model_role()
     {
         $user = User::factory()->create();

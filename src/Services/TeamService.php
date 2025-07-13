@@ -253,9 +253,7 @@ class TeamService extends AbstractGatekeeperEntityService
      */
     public function modelOnDirectly(Model $model, Team $team): bool
     {
-        $recentTeamAssignment = $this->modelHasTeamRepository->getRecentForModelAndTeamIncludingTrashed($model, $team);
-
-        return $recentTeamAssignment && ! $recentTeamAssignment->deleted_at;
+        return $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $team->is($t));
     }
 
     /**

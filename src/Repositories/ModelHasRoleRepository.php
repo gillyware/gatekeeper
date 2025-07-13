@@ -52,18 +52,6 @@ class ModelHasRoleRepository
     }
 
     /**
-     * Get the most recent ModelHasRole instance for a given model and role, including trashed instances.
-     */
-    public function getRecentForModelAndRoleIncludingTrashed(Model $model, Role $role): ?ModelHasRole
-    {
-        return ModelHasRole::forModel($model)
-            ->where('role_id', $role->id)
-            ->withTrashed()
-            ->latest()
-            ->first();
-    }
-
-    /**
      * Delete all ModelHasRole instances for a given model and role.
      */
     public function deleteForModelAndRole(Model $model, Role $role): bool

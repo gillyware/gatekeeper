@@ -42,7 +42,6 @@ class ModelControllerTest extends TestCase
         $this->seed(GatekeeperPermissionsSeeder::class);
         $this->user = User::factory()->create();
         $this->be($this->user);
-
         $this->cacheRepository = app()->make(CacheRepository::class);
     }
 

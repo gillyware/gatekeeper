@@ -73,17 +73,6 @@ class ModelHasTeamRepositoryTest extends TestCase
         $this->assertInstanceOf(ModelHasTeam::class, $records->first());
     }
 
-    public function test_it_can_get_most_recent_model_team_including_trashed()
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-
-        $this->repository->create($user, $team);
-        $record = $this->repository->getRecentForModelAndTeamIncludingTrashed($user, $team);
-
-        $this->assertInstanceOf(ModelHasTeam::class, $record);
-    }
-
     public function test_it_can_soft_delete_model_team()
     {
         $user = User::factory()->create();

@@ -3,7 +3,22 @@
 namespace Gillyware\Gatekeeper;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
+use Gillyware\Gatekeeper\Repositories\CacheRepository;
+use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
+use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
+use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
+use Gillyware\Gatekeeper\Repositories\PermissionRepository;
+use Gillyware\Gatekeeper\Repositories\RoleRepository;
+use Gillyware\Gatekeeper\Repositories\TeamRepository;
+use Gillyware\Gatekeeper\Services\AuditLogService;
+use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
+use Gillyware\Gatekeeper\Services\ModelMetadataService;
+use Gillyware\Gatekeeper\Services\ModelPermissionService;
+use Gillyware\Gatekeeper\Services\ModelRoleService;
+use Gillyware\Gatekeeper\Services\ModelService;
+use Gillyware\Gatekeeper\Services\ModelTeamService;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Services\TeamService;
@@ -38,13 +53,33 @@ class GatekeeperServiceProvider extends ServiceProvider
     {
         $this->configure();
 
-        $this->app->singleton('gatekeeper', function ($app) {
-            return new GatekeeperService(
-                $app->make(PermissionService::class),
-                $app->make(RoleService::class),
-                $app->make(TeamService::class),
-            );
-        });
+        $this->app->singleton(CacheRepository::class);
+        $this->app->singleton(CacheService::class);
+
+        $this->app->singleton(ModelService::class);
+        $this->app->singleton(ModelMetadataService::class);
+
+        $this->app->singleton(PermissionRepository::class);
+        $this->app->singleton(RoleRepository::class);
+        $this->app->singleton(TeamRepository::class);
+        $this->app->singleton(ModelHasPermissionRepository::class);
+        $this->app->singleton(ModelHasRoleRepository::class);
+        $this->app->singleton(ModelHasTeamRepository::class);
+        $this->app->singleton(AuditLogRepository::class);
+
+        $this->app->singleton(PermissionService::class);
+        $this->app->singleton(RoleService::class);
+        $this->app->singleton(TeamService::class);
+        $this->app->singleton(ModelPermissionService::class);
+        $this->app->singleton(ModelRoleService::class);
+        $this->app->singleton(ModelTeamService::class);
+        $this->app->singleton(AuditLogService::class);
+
+        $this->app->singleton('gatekeeper', fn ($app) => new GatekeeperService(
+            $app->make(PermissionService::class),
+            $app->make(RoleService::class),
+            $app->make(TeamService::class),
+        ));
     }
 
     /**
