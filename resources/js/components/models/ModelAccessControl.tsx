@@ -3,11 +3,11 @@ import { useApi } from '@/lib/api';
 import { GatekeeperEntity, ModelManagementTab } from '@/types';
 import { GatekeeperError } from '@/types/api';
 import { ConfiguredModel, LookupModelRequest } from '@/types/api/model';
+import ModelManagementTabs from '@components/models/ModelEntityTabs';
 import ModelSummary from '@components/models/ModelSummary';
 import { Loader } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import ModelManagementTabs from './ModelEntityTabs';
 
 export default function ModelAccessControl() {
     const api = useApi();

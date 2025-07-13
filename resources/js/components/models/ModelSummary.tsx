@@ -1,9 +1,9 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
 import { ConfiguredModel } from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
+import { Separator } from '@components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@components/ui/tooltip';
 import { Ban, CheckCircle } from 'lucide-react';
-import { Separator } from '../ui/separator';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface ModelSummaryProps {
     model: ConfiguredModel;

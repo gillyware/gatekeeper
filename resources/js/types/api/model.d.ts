@@ -19,18 +19,6 @@ export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
     display: { [key: string]: any };
 }
 
-export interface ConfiguredModelSearchByPermissionResult extends ConfiguredModelSearchResult {
-    permission: Permission;
-}
-
-export interface ConfiguredModelSearchByRoleResult extends ConfiguredModelSearchResult {
-    role: Role;
-}
-
-export interface ConfiguredModelSearchByTeamResult extends ConfiguredModelSearchResult {
-    team: Team;
-}
-
 export interface ConfiguredModel extends ConfiguredModelSearchResult {
     direct_permissions: Permission[];
     direct_roles: Role[];
