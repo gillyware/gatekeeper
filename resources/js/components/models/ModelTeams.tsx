@@ -10,6 +10,7 @@ import { Button } from '@components/ui/button';
 import HeadingSmall from '@components/ui/heading-small';
 import { CheckCircle, Loader, PauseCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 interface ModelTeamsProps {
     model: ConfiguredModel;
@@ -19,6 +20,7 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
     const api = useApi();
     const isMobile = useIsMobile();
     const { user } = useGatekeeper();
+    const navigate = useNavigate();
 
     const [teamAssignments, setTeamAssignments] = useState<Pagination<TeamAssignment> | null>(null);
     const [teamAssignmentsSearchTerm, setTeamAssignmentsSearchTerm] = useState<string>('');
@@ -131,7 +133,16 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                             ) : (
                                 teamAssignments.data.map((assignment) => (
                                     <tr key={assignment.team.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{assignment.team.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/teams/${assignment.team.id}/manage`);
+                                                }}
+                                            >
+                                                {assignment.team.name}
+                                            </Button>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {assignment.team.is_active ? (
@@ -305,7 +316,16 @@ export default function ModelTeams({ model }: ModelTeamsProps) {
                             ) : (
                                 unassignedTeams.data.map((team) => (
                                     <tr key={team.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{team.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/teams/${team.id}/manage`);
+                                                }}
+                                            >
+                                                {team.name}
+                                            </Button>
+                                        </td>
                                         <td className="flex items-center justify-center px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {team.is_active ? (

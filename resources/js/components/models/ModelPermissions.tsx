@@ -10,6 +10,7 @@ import { Button } from '@components/ui/button';
 import HeadingSmall from '@components/ui/heading-small';
 import { CheckCircle, Loader, PauseCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 interface ModelPermissionsProps {
     model: ConfiguredModel;
@@ -19,6 +20,7 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
     const api = useApi();
     const isMobile = useIsMobile();
     const { user } = useGatekeeper();
+    const navigate = useNavigate();
 
     const [permissionAssignments, setPermissionAssignments] = useState<Pagination<PermissionAssignment> | null>(null);
     const [permissionAssignmentsSearchTerm, setPermissionAssignmentsSearchTerm] = useState<string>('');
@@ -131,7 +133,16 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
                             ) : (
                                 permissionAssignments.data.map((assignment) => (
                                     <tr key={assignment.permission.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{assignment.permission.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/permissions/${assignment.permission.id}/manage`);
+                                                }}
+                                            >
+                                                {assignment.permission.name}
+                                            </Button>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {assignment.permission.is_active ? (
@@ -305,7 +316,16 @@ export default function ModelPermissions({ model }: ModelPermissionsProps) {
                             ) : (
                                 unassignedPermissions.data.map((permission) => (
                                     <tr key={permission.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">{permission.name || 'N/A'}</td>
+                                        <td className="px-4 py-2">
+                                            <Button
+                                                variant={'link'}
+                                                onClick={() => {
+                                                    navigate(`/permissions/${permission.id}/manage`);
+                                                }}
+                                            >
+                                                {permission.name}
+                                            </Button>
+                                        </td>
                                         <td className="flex items-center justify-center px-4 py-2">
                                             <div className="flex h-8 w-full items-center justify-center">
                                                 {permission.is_active ? (
