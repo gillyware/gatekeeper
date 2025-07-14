@@ -1,5 +1,6 @@
 /vendor
 /node_modules
+/dist/.vite
 composer.lock
 package-lock.json
 .phpunit.result.cache
