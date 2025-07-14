@@ -32,37 +32,6 @@ class ModelController extends Controller
     ) {}
 
     /**
-     * Get all models that have been configured.
-     */
-    public function getConfigured(): JsonResponse
-    {
-        return Response::json(
-            $this->modelMetadataService->getConfiguredModels()
-                ->map(function (array $modelData) {
-                    try {
-                        $className = $this->modelMetadataService->getClassFromModelData($modelData);
-
-                        return [
-                            'model_label' => $modelData['label'],
-                            'searchable' => $modelData['searchable'] ?? [],
-                            'displayable' => $modelData['displayable'] ?? [],
-                            'is_permission' => $this->modelIsPermission($className),
-                            'is_role' => $this->modelIsRole($className),
-                            'is_team' => $this->modelIsTeam($className),
-                            'has_permissions' => $this->modelInteractsWithPermissions($className),
-                            'has_roles' => $this->modelInteractsWithRoles($className),
-                            'has_teams' => $this->modelInteractsWithTeams($className),
-                        ];
-                    } catch (GatekeeperException $e) {
-                        return null;
-                    }
-                })
-                ->filter()
-                ->values()
-        );
-    }
-
-    /**
      * Search for models based on a search term.
      */
     public function search(SearchModelsRequest $request): JsonResponse

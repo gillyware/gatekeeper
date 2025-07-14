@@ -1,3 +1,4 @@
+import { ConfiguredModelMetadata } from '@/types/api/model';
 import { type Permission, type Role, type Team } from '@/types/models';
 import { LucideIcon } from 'lucide-react';
 
@@ -11,6 +12,7 @@ export type GatekeeperConfig = {
     audit_enabled: boolean;
     roles_enabled: boolean;
     teams_enabled: boolean;
+    models: ConfiguredModelMetadata[];
 };
 
 export type GatekeeperUser = {

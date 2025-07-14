@@ -1,36 +1,7 @@
 import { useApi } from '@/lib/api';
 import { type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
 import { type Pagination } from '@/types/api';
-import {
-    type AssignEntityToModelRequest,
-    type ConfiguredModel,
-    type ConfiguredModelMetadata,
-    type LookupModelRequest,
-    type RevokeEntityFromModelRequest,
-} from '@/types/api/model';
-
-export async function fetchConfiguredModels(
-    api: ReturnType<typeof useApi>,
-    setConfiguredModels: (models: ConfiguredModelMetadata[]) => void,
-    setLoading: (loading: boolean) => void,
-    setError: (error: string | null) => void,
-): Promise<void> {
-    setLoading(true);
-    setError(null);
-
-    const response = await api.getConfiguredModels();
-
-    if (response.status >= 400) {
-        setError(response.errors?.general || 'Failed to fetch configured models.');
-        setConfiguredModels([]);
-        setLoading(false);
-        return;
-    }
-
-    const configured = response.data as ConfiguredModelMetadata[];
-    setConfiguredModels(configured);
-    setLoading(false);
-}
+import { type AssignEntityToModelRequest, type ConfiguredModel, type LookupModelRequest, type RevokeEntityFromModelRequest } from '@/types/api/model';
 
 export async function fetchEntityAssignmentsForModel<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,

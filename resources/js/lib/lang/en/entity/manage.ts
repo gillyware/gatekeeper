@@ -14,6 +14,7 @@ export interface EntitySummaryText {
     title: string;
     nameLabel: string;
     statusLabel: string;
+    manageAccessLabel: string;
     active: string;
     inactive: string;
 }
@@ -62,11 +63,12 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
     permission: {
         failedToLoad: 'Failed to load permission',
         entitySummaryText: {
-            title: 'Permission Details',
+            title: 'Permission',
             nameLabel: 'Name:',
             statusLabel: 'Status:',
             active: 'Active',
             inactive: 'Inactive',
+            manageAccessLabel: '',
         },
         entityFormText: {
             create: {
@@ -117,11 +119,12 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
     role: {
         failedToLoad: 'Failed to load role',
         entitySummaryText: {
-            title: 'Role Details',
+            title: 'Role',
             nameLabel: 'Name:',
             statusLabel: 'Status:',
             active: 'Active',
             inactive: 'Inactive',
+            manageAccessLabel: 'Manage Role Access',
         },
         entityFormText: {
             create: {
@@ -171,11 +174,12 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
     team: {
         failedToLoad: 'Failed to load team',
         entitySummaryText: {
-            title: 'Team Details',
+            title: 'Team',
             nameLabel: 'Name:',
             statusLabel: 'Status:',
             active: 'Active',
             inactive: 'Inactive',
+            manageAccessLabel: 'Manage Team Access',
         },
         entityFormText: {
             create: {

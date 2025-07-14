@@ -1,7 +1,6 @@
 import { DebouncedInput } from '@/components/ui/debounced-input';
 import { useGatekeeper } from '@/context/GatekeeperContext';
 import { useApi } from '@/lib/api';
-import { fetchConfiguredModels } from '@/lib/models';
 import { cn } from '@/lib/utils';
 import { type ConfiguredModelMetadata, type ConfiguredModelSearchResult } from '@/types/api/model';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
@@ -10,11 +9,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 export default function ModelsSearch() {
-    const { user } = useGatekeeper();
+    const { config } = useGatekeeper();
     const api = useApi();
     const navigate = useNavigate();
 
-    const [configuredModels, setConfiguredModels] = useState<ConfiguredModelMetadata[]>([]);
     const [configuredModelLabel, setConfiguredModelLabel] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [modelSearchResults, setModelSearchResults] = useState<ConfiguredModelSearchResult[]>([]);
@@ -26,7 +24,7 @@ export default function ModelsSearch() {
             return null;
         }
 
-        return configuredModels.find((m) => m.model_label === configuredModelLabel) || null;
+        return config.models.find((m) => m.model_label === configuredModelLabel) || null;
     }, [configuredModelLabel]) as ConfiguredModelMetadata | null;
 
     const numberOfColumns = useMemo(() => {
@@ -52,17 +50,9 @@ export default function ModelsSearch() {
     }, [configuredModel]);
 
     useEffect(() => {
-        fetchConfiguredModels(
-            api,
-            (models) => {
-                setConfiguredModels(models);
-                if (models.length > 0) {
-                    setConfiguredModelLabel(models[0].model_label);
-                }
-            },
-            setLoading,
-            setError,
-        );
+        if (config.models.length > 0) {
+            setConfiguredModelLabel(config.models[0].model_label);
+        }
     }, []);
 
     useEffect(() => {
@@ -97,7 +87,7 @@ export default function ModelsSearch() {
                         <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent>
-                        {configuredModels.map((m) => (
+                        {config.models.map((m) => (
                             <SelectItem key={m.model_label} value={m.model_label}>
                                 {m.model_label}
                             </SelectItem>

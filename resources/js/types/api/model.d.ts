@@ -68,10 +68,6 @@ export interface RevokeEntityFromModelRequest extends ModelEntityRequest {}
  * ******************************************************************
  */
 
-export interface GetConfiguredModelsResponse extends GatekeeperResponse {
-    data?: ConfiguredModelMetadata[];
-}
-
 export interface SearchModelsResponse extends GatekeeperResponse {
     data?: ConfiguredModelSearchResult[];
 }
