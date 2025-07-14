@@ -1,8 +1,13 @@
+import { useGatekeeper } from '@/context/GatekeeperContext';
+import { getModelMetadataForEntity } from '@/lib/entities';
 import { manageEntityText, type EntitySummaryText } from '@/lib/lang/en/entity/manage';
 import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
+import { type ConfiguredModelMetadata } from '@/types/api/model';
+import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { CheckCircle, Info, PauseCircle } from 'lucide-react';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 interface EntitySummaryProps<E extends GatekeeperEntity> {
     entity: GatekeeperEntity;
@@ -10,6 +15,8 @@ interface EntitySummaryProps<E extends GatekeeperEntity> {
 }
 
 export default function EntitySummary<E extends GatekeeperEntity>({ entity, entityModel }: EntitySummaryProps<E>) {
+    const { config } = useGatekeeper();
+    const modelMetadata: ConfiguredModelMetadata | null = useMemo(() => getModelMetadataForEntity(config, entity), [entity]);
     const language: EntitySummaryText = useMemo(() => manageEntityText[entity].entitySummaryText, [entity]);
 
     return (
@@ -38,6 +45,13 @@ export default function EntitySummary<E extends GatekeeperEntity>({ entity, enti
                         </div>
                     )}
                 </div>
+                {language.manageAccessLabel && modelMetadata && (
+                    <div className="flex items-center justify-start pt-2">
+                        <Button asChild variant="link" className="text-md p-0 font-bold">
+                            <Link to={`/models/${modelMetadata.model_label}/${entityModel.id}`}>{language.manageAccessLabel}</Link>
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

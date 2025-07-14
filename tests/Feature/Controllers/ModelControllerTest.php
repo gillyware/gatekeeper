@@ -45,15 +45,6 @@ class ModelControllerTest extends TestCase
         $this->cacheRepository = app()->make(CacheRepository::class);
     }
 
-    public function test_get_configured_models()
-    {
-        $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
-
-        $this->getJson(route('gatekeeper.api.models.configured'))
-            ->assertStatus(Response::HTTP_OK)
-            ->assertJsonFragment(['model_label' => 'User']);
-    }
-
     public function test_lookup_model_with_access()
     {
         $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
@@ -106,6 +97,6 @@ class ModelControllerTest extends TestCase
 
     public function test_protected_routes_fail_without_permission()
     {
-        $this->getJson(route('gatekeeper.api.models.configured'))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->getJson(route('gatekeeper.api.models.lookup'))->assertStatus(Response::HTTP_FORBIDDEN);
     }
 }

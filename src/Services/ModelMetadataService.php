@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelConfigurationException;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,35 @@ class ModelMetadataService
         $this->models = collect(Config::get('gatekeeper.models.manageable', []));
 
         return $this->models;
+    }
+
+    /**
+     * Get all configured manageable models with metadata.
+     */
+    public function getConfiguredModelsWithMetadata(): Collection
+    {
+        return $this->getConfiguredModels()
+            ->map(function (array $modelData) {
+                try {
+                    $className = $this->getClassFromModelData($modelData);
+
+                    return [
+                        'model_label' => $modelData['label'],
+                        'searchable' => $modelData['searchable'] ?? [],
+                        'displayable' => $modelData['displayable'] ?? [],
+                        'is_permission' => $this->modelIsPermission($className),
+                        'is_role' => $this->modelIsRole($className),
+                        'is_team' => $this->modelIsTeam($className),
+                        'has_permissions' => $this->modelInteractsWithPermissions($className),
+                        'has_roles' => $this->modelInteractsWithRoles($className),
+                        'has_teams' => $this->modelInteractsWithTeams($className),
+                    ];
+                } catch (GatekeeperException) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->values();
     }
 
     /**

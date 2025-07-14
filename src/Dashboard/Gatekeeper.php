@@ -4,6 +4,7 @@ namespace Gillyware\Gatekeeper\Dashboard;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\HtmlString;
@@ -48,9 +49,10 @@ class Gatekeeper
     /**
      * Get the default JavaScript variables for Gatekeeper.
      */
-    public static function scriptVariables(): array
+    private static function scriptVariables(): array
     {
         $user = auth()->user();
+        $modelMetadataService = app(ModelMetadataService::class);
 
         return [
             'config' => [
@@ -58,6 +60,7 @@ class Gatekeeper
                 'audit_enabled' => Config::get('gatekeeper.features.audit.enabled', GatekeeperConfigDefault::FEATURES_AUDIT_ENABLED),
                 'roles_enabled' => Config::get('gatekeeper.features.roles.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED),
                 'teams_enabled' => Config::get('gatekeeper.features.teams.enabled', GatekeeperConfigDefault::FEATURES_TEAMS_ENABLED),
+                'models' => $modelMetadataService->getConfiguredModelsWithMetadata(),
             ],
             'user' => [
                 'name' => (string) $user?->name,

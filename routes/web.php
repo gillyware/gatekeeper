@@ -110,8 +110,6 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
      */
     Route::prefix('models')->name('models.')->controller(ModelController::class)->group(function () {
 
-        Route::get('/configured', 'getConfigured')->name('configured');
-
         Route::get('/search', 'search')->name('search');
 
         Route::get('/search-entity-assignments-for-model', 'searchEntityAssignmentsForModel')->name('search-entity-assignments-for-model');

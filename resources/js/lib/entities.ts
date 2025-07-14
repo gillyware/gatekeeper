@@ -2,9 +2,18 @@ import { type EntityFormType } from '@/components/entity/EntityForm';
 import { useApi } from '@/lib/api';
 import { apiText } from '@/lib/lang/en/api';
 import { flattenStrings } from '@/lib/utils';
-import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
+import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import { type EntityPageRequest, type ShowEntityRequest } from '@/types/api/entity';
+import { type ConfiguredModelMetadata } from '@/types/api/model';
+
+export function getModelMetadataForEntity(config: GatekeeperConfig, entity: GatekeeperEntity): ConfiguredModelMetadata | null {
+    const model = config.models.find(
+        (m) => (m.is_permission && entity === 'permission') || (m.is_role && entity === 'role') || (m.is_team && entity === 'team'),
+    );
+
+    return model || null;
+}
 
 export async function getEntities<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,

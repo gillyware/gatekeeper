@@ -22,7 +22,6 @@ import {
 import {
     type AssignEntityToModelRequest,
     type AssignEntityToModelResponse,
-    type GetConfiguredModelsResponse,
     type LookupModelRequest,
     type LookupModelResponse,
     type RevokeEntityFromModelRequest,
@@ -170,12 +169,6 @@ export function useApi() {
             deleteTeam: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
                 return handleResponse(() => {
                     return axios.delete(`/teams/${data.id}`);
-                });
-            },
-
-            getConfiguredModels: async (): Promise<GetConfiguredModelsResponse> => {
-                return handleResponse(() => {
-                    return axios.get('/models/configured');
                 });
             },
 
