@@ -82,7 +82,7 @@ class GatekeeperService
     /**
      * Update an existing permission.
      */
-    public function updatePermission(Permission $permission, string $permissionName): Permission
+    public function updatePermission(Permission|string $permission, string $permissionName): Permission
     {
         return $this->permissionService->update($permission, $permissionName);
     }
@@ -90,7 +90,7 @@ class GatekeeperService
     /**
      * Deactivate a permission.
      */
-    public function deactivatePermission(Permission $permission): Permission
+    public function deactivatePermission(Permission|string $permission): Permission
     {
         return $this->permissionService->deactivate($permission);
     }
@@ -98,7 +98,7 @@ class GatekeeperService
     /**
      * Reactivate a permission.
      */
-    public function reactivatePermission(Permission $permission): Permission
+    public function reactivatePermission(Permission|string $permission): Permission
     {
         return $this->permissionService->reactivate($permission);
     }
@@ -218,7 +218,7 @@ class GatekeeperService
     /**
      * Update an existing role.
      */
-    public function updateRole(Role $role, string $roleName): Role
+    public function updateRole(Role|string $role, string $roleName): Role
     {
         return $this->roleService->update($role, $roleName);
     }
@@ -226,7 +226,7 @@ class GatekeeperService
     /**
      * Deactivate a role.
      */
-    public function deactivateRole(Role $role): Role
+    public function deactivateRole(Role|string $role): Role
     {
         return $this->roleService->deactivate($role);
     }
@@ -234,7 +234,7 @@ class GatekeeperService
     /**
      * Reactivate a role.
      */
-    public function reactivateRole(Role $role): Role
+    public function reactivateRole(Role|string $role): Role
     {
         return $this->roleService->reactivate($role);
     }
@@ -354,7 +354,7 @@ class GatekeeperService
     /**
      * Update an existing team.
      */
-    public function updateTeam(Team $team, string $teamName): Team
+    public function updateTeam(Team|string $team, string $teamName): Team
     {
         return $this->teamService->update($team, $teamName);
     }
@@ -362,7 +362,7 @@ class GatekeeperService
     /**
      * Deactivate a team.
      */
-    public function deactivateTeam(Team $team): Team
+    public function deactivateTeam(Team|string $team): Team
     {
         return $this->teamService->deactivate($team);
     }
@@ -370,7 +370,7 @@ class GatekeeperService
     /**
      * Reactivate a team.
      */
-    public function reactivateTeam(Team $team): Team
+    public function reactivateTeam(Team|string $team): Team
     {
         return $this->teamService->reactivate($team);
     }

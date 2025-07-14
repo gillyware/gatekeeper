@@ -60,18 +60,21 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Update an existing team.
      */
-    public function update(Team $team, string $teamName): Team
+    public function update(Team|string $team, string $newTeamName): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
 
-        if ($this->exists($teamName) && $team->name !== $teamName) {
-            throw new TeamAlreadyExistsException($teamName);
+        $teamName = $this->resolveEntityName($team);
+        $team = $this->teamRepository->findOrFailByName($teamName);
+
+        if ($this->exists($newTeamName) && $team->name !== $newTeamName) {
+            throw new TeamAlreadyExistsException($newTeamName);
         }
 
         $oldTeamName = $team->name;
-        $team = $this->teamRepository->update($team, $teamName);
+        $team = $this->teamRepository->update($team, $newTeamName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(new UpdateTeamAuditLogDto($team, $oldTeamName));
@@ -83,10 +86,13 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Deactivate a team.
      */
-    public function deactivate(Team $team): Team
+    public function deactivate(Team|string $team): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
+
+        $teamName = $this->resolveEntityName($team);
+        $team = $this->teamRepository->findOrFailByName($teamName);
 
         if (! $team->is_active) {
             return $team;
@@ -104,11 +110,14 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Reactivate a team.
      */
-    public function reactivate(Team $team): Team
+    public function reactivate(Team|string $team): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
+
+        $teamName = $this->resolveEntityName($team);
+        $team = $this->teamRepository->findOrFailByName($teamName);
 
         if ($team->is_active) {
             return $team;

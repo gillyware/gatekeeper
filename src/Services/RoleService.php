@@ -63,18 +63,21 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Update an existing role.
      */
-    public function update(Role $role, string $roleName): Role
+    public function update(Role|string $role, string $newRoleName): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
 
-        if ($this->exists($roleName) && $role->name !== $roleName) {
-            throw new RoleAlreadyExistsException($roleName);
+        $roleName = $this->resolveEntityName($role);
+        $role = $this->roleRepository->findByName($roleName);
+
+        if ($this->exists($newRoleName) && $role->name !== $newRoleName) {
+            throw new RoleAlreadyExistsException($newRoleName);
         }
 
         $oldRoleName = $role->name;
-        $role = $this->roleRepository->update($role, $roleName);
+        $role = $this->roleRepository->update($role, $newRoleName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(new UpdateRoleAuditLogDto($role, $oldRoleName));
@@ -86,10 +89,13 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Deactivate a role.
      */
-    public function deactivate(Role $role): Role
+    public function deactivate(Role|string $role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
+
+        $roleName = $this->resolveEntityName($role);
+        $role = $this->roleRepository->findByName($roleName);
 
         if (! $role->is_active) {
             return $role;
@@ -107,11 +113,14 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Reactivate a role.
      */
-    public function reactivate(Role $role): Role
+    public function reactivate(Role|string $role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
+
+        $roleName = $this->resolveEntityName($role);
+        $role = $this->roleRepository->findByName($roleName);
 
         if ($role->is_active) {
             return $role;

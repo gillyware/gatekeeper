@@ -65,17 +65,20 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Update an existing permission.
      */
-    public function update(Permission $permission, string $permissionName): Permission
+    public function update(Permission|string $permission, string $newPermissionName): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        if ($this->exists($permissionName) && $permission->name !== $permissionName) {
-            throw new PermissionAlreadyExistsException($permissionName);
+        $permissionName = $this->resolveEntityName($permission);
+        $permission = $this->permissionRepository->findByName($permissionName);
+
+        if ($this->exists($newPermissionName) && $permission->name !== $newPermissionName) {
+            throw new PermissionAlreadyExistsException($newPermissionName);
         }
 
         $oldPermissionName = $permission->name;
-        $permission = $this->permissionRepository->update($permission, $permissionName);
+        $permission = $this->permissionRepository->update($permission, $newPermissionName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(new UpdatePermissionAuditLogDto($permission, $oldPermissionName));
@@ -87,10 +90,13 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Deactivate a permission.
      */
-    public function deactivate(Permission $permission): Permission
+    public function deactivate(Permission|string $permission): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
+
+        $permissionName = $this->resolveEntityName($permission);
+        $permission = $this->permissionRepository->findByName($permissionName);
 
         if (! $permission->is_active) {
             return $permission;
@@ -108,10 +114,13 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Reactivate a permission.
      */
-    public function reactivate(Permission $permission): Permission
+    public function reactivate(Permission|string $permission): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
+
+        $permissionName = $this->resolveEntityName($permission);
+        $permission = $this->permissionRepository->findByName($permissionName);
 
         if ($permission->is_active) {
             return $permission;
@@ -138,10 +147,6 @@ class PermissionService extends AbstractGatekeeperEntityService
         $permission = $this->permissionRepository->findByName($permissionName);
 
         if (! $permission) {
-            dump($permissionName, $permission);
-            dump(Permission::all());
-            dump($this->permissionRepository->all());
-
             return true;
         }
 
@@ -162,7 +167,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Assign a permission to a model.
      */
-    public function assignToModel(Model $model, Role|string $permission): bool
+    public function assignToModel(Model $model, Permission|string $permission): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
