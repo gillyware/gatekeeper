@@ -12,7 +12,11 @@ use Illuminate\Support\Facades\Config;
 
 class TeamRepository
 {
-    public function __construct(private readonly CacheService $cacheService) {}
+    public function __construct(
+        private readonly CacheService $cacheService,
+        private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
+        private readonly ModelHasRoleRepository $modelHasRoleRepository,
+    ) {}
 
     /**
      * Check if a team with the given name exists.
@@ -99,6 +103,10 @@ class TeamRepository
      */
     public function delete(Team $team): bool
     {
+        // Unassign all permissions and roles from the team (without audit logging).
+        $this->modelHasPermissionRepository->deleteForModel($team);
+        $this->modelHasRoleRepository->deleteForModel($team);
+
         $deleted = $team->delete();
 
         if ($deleted) {

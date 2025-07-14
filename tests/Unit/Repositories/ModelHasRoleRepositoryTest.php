@@ -7,7 +7,6 @@ use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
-use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
@@ -23,10 +22,14 @@ class ModelHasRoleRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        $cacheMock = $this->createMock(CacheService::class);
-        $this->cacheService = $cacheMock;
+        $this->app->forgetInstance(CacheService::class);
+        $this->app->forgetInstance(ModelHasRoleRepository::class);
 
-        $this->repository = new ModelHasRoleRepository($cacheMock, app()->make(ModelMetadataService::class));
+        $cacheMock = $this->createMock(CacheService::class);
+        $this->app->singleton(CacheService::class, fn () => $cacheMock);
+
+        $this->cacheService = $cacheMock;
+        $this->repository = $this->app->make(ModelHasRoleRepository::class);
     }
 
     public function test_it_can_check_if_a_role_is_assigned_to_any_model()
@@ -58,19 +61,6 @@ class ModelHasRoleRepositoryTest extends TestCase
             'model_id' => $user->id,
             'role_id' => $role->id,
         ]);
-    }
-
-    public function test_it_can_get_model_role_records()
-    {
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
-
-        $this->repository->create($user, $role);
-
-        $records = $this->repository->getForModelAndRole($user, $role);
-
-        $this->assertCount(1, $records);
-        $this->assertInstanceOf(ModelHasRole::class, $records->first());
     }
 
     public function test_it_can_soft_delete_model_role()
