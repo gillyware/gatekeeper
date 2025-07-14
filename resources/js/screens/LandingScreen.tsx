@@ -1,5 +1,6 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
+import { landingText, type LandingText } from '@/lib/lang/en/landing';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
 import { FileClock, KeyRound, LucideIcon, Shapes, ShieldCheck, Users } from 'lucide-react';
 import { useMemo } from 'react';
@@ -14,39 +15,40 @@ type Tile = {
 
 export default function LandingScreen() {
     const { config } = useGatekeeper();
+    const landing: LandingText = useMemo(() => landingText, []);
 
     const tiles: Tile[] = useMemo(
         () =>
             [
                 {
                     to: '/permissions',
-                    title: 'Permissions',
+                    title: landing.tiles.permissions.title,
                     icon: KeyRound,
-                    description: "Manage your application's permissions",
+                    description: landing.tiles.permissions.description,
                 },
                 config.roles_enabled && {
                     to: '/roles',
-                    title: 'Roles',
+                    title: landing.tiles.roles.title,
                     icon: ShieldCheck,
-                    description: "Manage your application's roles",
+                    description: landing.tiles.roles.description,
                 },
                 config.teams_enabled && {
                     to: '/teams',
-                    title: 'Teams',
+                    title: landing.tiles.teams.title,
                     icon: Users,
-                    description: "Manage your application's teams",
+                    description: landing.tiles.teams.description,
                 },
                 {
                     to: '/models',
-                    title: 'Models',
+                    title: landing.tiles.models.title,
                     icon: Shapes,
-                    description: 'Manage access for models in your application',
+                    description: landing.tiles.models.description,
                 },
                 config.audit_enabled && {
                     to: '/audit',
-                    title: 'Audit',
+                    title: landing.tiles.audit.title,
                     icon: FileClock,
-                    description: 'Oversee Gatekeeper changes in your application',
+                    description: landing.tiles.audit.description,
                 },
             ].filter((x) => Boolean(x)) as Tile[],
         [config],
@@ -56,8 +58,8 @@ export default function LandingScreen() {
         <GatekeeperLayout>
             <div className="space-y-8 p-6">
                 <div>
-                    <h1 className="text-2xl font-bold">Gatekeeper</h1>
-                    <p className="text-muted-foreground">Manage permissions, roles, teams, and model access for your application</p>
+                    <h1 className="text-2xl font-bold">{landing.title}</h1>
+                    <p className="text-muted-foreground">{landing.description}</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

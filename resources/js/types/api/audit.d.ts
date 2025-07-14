@@ -1,5 +1,5 @@
-import { GatekeeperResponse, Pagination } from '@/types/api/index';
-import { AuditLog } from '@/types/models';
+import { type GatekeeperResponse, type Pagination, type QueryOrder } from '@/types/api/index';
+import { type AuditLog } from '@/types/models';
 
 /**
  * ******************************************************************
@@ -9,7 +9,7 @@ import { AuditLog } from '@/types/models';
 
 export interface AuditLogPageRequest {
     page: number;
-    created_at_order?: 'asc' | 'desc';
+    created_at_order?: QueryOrder;
 }
 
 /**

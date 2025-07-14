@@ -1,6 +1,6 @@
-import { GatekeeperEntity, GatekeeperEntityAssignmentMap, GatekeeperEntityModelMap } from '@/types';
-import { GatekeeperResponse, Pagination } from '@/types/api/index';
-import { Permission, Role, Team } from '@/types/models';
+import { type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
+import { type GatekeeperResponse, type Pagination } from '@/types/api/index';
+import { type Permission, type Role, type Team } from '@/types/models';
 
 export interface ConfiguredModelMetadata {
     model_label: string;

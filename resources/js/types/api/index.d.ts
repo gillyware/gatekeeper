@@ -1,3 +1,18 @@
+export interface GatekeeperError {
+    message: string;
+}
+
+export interface GatekeeperErrors {
+    general?: string;
+    [key: string]: string[] | string;
+}
+
+export interface GatekeeperResponse {
+    status: number;
+    data?: any;
+    errors?: GatekeeperErrors;
+}
+
 export interface Pagination<T> {
     current_page: number;
     data: T[];
@@ -8,59 +23,8 @@ export interface Pagination<T> {
     total: number;
 }
 
-export interface GatekeeperError {
-    message: string;
-}
+export type QueryOrderAsc = 'asc';
 
-/**
- * ******************************************************************
- * Requests
- * ******************************************************************
- */
+export type QueryOrderDesc = 'desc';
 
-export interface EntityPageRequest {
-    page: number;
-    important_attribute?: 'name' | 'is_active';
-    name_order?: 'asc' | 'desc';
-    is_active_order?: 'asc' | 'desc';
-}
-
-export interface ShowEntityRequest {
-    id: number | string;
-}
-
-export interface StoreEntityRequest {
-    name: string;
-}
-
-export interface UpdateEntityRequest {
-    id: number | string;
-    name: string;
-}
-
-export interface DeactivateEntityRequest {
-    id: number | string;
-}
-
-export interface ReactivateEntityRequest {
-    id: number | string;
-}
-
-export interface DeleteEntityRequest {
-    id: number | string;
-}
-
-/**
- * ******************************************************************
- * Responses
- * ******************************************************************
- */
-
-export interface GatekeeperResponse {
-    status: number;
-    data?: any;
-    errors?: {
-        general?: string;
-        [key: string]: string[] | string;
-    };
-}
+export type QueryOrder = 'asc' | 'desc';

@@ -20,7 +20,7 @@ class PermissionController extends Controller
     public function index(PermissionPageRequest $request): JsonResponse
     {
         $pageNumber = $request->validated('page');
-        $importantAttribute = $request->validated('important_attribute');
+        $importantAttribute = $request->validated('prioritized_attribute');
         $nameOrder = $request->validated('name_order');
         $isActiveOrder = $request->validated('is_active_order');
 

@@ -38,7 +38,7 @@ class RoleControllerTest extends TestCase
 
         $this->getJson(route('gatekeeper.api.roles.index', [
             'page' => 1,
-            'important_attribute' => 'name',
+            'prioritized_attribute' => 'name',
             'name_order' => 'asc',
             'is_active_order' => 'desc',
         ]))

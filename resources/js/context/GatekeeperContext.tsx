@@ -1,5 +1,5 @@
-import { GatekeeperSharedData } from '@/types';
-import { createContext, FC, ReactNode, useContext } from 'react';
+import { type GatekeeperSharedData } from '@/types';
+import { createContext, type FC, type ReactNode, useContext } from 'react';
 
 const GatekeeperContext = createContext<GatekeeperSharedData | undefined>(undefined);
 

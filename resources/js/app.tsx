@@ -4,7 +4,7 @@ import { GatekeeperProvider } from '@/context/GatekeeperContext';
 import GatekeeperApp from '@/GatekeeperApp';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { initializeAxios } from '@/lib/axios';
-import { GatekeeperSharedData } from '@/types';
+import { type GatekeeperSharedData } from '@/types';
 import { createRoot } from 'react-dom/client';
 
 const container = document.getElementById('gatekeeper-root');

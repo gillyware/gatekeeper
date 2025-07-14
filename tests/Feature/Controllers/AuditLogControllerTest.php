@@ -36,7 +36,7 @@ class AuditLogControllerTest extends TestCase
             Gatekeeper::createPermission(fake()->unique()->word());
         });
 
-        $response = $this->getJson(route('gatekeeper.api.audit-logs.index', [
+        $response = $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,
             'created_at_order' => 'desc',
         ]));
@@ -61,7 +61,7 @@ class AuditLogControllerTest extends TestCase
 
         AuditLog::truncate();
 
-        $response = $this->getJson(route('gatekeeper.api.audit-logs.index', [
+        $response = $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,
             'created_at_order' => 'asc',
         ]));
@@ -77,7 +77,7 @@ class AuditLogControllerTest extends TestCase
 
         Schema::drop(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
 
-        $response = $this->getJson(route('gatekeeper.api.audit-logs.index', [
+        $response = $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,
             'created_at_order' => 'asc',
         ]));
@@ -89,7 +89,7 @@ class AuditLogControllerTest extends TestCase
 
     public function test_fails_without_manage_permission()
     {
-        $this->getJson(route('gatekeeper.api.audit-logs.index', [
+        $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,
             'created_at_order' => 'asc',
         ]))->assertStatus(Response::HTTP_FORBIDDEN);

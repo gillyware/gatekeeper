@@ -1,12 +1,12 @@
 import { useApi } from '@/lib/api';
-import { GatekeeperEntity, GatekeeperEntityAssignmentMap, GatekeeperEntityModelMap } from '@/types';
-import { Pagination } from '@/types/api';
+import { type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
+import { type Pagination } from '@/types/api';
 import {
-    AssignEntityToModelRequest,
-    ConfiguredModel,
-    ConfiguredModelMetadata,
-    LookupModelRequest,
-    RevokeEntityFromModelRequest,
+    type AssignEntityToModelRequest,
+    type ConfiguredModel,
+    type ConfiguredModelMetadata,
+    type LookupModelRequest,
+    type RevokeEntityFromModelRequest,
 } from '@/types/api/model';
 
 export async function fetchConfiguredModels(
