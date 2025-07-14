@@ -51,7 +51,7 @@ class ModelService
         $query = $className::query();
 
         foreach ($searchableColumns as $column) {
-            $query->orWhere($column, 'like', "%{$searchTerm}%");
+            $query->orWhereLike($column, "%{$searchTerm}%");
         }
 
         return $query->limit(10)->get()->map(fn (Model $model): array => [

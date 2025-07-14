@@ -33,7 +33,7 @@ export default function DeleteEntity<E extends GatekeeperEntity>({ entity, entit
 
         const onDelete = () => {
             closeModal();
-            navigate('/permissions', { replace: true });
+            navigate(`/${entity}s`, { replace: true });
         };
 
         deleteEntity(api, entity, entityModel.id, onDelete, setProcessing, setError);

@@ -20,6 +20,7 @@ class TeamController extends Controller
     public function index(TeamPageRequest $request): JsonResponse
     {
         $pageNumber = $request->validated('page');
+        $searchTerm = (string) $request->validated('search_term');
         $importantAttribute = $request->validated('prioritized_attribute');
         $nameOrder = $request->validated('name_order');
         $isActiveOrder = $request->validated('is_active_order');
@@ -28,7 +29,7 @@ class TeamController extends Controller
             return $this->errorResponse('The teams table does not exist in the database.');
         }
 
-        $query = Team::query();
+        $query = Team::query()->whereLike('name', "%{$searchTerm}%");
 
         if ($importantAttribute === 'is_active') {
             $query = $query

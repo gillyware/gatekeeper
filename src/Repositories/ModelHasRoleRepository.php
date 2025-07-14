@@ -81,7 +81,7 @@ class ModelHasRoleRepository
             ->whereIn('role_id', function ($sub) use ($rolesTable, $roleNameSearchTerm) {
                 $sub->select('id')
                     ->from($rolesTable)
-                    ->where('name', 'like', "%{$roleNameSearchTerm}%");
+                    ->whereLike('name', "%{$roleNameSearchTerm}%");
             })
             ->orderBy("$rolesTable.is_active")
             ->orderBy("$rolesTable.name")
@@ -98,7 +98,7 @@ class ModelHasRoleRepository
         $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 
         $query = Role::query()
-            ->where('name', 'like', "%{$roleNameSearchTerm}%")
+            ->whereLike('name', "%{$roleNameSearchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelRolesTable) {
                 $subquery->select('role_id')
                     ->from($modelRolesTable)

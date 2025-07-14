@@ -18,6 +18,7 @@ abstract class AbstractBaseEntityPageRequest extends FormRequest
     {
         return [
             'page' => ['required', 'integer', 'min:1'],
+            'search_term' => ['present', 'nullable', 'string'],
             'prioritized_attribute' => ['required', 'string', Rule::in(['name', 'is_active'])],
             'name_order' => ['required', 'string', Rule::in(['asc', 'desc'])],
             'is_active_order' => ['required', 'string', Rule::in(['asc', 'desc'])],

@@ -9,7 +9,7 @@ import { type AuditLog } from '@/types/models';
 
 export interface AuditLogPageRequest {
     page: number;
-    created_at_order?: QueryOrder;
+    created_at_order: QueryOrder;
 }
 
 /**

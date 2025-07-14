@@ -81,7 +81,7 @@ class ModelHasTeamRepository
             ->whereIn('team_id', function ($sub) use ($teamsTable, $teamNameSearchTerm) {
                 $sub->select('id')
                     ->from($teamsTable)
-                    ->where('name', 'like', "%{$teamNameSearchTerm}%");
+                    ->whereLike('name', "%{$teamNameSearchTerm}%");
             })
             ->orderBy("$teamsTable.is_active")
             ->orderBy("$teamsTable.name")
@@ -98,7 +98,7 @@ class ModelHasTeamRepository
         $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 
         $query = Team::query()
-            ->where('name', 'like', "%{$teamNameSearchTerm}%")
+            ->whereLike('name', "%{$teamNameSearchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelTeamsTable) {
                 $subquery->select('team_id')
                     ->from($modelTeamsTable)

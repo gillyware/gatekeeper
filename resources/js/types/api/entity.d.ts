@@ -13,9 +13,10 @@ export type OrderableEntityField = EntityFieldName | EntityFieldIsActive;
 
 export interface EntityPageRequest {
     page: number;
-    prioritized_attribute?: OrderableEntityField;
-    name_order?: QueryOrder;
-    is_active_order?: QueryOrder;
+    search_term: string;
+    prioritized_attribute: OrderableEntityField;
+    name_order: QueryOrder;
+    is_active_order: QueryOrder;
 }
 
 export interface ShowEntityRequest {
