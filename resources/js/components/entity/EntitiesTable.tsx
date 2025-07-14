@@ -7,6 +7,7 @@ import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperUs
 import { type Pagination } from '@/types/api';
 import { EntityPageRequest } from '@/types/api/entity';
 import { Button } from '@components/ui/button';
+import { DebouncedInput } from '@components/ui/debounced-input';
 import { ArrowUpDown, CheckCircle, Loader, PauseCircle } from 'lucide-react';
 import { type SetStateAction, useEffect, useMemo, useState } from 'react';
 import { type NavigateFunction, useNavigate } from 'react-router-dom';
@@ -40,13 +41,17 @@ export default function EntitiesTable<E extends GatekeeperEntity>({ entity }: En
     const navigate = useNavigate();
     const { user } = useGatekeeper();
 
-    const [entities, setEntities] = useState<Pagination<GatekeeperEntityModelMap[E]> | null>(null);
-    const [pageRequest, setPageRequest] = useState<EntityPageRequest>({
+    const initialPageRequest: EntityPageRequest = {
         page: 1,
+        search_term: '',
         prioritized_attribute: 'is_active',
         name_order: 'asc',
         is_active_order: 'desc',
-    });
+    };
+
+    const [entities, setEntities] = useState<Pagination<GatekeeperEntityModelMap[E]> | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [pageRequest, setPageRequest] = useState<EntityPageRequest>(initialPageRequest);
 
     const [loadingEntities, setLoadingEntities] = useState<boolean>(true);
     const [errorLoadingEntities, setErrorLoadingEntities] = useState<string | null>(null);
@@ -54,11 +59,36 @@ export default function EntitiesTable<E extends GatekeeperEntity>({ entity }: En
     const language: EntityTableText = useMemo(() => entityIndexText[entity].entityTableText, [entity]);
 
     useEffect(() => {
-        getEntities(api, entity, pageRequest, setEntities, setLoadingEntities, setErrorLoadingEntities);
-    }, [entity, pageRequest]);
+        setEntities(null);
+        setSearchTerm('');
+        setPageRequest(initialPageRequest);
+        getEntities(api, entity, initialPageRequest, setEntities, setLoadingEntities, setErrorLoadingEntities);
+    }, [entity]);
+
+    useEffect(() => {
+        if (entities !== null) {
+            getEntities(api, entity, pageRequest, setEntities, setLoadingEntities, setErrorLoadingEntities);
+        }
+    }, [pageRequest]);
 
     return (
         <div className="w-full">
+            <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-center">
+                <DebouncedInput
+                    value={searchTerm}
+                    placeholder={language.searchInputPlaceholder}
+                    debounceTime={1000}
+                    setValue={setSearchTerm}
+                    onDebouncedChange={async (value: string) => {
+                        setPageRequest((prev) => ({
+                            ...prev,
+                            page: 1,
+                            search_term: value,
+                        }));
+                    }}
+                />
+            </div>
+
             <div className="overflow-auto rounded-lg border dark:border-gray-700">
                 <table className="w-full text-sm">
                     <EntitiesTableHeader language={language} setPageRequest={setPageRequest} />

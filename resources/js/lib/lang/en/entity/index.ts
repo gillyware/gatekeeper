@@ -7,6 +7,7 @@ export interface EntityIndexText {
 }
 
 export interface EntityTableText {
+    searchInputPlaceholder: string;
     nameColumn: string;
     statusColumn: string;
     active: string;
@@ -23,6 +24,7 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         title: 'Permissions Index',
         description: "Take stock of your application's permissions",
         entityTableText: {
+            searchInputPlaceholder: 'Search by permission name',
             nameColumn: 'Name',
             statusColumn: 'Status',
             active: 'Active',
@@ -38,6 +40,7 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         title: 'Roles Index',
         description: "Take stock of your application's permissions",
         entityTableText: {
+            searchInputPlaceholder: 'Search by role name',
             nameColumn: 'Name',
             statusColumn: 'Status',
             active: 'Active',
@@ -53,6 +56,7 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         title: 'Teams Index',
         description: "Take stock of your application's permissions",
         entityTableText: {
+            searchInputPlaceholder: 'Search by team name',
             nameColumn: 'Name',
             statusColumn: 'Status',
             active: 'Active',

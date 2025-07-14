@@ -81,7 +81,7 @@ class ModelHasPermissionRepository
             ->whereIn('permission_id', function ($sub) use ($permissionsTable, $permissionNameSearchTerm) {
                 $sub->select('id')
                     ->from($permissionsTable)
-                    ->where('name', 'like', "%{$permissionNameSearchTerm}%");
+                    ->whereLike('name', "%{$permissionNameSearchTerm}%");
             })
             ->orderBy("$permissionsTable.is_active")
             ->orderBy("$permissionsTable.name")
@@ -98,7 +98,7 @@ class ModelHasPermissionRepository
         $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 
         $query = Permission::query()
-            ->where('name', 'like', "%{$permissionNameSearchTerm}%")
+            ->whereLike('name', "%{$permissionNameSearchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelPermissionsTable) {
                 $subquery->select('permission_id')
                     ->from($modelPermissionsTable)

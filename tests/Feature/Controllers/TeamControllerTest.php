@@ -38,6 +38,7 @@ class TeamControllerTest extends TestCase
 
         $this->getJson(route('gatekeeper.api.teams.index', [
             'page' => 1,
+            'search_term' => '',
             'prioritized_attribute' => 'name',
             'name_order' => 'asc',
             'is_active_order' => 'desc',
