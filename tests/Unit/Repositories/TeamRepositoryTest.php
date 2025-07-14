@@ -8,7 +8,6 @@ use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
-use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\MockObject\MockObject;
 
 class TeamRepositoryTest extends TestCase
@@ -21,12 +20,14 @@ class TeamRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        Config::set('gatekeeper.features.audit.enabled', false);
+        $this->app->forgetInstance(CacheService::class);
+        $this->app->forgetInstance(TeamRepository::class);
 
         $cacheMock = $this->createMock(CacheService::class);
-        $this->cacheService = $cacheMock;
+        $this->app->singleton(CacheService::class, fn () => $cacheMock);
 
-        $this->repository = new TeamRepository($cacheMock);
+        $this->cacheService = $cacheMock;
+        $this->repository = $this->app->make(TeamRepository::class);
     }
 
     public function test_team_exists_returns_true_if_exists()

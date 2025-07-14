@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Config;
 
 class RoleRepository
 {
-    public function __construct(private readonly CacheService $cacheService) {}
+    public function __construct(
+        private readonly CacheService $cacheService,
+        private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
+    ) {}
 
     /**
      * Check if a role with the given name exists.
@@ -99,6 +102,9 @@ class RoleRepository
      */
     public function delete(Role $role): bool
     {
+        // Unassign all permissions from the role (without audit logging).
+        $this->modelHasPermissionRepository->deleteForModel($role);
+
         $deleted = $role->delete();
 
         if ($deleted) {

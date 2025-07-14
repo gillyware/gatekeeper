@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 
 class ModelHasRoleRepository
@@ -44,21 +43,23 @@ class ModelHasRoleRepository
     }
 
     /**
-     * Get all ModelHasRole instances for a given model and role.
+     * Delete all role assignments for a given model.
      */
-    public function getForModelAndRole(Model $model, Role $role): Collection
+    public function deleteForModel(Model $model): bool
     {
-        return ModelHasRole::forModel($model)->where('role_id', $role->id)->get();
+        ModelHasRole::forModel($model)->delete();
+
+        $this->cacheService->invalidateCacheForModelRoleNames($model);
+
+        return true;
     }
 
     /**
-     * Delete all ModelHasRole instances for a given model and role.
+     * Delete all role assignments for a given model and role.
      */
     public function deleteForModelAndRole(Model $model, Role $role): bool
     {
-        $this->getForModelAndRole($model, $role)->each(function (ModelHasRole $modelHasRole) {
-            $modelHasRole->delete();
-        });
+        ModelHasRole::forModel($model)->where('role_id', $role->id)->delete();
 
         $this->cacheService->invalidateCacheForModelRoleNames($model);
 

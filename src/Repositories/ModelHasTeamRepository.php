@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 
 class ModelHasTeamRepository
@@ -44,21 +43,23 @@ class ModelHasTeamRepository
     }
 
     /**
-     * Get all ModelHasTeam instances for a given model and team.
+     * Delete all team assignments for a given model.
      */
-    public function getForModelAndTeam(Model $model, Team $team): Collection
+    public function deleteForModel(Model $model): bool
     {
-        return ModelHasTeam::forModel($model)->where('team_id', $team->id)->get();
+        ModelHasTeam::forModel($model)->delete();
+
+        $this->cacheService->invalidateCacheForModelTeamNames($model);
+
+        return true;
     }
 
     /**
-     * Delete all ModelHasTeam instances for a given model and team.
+     * Delete all team assignments for a given model and team.
      */
     public function deleteForModelAndTeam(Model $model, Team $team): bool
     {
-        $this->getForModelAndTeam($model, $team)->each(function (ModelHasTeam $modelHasTeam) {
-            $modelHasTeam->delete();
-        });
+        ModelHasTeam::forModel($model)->where('team_id', $team->id)->delete();
 
         $this->cacheService->invalidateCacheForModelTeamNames($model);
 

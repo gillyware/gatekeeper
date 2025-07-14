@@ -7,7 +7,6 @@ use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
-use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
@@ -23,10 +22,14 @@ class ModelHasTeamRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        $cacheMock = $this->createMock(CacheService::class);
-        $this->cacheService = $cacheMock;
+        $this->app->forgetInstance(CacheService::class);
+        $this->app->forgetInstance(ModelHasTeamRepository::class);
 
-        $this->repository = new ModelHasTeamRepository($cacheMock, app()->make(ModelMetadataService::class));
+        $cacheMock = $this->createMock(CacheService::class);
+        $this->app->singleton(CacheService::class, fn () => $cacheMock);
+
+        $this->cacheService = $cacheMock;
+        $this->repository = $this->app->make(ModelHasTeamRepository::class);
     }
 
     public function test_it_can_check_if_a_team_is_assigned_to_any_model()
@@ -58,19 +61,6 @@ class ModelHasTeamRepositoryTest extends TestCase
             'model_id' => $user->id,
             'team_id' => $team->id,
         ]);
-    }
-
-    public function test_it_can_get_model_team_records()
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-
-        $this->repository->create($user, $team);
-
-        $records = $this->repository->getForModelAndTeam($user, $team);
-
-        $this->assertCount(1, $records);
-        $this->assertInstanceOf(ModelHasTeam::class, $records->first());
     }
 
     public function test_it_can_soft_delete_model_team()

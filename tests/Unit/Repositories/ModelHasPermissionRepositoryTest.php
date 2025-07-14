@@ -7,7 +7,6 @@ use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
-use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
@@ -23,10 +22,14 @@ class ModelHasPermissionRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        $cacheMock = $this->createMock(CacheService::class);
-        $this->cacheService = $cacheMock;
+        $this->app->forgetInstance(CacheService::class);
+        $this->app->forgetInstance(ModelHasPermissionRepository::class);
 
-        $this->repository = new ModelHasPermissionRepository($cacheMock, app()->make(ModelMetadataService::class));
+        $cacheMock = $this->createMock(CacheService::class);
+        $this->app->singleton(CacheService::class, fn () => $cacheMock);
+
+        $this->cacheService = $cacheMock;
+        $this->repository = $this->app->make(ModelHasPermissionRepository::class);
     }
 
     public function test_it_can_check_if_a_permission_is_assigned_to_any_model()
@@ -58,19 +61,6 @@ class ModelHasPermissionRepositoryTest extends TestCase
             'model_id' => $user->id,
             'permission_id' => $permission->id,
         ]);
-    }
-
-    public function test_it_can_get_model_permission_records()
-    {
-        $user = User::factory()->create();
-        $permission = Permission::factory()->create();
-
-        $this->repository->create($user, $permission);
-
-        $records = $this->repository->getForModelAndPermission($user, $permission);
-
-        $this->assertCount(1, $records);
-        $this->assertInstanceOf(ModelHasPermission::class, $records->first());
     }
 
     public function test_it_can_soft_delete_model_permission()

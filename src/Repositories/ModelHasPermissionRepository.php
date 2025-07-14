@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 
 class ModelHasPermissionRepository
@@ -44,21 +43,23 @@ class ModelHasPermissionRepository
     }
 
     /**
-     * Get all ModelHasPermission instances for a given model and permission.
+     * Delete all permission assignments for a given model.
      */
-    public function getForModelAndPermission(Model $model, Permission $permission): Collection
+    public function deleteForModel(Model $model): bool
     {
-        return ModelHasPermission::forModel($model)->where('permission_id', $permission->id)->get();
+        ModelHasPermission::forModel($model)->delete();
+
+        $this->cacheService->invalidateCacheForModelPermissionNames($model);
+
+        return true;
     }
 
     /**
-     * Delete all ModelHasPermission instances for a given model and permission.
+     * Delete all permission assignments for a given model and permission.
      */
     public function deleteForModelAndPermission(Model $model, Permission $permission): bool
     {
-        $this->getForModelAndPermission($model, $permission)->each(function (ModelHasPermission $modelHasPermission) {
-            $modelHasPermission->delete();
-        });
+        ModelHasPermission::forModel($model)->where('permission_id', $permission->id)->delete();
 
         $this->cacheService->invalidateCacheForModelPermissionNames($model);
 
