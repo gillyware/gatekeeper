@@ -242,7 +242,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 
         $primaryKey = search(
             label: "Search by {$searchableList}",
-            options: fn (string $value) => $this->modelService->searchModels($label, trim($value))->mapWithKeys(function (array $model) {
+            options: fn (string $value) => $this->modelService->getModels($label, trim($value))->mapWithKeys(function (array $model) {
                 $displayable = $model['displayable'] ?? [];
                 $result = [];
 

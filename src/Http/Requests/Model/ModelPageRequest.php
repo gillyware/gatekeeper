@@ -8,11 +8,16 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class SearchModelsRequest extends FormRequest
+class ModelPageRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function validationData(): array
+    {
+        return array_merge($this->all(), $this->route()->parameters());
     }
 
     public function rules(): array

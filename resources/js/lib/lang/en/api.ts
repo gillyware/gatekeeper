@@ -5,6 +5,7 @@ export interface ApiText {
     badRequest: string;
     unexpectedError: string;
     entities: Record<GatekeeperEntity, EntityApiText>;
+    models: ModelApiText;
 }
 
 export interface EntityApiText {
@@ -14,6 +15,10 @@ export interface EntityApiText {
     deactivateError: string;
     reactivateError: string;
     deleteError: string;
+}
+
+export interface ModelApiText {
+    getPageError: string;
 }
 
 export const apiText: ApiText = {
@@ -53,5 +58,8 @@ export const apiText: ApiText = {
             reactivateError: 'Failed to reactivate team.',
             deleteError: 'Failed to delete team.',
         },
+    },
+    models: {
+        getPageError: 'Failed to fetch models.',
     },
 };

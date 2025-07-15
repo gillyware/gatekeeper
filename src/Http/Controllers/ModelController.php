@@ -5,11 +5,10 @@ namespace Gillyware\Gatekeeper\Http\Controllers;
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
-use Gillyware\Gatekeeper\Http\Requests\Model\AssignEntityToModelRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\LookupModelRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\RevokeEntityFromModelRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\SearchEntitiesForModelRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\SearchModelsRequest;
+use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntitiesPageRequest;
+use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntityRequest;
+use Gillyware\Gatekeeper\Http\Requests\Model\ModelPageRequest;
+use Gillyware\Gatekeeper\Http\Requests\Model\ShowModelRequest;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Services\ModelPermissionService;
 use Gillyware\Gatekeeper\Services\ModelRoleService;
@@ -32,12 +31,12 @@ class ModelController extends Controller
     ) {}
 
     /**
-     * Search for models based on a search term.
+     * Get a page of labels matching the label and search term.
      */
-    public function search(SearchModelsRequest $request): JsonResponse
+    public function index(ModelPageRequest $request): JsonResponse
     {
         try {
-            return Response::json($this->modelService->searchModels(
+            return Response::json($this->modelService->getModels(
                 $request->validated('model_label'),
                 (string) $request->validated('search_term')
             ));
@@ -47,67 +46,13 @@ class ModelController extends Controller
     }
 
     /**
-     * Search for entity assignments for a model.
+     * Get a model and its access.
      */
-    public function searchEntityAssignmentsForModel(SearchEntitiesForModelRequest $request): JsonResponse
+    public function show(ShowModelRequest $request): JsonResponse
     {
         try {
-            $modelLabel = $request->validated('model_label');
-            $modelPk = $request->validated('model_pk');
-            $pageNumber = $request->validated('page');
-            $entity = $request->validated('entity');
-            $entityNameSearchTerm = (string) $request->validated('search_term');
-
-            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
-            $model = $this->modelService->findModelInstance($className, $modelPk);
-
-            $paginator = match ($entity) {
-                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchAssignmentsByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::ROLE => $this->modelRoleService->searchAssignmentsByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::TEAM => $this->modelTeamService->searchAssignmentsByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
-            };
-
-            return Response::json($paginator);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Search for unassigned entities for a model.
-     */
-    public function searchUnassignedEntitiesForModel(SearchEntitiesForModelRequest $request): JsonResponse
-    {
-        try {
-            $modelLabel = $request->validated('model_label');
-            $modelPk = $request->validated('model_pk');
-            $pageNumber = $request->validated('page');
-            $entity = $request->validated('entity');
-            $entityNameSearchTerm = (string) $request->validated('search_term');
-
-            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
-            $model = $this->modelService->findModelInstance($className, $modelPk);
-
-            $paginator = match ($entity) {
-                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchUnassignedByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::ROLE => $this->modelRoleService->searchUnassignedByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::TEAM => $this->modelTeamService->searchUnassignedByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
-            };
-
-            return Response::json($paginator);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Lookup a model by its primary key and return its access.
-     */
-    public function lookup(LookupModelRequest $request): JsonResponse
-    {
-        try {
-            $label = $request->validated('model_label');
-            $pk = $request->validated('model_pk');
+            $label = $request->validated('modelLabel');
+            $pk = $request->validated('modelPk');
 
             $modelData = $this->modelMetadataService->getModelDataByLabel($label);
             $modelClass = $this->modelMetadataService->getClassFromModelData($modelData);
@@ -139,13 +84,67 @@ class ModelController extends Controller
     }
 
     /**
-     * Assign an entity to a model.
+     * Get a page of assigned entities for a model and entity.
      */
-    public function assign(AssignEntityToModelRequest $request): JsonResponse
+    public function searchAssignedEntitiesForModel(ModelEntitiesPageRequest $request): JsonResponse
     {
         try {
-            $label = $request->validated('model_label');
-            $pk = $request->validated('model_pk');
+            $modelLabel = $request->validated('modelLabel');
+            $modelPk = $request->validated('modelPk');
+            $pageNumber = $request->validated('page');
+            $entity = $request->validated('entity');
+            $entityNameSearchTerm = (string) $request->validated('search_term');
+
+            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
+            $model = $this->modelService->findModelInstance($className, $modelPk);
+
+            $paginator = match ($entity) {
+                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchAssignmentsByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
+                GatekeeperEntity::ROLE => $this->modelRoleService->searchAssignmentsByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
+                GatekeeperEntity::TEAM => $this->modelTeamService->searchAssignmentsByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
+            };
+
+            return Response::json($paginator);
+        } catch (GatekeeperException $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Get a page of unassigned entities for a model and entity.
+     */
+    public function searchUnassignedEntitiesForModel(ModelEntitiesPageRequest $request): JsonResponse
+    {
+        try {
+            $modelLabel = $request->validated('modelLabel');
+            $modelPk = $request->validated('modelPk');
+            $pageNumber = $request->validated('page');
+            $entity = $request->validated('entity');
+            $entityNameSearchTerm = (string) $request->validated('search_term');
+
+            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
+            $model = $this->modelService->findModelInstance($className, $modelPk);
+
+            $paginator = match ($entity) {
+                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchUnassignedByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
+                GatekeeperEntity::ROLE => $this->modelRoleService->searchUnassignedByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
+                GatekeeperEntity::TEAM => $this->modelTeamService->searchUnassignedByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
+            };
+
+            return Response::json($paginator);
+        } catch (GatekeeperException $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Assign an entity to a model.
+     */
+    public function assign(ModelEntityRequest $request): JsonResponse
+    {
+        try {
+            $label = $request->validated('modelLabel');
+            $pk = $request->validated('modelPk');
             $entity = $request->validated('entity');
             $entityName = $request->validated('entity_name');
 
@@ -173,11 +172,11 @@ class ModelController extends Controller
     /**
      * Revoke an entity from a model.
      */
-    public function revoke(RevokeEntityFromModelRequest $request): JsonResponse
+    public function revoke(ModelEntityRequest $request): JsonResponse
     {
         try {
-            $label = $request->validated('model_label');
-            $pk = $request->validated('model_pk');
+            $label = $request->validated('modelLabel');
+            $pk = $request->validated('modelPk');
             $entity = $request->validated('entity');
             $entityName = $request->validated('entity_name');
 

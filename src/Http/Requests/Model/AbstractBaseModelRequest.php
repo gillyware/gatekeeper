@@ -8,11 +8,16 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-abstract class AbstractBaseModelRequest extends FormRequest
+class AbstractBaseModelRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function validationData(): array
+    {
+        return array_merge($this->all(), $this->route()->parameters());
     }
 
     public function rules(): array
@@ -20,8 +25,8 @@ abstract class AbstractBaseModelRequest extends FormRequest
         $labels = app()->make(ModelMetadataService::class)->getConfiguredModelLabels();
 
         return [
-            'model_label' => ['required', 'string', Rule::in($labels)],
-            'model_pk' => ['required', 'string', 'regex:/^[\w-]+$/'],
+            'modelLabel' => ['required', 'string', Rule::in($labels)],
+            'modelPk' => ['required', 'string', 'regex:/^[\w-]+$/'],
         ];
     }
 
