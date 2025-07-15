@@ -14,6 +14,14 @@ export interface ConfiguredModelMetadata {
     has_teams: boolean;
 }
 
+export type ModelEntitySupport = Record<
+    GatekeeperEntity,
+    {
+        supported: boolean;
+        reason?: string;
+    }
+>;
+
 export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
     model_pk: string | number;
     display: { [key: string]: any };

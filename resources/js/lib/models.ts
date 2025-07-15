@@ -1,7 +1,60 @@
 import { useApi } from '@/lib/api';
-import { type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
+import { manageModelText, type ModelEntitySupportText } from '@/lib/lang/en/model/manage';
+import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
 import { type Pagination } from '@/types/api';
-import { type AssignEntityToModelRequest, type ConfiguredModel, type LookupModelRequest, type RevokeEntityFromModelRequest } from '@/types/api/model';
+import {
+    type AssignEntityToModelRequest,
+    type ConfiguredModel,
+    type ConfiguredModelMetadata,
+    type LookupModelRequest,
+    type ModelEntitySupport,
+    type RevokeEntityFromModelRequest,
+} from '@/types/api/model';
+
+export function getEntitySupportForModel(config: GatekeeperConfig, model: ConfiguredModelMetadata): ModelEntitySupport {
+    const result: ModelEntitySupport = {
+        permission: { supported: true },
+        role: { supported: true },
+        team: { supported: true },
+    };
+
+    const permissionsSupported = model.has_permissions && !model.is_permission;
+    const rolesSupported = config.roles_enabled && model.has_roles && !model.is_role && !model.is_permission;
+    const teamsSupported = config.teams_enabled && model.has_teams && !model.is_team && !model.is_role && !model.is_permission;
+
+    const language: ModelEntitySupportText = manageModelText.modelSummaryText.entitySupportText;
+
+    if (!permissionsSupported) {
+        result.permission.supported = false;
+        result.permission.reason = model.is_role ? language.permission.isPermission : language.permission.missingTrait;
+    }
+
+    if (!rolesSupported) {
+        result.role.supported = false;
+        result.role.reason = !config.roles_enabled
+            ? language.role.featureDisabled
+            : model.is_role
+              ? language.role.isRole
+              : model.is_permission
+                ? language.role.isPermission
+                : language.role.missingTrait;
+    }
+
+    if (!teamsSupported) {
+        result.team.supported = false;
+        result.team.reason = !config.teams_enabled
+            ? language.team.featureDisabled
+            : model.is_team
+              ? language.team.isTeam
+              : model.is_role
+                ? language.team.isRole
+                : model.is_permission
+                  ? language.team.isPermission
+                  : language.team.missingTrait;
+    }
+
+    return result;
+}
 
 export async function fetchEntityAssignmentsForModel<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,

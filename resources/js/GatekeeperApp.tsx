@@ -1,11 +1,11 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
 import AuditLogIndex from '@/screens/audit-log/AuditLogIndex';
-import CreateEntityScreen from '@/screens/entities/CreateEntityScreen';
-import EntityIndexScreen from '@/screens/entities/EntityIndexScreen';
-import ManageEntityScreen from '@/screens/entities/ManageEntityScreen';
+import CreateEntityScreen from '@/screens/entity/CreateEntityScreen';
+import EntityIndexScreen from '@/screens/entity/EntityIndexScreen';
+import ManageEntityScreen from '@/screens/entity/ManageEntityScreen';
 import LandingScreen from '@/screens/LandingScreen';
-import ManageModel from '@/screens/models/ManageModel';
-import ModelsIndex from '@/screens/models/ModelsIndex';
+import ManageModel from '@/screens/model/ManageModel';
+import ModelsIndex from '@/screens/model/ModelsIndex';
 import { type GatekeeperPermission, type GatekeeperRole, type GatekeeperTeam } from '@/types';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
