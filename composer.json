@@ -43,7 +43,7 @@
         "format": [
             "./vendor/bin/pint"
         ],
-        "check": [
+        "lint": [
             "./vendor/bin/phpstan analyse --memory-limit=2G"
         ],
         "test": [
@@ -51,7 +51,7 @@
         ],
         "sweep": [
             "composer format",
-            "composer check",
+            "composer lint",
             "composer test"
         ]
     },

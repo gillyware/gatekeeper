@@ -1,19 +1,37 @@
+import { useGatekeeper } from '@/context/GatekeeperContext';
+import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
 import { type ModelManagementTab } from '@/types';
+import { type ConfiguredModel, type ModelEntitySupport } from '@/types/api/model';
 import { KeyRound, LucideIcon, ShieldCheck, Square, Users } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface ModelManagementTabsProps {
     tab: ModelManagementTab;
     changeTab: (tab: ModelManagementTab) => void;
+    model: ConfiguredModel;
 }
 
-export default function ModelManagementTabs({ tab, changeTab }: ModelManagementTabsProps) {
-    const tabs: { value: ModelManagementTab; icon: LucideIcon; label: string }[] = [
+interface Tab {
+    value: ModelManagementTab;
+    icon: LucideIcon;
+    label: string;
+}
+
+export default function ModelManagementTabs({ tab, changeTab, model }: ModelManagementTabsProps) {
+    const { config } = useGatekeeper();
+    const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
+
+    const showPermissiosnTab = entitySupport.permission.supported || model.direct_permissions.length > 0;
+    const showRolesTab = entitySupport.role.supported || model.direct_roles.length > 0;
+    const showTeamsTab = entitySupport.team.supported || model.direct_teams.length > 0;
+
+    const tabs: Tab[] = [
         { value: 'overview', icon: Square, label: 'Overview' },
-        { value: 'permissions', icon: KeyRound, label: 'Permissions' },
-        { value: 'roles', icon: ShieldCheck, label: 'Roles' },
-        { value: 'teams', icon: Users, label: 'Teams' },
-    ];
+        showPermissiosnTab && { value: 'permissions', icon: KeyRound, label: 'Permissions' },
+        showRolesTab && { value: 'roles', icon: ShieldCheck, label: 'Roles' },
+        showTeamsTab && { value: 'teams', icon: Users, label: 'Teams' },
+    ].filter((x) => Boolean(x)) as Tab[];
 
     return (
         <div className="mb-0 inline-flex w-full justify-between gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">

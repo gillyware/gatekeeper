@@ -1,9 +1,11 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
-import { type ConfiguredModel } from '@/types/api/model';
+import { getEntitySupportForModel } from '@/lib/models';
+import { type ConfiguredModel, type ModelEntitySupport } from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
 import { Separator } from '@components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@components/ui/tooltip';
 import { Ban, CheckCircle } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface ModelSummaryProps {
     model: ConfiguredModel;
@@ -16,6 +18,7 @@ interface SupportIndicatorProps {
 
 export default function ModelSummary({ model }: ModelSummaryProps) {
     const { config } = useGatekeeper();
+    const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
 
     return (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -48,52 +51,21 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                     <div className="flex flex-row items-center justify-between gap-4">
                         <span className="font-bold">Permissions:</span>
                         <span>
-                            <SupportIndicator
-                                supported={model.has_permissions && !model.is_permission}
-                                tooltip={
-                                    model.is_permission
-                                        ? 'Permissions cannot be assigned to other permissions'
-                                        : 'Add the `HasPermissions` trait to this model to enable permission assignment.'
-                                }
-                            />
+                            <SupportIndicator supported={entitySupport.permission.supported} tooltip={entitySupport.permission.reason || ''} />
                         </span>
                     </div>
 
                     <div className="flex flex-row items-center justify-between gap-4">
                         <span className="font-bold">Roles:</span>
                         <span>
-                            <SupportIndicator
-                                supported={config.roles_enabled && model.has_roles && !model.is_role && !model.is_permission}
-                                tooltip={
-                                    !config.roles_enabled
-                                        ? "The 'roles' feature is disabled in the configuration"
-                                        : model.is_role
-                                          ? 'Roles cannot be assigned to other roles'
-                                          : model.is_permission
-                                            ? 'Roles cannot be assigned to permissions'
-                                            : 'Add the `HasRoles` trait to this model to enable role assignment.'
-                                }
-                            />
+                            <SupportIndicator supported={entitySupport.role.supported} tooltip={entitySupport.role.reason || ''} />
                         </span>
                     </div>
 
                     <div className="flex flex-row items-center justify-between gap-4">
                         <span className="font-bold">Teams:</span>
                         <span>
-                            <SupportIndicator
-                                supported={config.teams_enabled && model.has_teams && !model.is_team && !model.is_role && !model.is_permission}
-                                tooltip={
-                                    !config.teams_enabled
-                                        ? "The 'teams' feature is disabled in the configuration"
-                                        : model.is_team
-                                          ? 'Teams cannot be assigned to other teams.'
-                                          : model.is_role
-                                            ? 'Teams cannot be assigned to roles'
-                                            : model.is_permission
-                                              ? 'Teams cannot be assigned to permissions'
-                                              : 'Add the `HasTeams` trait to this model to enable team assignment.'
-                                }
-                            />
+                            <SupportIndicator supported={entitySupport.team.supported} tooltip={entitySupport.team.reason || ''} />
                         </span>
                     </div>
                 </CardContent>

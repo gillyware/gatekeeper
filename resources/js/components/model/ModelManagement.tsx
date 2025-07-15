@@ -41,7 +41,7 @@ export default function ModelManagement() {
 
     return (
         <div className="flex flex-col gap-8 space-y-6 p-4">
-            <ModelManagementTabs tab={tab} changeTab={setTab} />
+            <ModelManagementTabs tab={tab} changeTab={setTab} model={model} />
 
             {tab === 'overview' && <ModelSummary model={model} />}
 
