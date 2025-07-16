@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
 use Illuminate\Contracts\Support\Arrayable;
+use UnitEnum;
 
 trait HasPermissions
 {
@@ -13,7 +14,7 @@ trait HasPermissions
     /**
      * Assign a permission to the model.
      */
-    public function assignPermission(Permission|string $permission): bool
+    public function assignPermission(Permission|string|UnitEnum $permission): bool
     {
         return Gatekeeper::assignPermissionToModel($this, $permission);
     }
@@ -29,7 +30,7 @@ trait HasPermissions
     /**
      * Revoke a permission from the model.
      */
-    public function revokePermission(Permission|string $permission): bool
+    public function revokePermission(Permission|string|UnitEnum $permission): bool
     {
         return Gatekeeper::revokePermissionFromModel($this, $permission);
     }
@@ -45,7 +46,7 @@ trait HasPermissions
     /**
      * Check if the model has a given permission.
      */
-    public function hasPermission(Permission|string $permission): bool
+    public function hasPermission(Permission|string|UnitEnum $permission): bool
     {
         return Gatekeeper::modelHasPermission($this, $permission);
     }

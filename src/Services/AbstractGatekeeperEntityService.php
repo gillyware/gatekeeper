@@ -25,7 +25,7 @@ abstract class AbstractGatekeeperEntityService
         $entityArray = $entities instanceof Arrayable ? $entities->toArray() : $entities;
 
         return collect($entityArray)->map(
-            fn (AbstractGatekeeperEntity|array|string $entity) => $this->resolveEntityName($entity)
+            fn (AbstractGatekeeperEntity|array|string|UnitEnum $entity) => $this->resolveEntityName($entity)
         );
     }
 

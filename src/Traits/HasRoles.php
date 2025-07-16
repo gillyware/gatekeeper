@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Role;
 use Illuminate\Contracts\Support\Arrayable;
+use UnitEnum;
 
 trait HasRoles
 {
@@ -13,7 +14,7 @@ trait HasRoles
     /**
      * Assign a role to the model.
      */
-    public function assignRole(Role|string $role): bool
+    public function assignRole(Role|string|UnitEnum $role): bool
     {
         return Gatekeeper::assignRoleToModel($this, $role);
     }
@@ -29,7 +30,7 @@ trait HasRoles
     /**
      * Revoke a role from the model.
      */
-    public function revokeRole(Role|string $role): bool
+    public function revokeRole(Role|string|UnitEnum $role): bool
     {
         return Gatekeeper::revokeRoleFromModel($this, $role);
     }
@@ -45,7 +46,7 @@ trait HasRoles
     /**
      * Check if the model has a given role.
      */
-    public function hasRole(Role|string $role): bool
+    public function hasRole(Role|string|UnitEnum $role): bool
     {
         return Gatekeeper::modelHasRole($this, $role);
     }
