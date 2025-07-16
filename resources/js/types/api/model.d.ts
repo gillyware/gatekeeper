@@ -1,4 +1,4 @@
-import { type GatekeeperEntity, type GatekeeperEntityAssignmentMap, type GatekeeperEntityModelMap } from '@/types';
+import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperModelEntityAssignmentMap } from '@/types';
 import { type GatekeeperResponse, type Pagination } from '@/types/api/index';
 import { type Permission, type Role, type Team } from '@/types/models';
 
@@ -14,13 +14,12 @@ export interface ConfiguredModelMetadata {
     has_teams: boolean;
 }
 
-export type ModelEntitySupport = Record<
-    GatekeeperEntity,
-    {
-        supported: boolean;
-        reason?: string;
-    }
->;
+export type ModelEntitySupport = Record<GatekeeperEntity, EntitySupported>;
+
+export interface EntitySupported {
+    supported: boolean;
+    reason?: string;
+}
 
 export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
     model_pk: string | number;
@@ -44,17 +43,12 @@ export interface ModelRequest {
     model_pk: string | number;
 }
 
-export interface SearchModelsRequest {
+export interface ModelPageRequest {
     model_label: string;
     search_term: string;
 }
 
-export interface SearchEntityAssignmentsForModelRequest extends ModelRequest, SearchModelsRequest {
-    entity: GatekeeperEntity;
-    page: number;
-}
-
-export interface SearchUnassignedEntitiesForModelRequest extends ModelRequest, SearchModelsRequest {
+export interface GetModelEntitiesPageRequest extends ModelRequest, ModelPageRequest {
     entity: GatekeeperEntity;
     page: number;
 }
@@ -64,7 +58,7 @@ export interface ModelEntityRequest extends ModelRequest {
     entity_name: string;
 }
 
-export interface LookupModelRequest extends ModelRequest {}
+export interface ShowModelRequest extends ModelRequest {}
 
 export interface AssignEntityToModelRequest extends ModelEntityRequest {}
 
@@ -76,15 +70,15 @@ export interface RevokeEntityFromModelRequest extends ModelEntityRequest {}
  * ******************************************************************
  */
 
-export interface SearchModelsResponse extends GatekeeperResponse {
+export interface ModelPageResponse extends GatekeeperResponse {
     data?: ConfiguredModelSearchResult[];
 }
 
-export interface SearchEntityAssignmentsForModelResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
-    data?: Pagination<GatekeeperEntityAssignmentMap[E]>;
+export interface ModelEntityAssignmentsPageResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
+    data?: Pagination<GatekeeperModelEntityAssignmentMap[E]>;
 }
 
-export interface SearchUnassignedEntitiesForModelResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
+export interface ModelUnassignedEntitiesPageResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
     data?: Pagination<GatekeeperEntityModelMap[E]>;
 }
 

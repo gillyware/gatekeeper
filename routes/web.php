@@ -110,17 +110,21 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
      */
     Route::prefix('models')->name('models.')->controller(ModelController::class)->group(function () {
 
-        Route::get('/search', 'search')->name('search');
+        Route::get('/', 'index')->name('index');
 
-        Route::get('/search-entity-assignments-for-model', 'searchEntityAssignmentsForModel')->name('search-entity-assignments-for-model');
+        Route::get('/{modelLabel}/{modelPk}', 'show')->name('show');
 
-        Route::get('/search-unassigned-entities-for-model', 'searchUnassignedEntitiesForModel')->name('search-unassigned-entities-for-model');
+        Route::get('/{modelLabel}/{modelPk}/entities/{entity}/assigned', 'searchAssignedEntitiesForModel')->name('search-assigned-entities');
 
-        Route::get('/lookup', 'lookup')->name('lookup');
+        Route::get('/{modelLabel}/{modelPk}/entities/{entity}/unassigned', 'searchUnassignedEntitiesForModel')->name('search-unassigned-entities');
 
-        Route::post('/assign', 'assign')->name('assign');
+        Route::middleware('has_permission:'.GatekeeperPermissionName::MANAGE)->group(function () {
 
-        Route::delete('/revoke', 'revoke')->name('revoke');
+            Route::post('/{modelLabel}/{modelPk}/entities/{entity}/assign', 'assign')->name('assign');
+
+            Route::delete('/{modelLabel}/{modelPk}/entities/{entity}/revoke', 'revoke')->name('revoke');
+
+        });
 
     });
 });

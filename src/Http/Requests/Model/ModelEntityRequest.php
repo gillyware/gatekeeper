@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Http\Requests\Model;
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Illuminate\Validation\Rule;
 
-class AssignEntityToModelRequest extends AbstractBaseModelRequest
+class ModelEntityRequest extends AbstractBaseModelRequest
 {
     public function rules(): array
     {

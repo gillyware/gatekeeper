@@ -22,19 +22,19 @@ export type Role = EntityModel;
 
 export type Team = EntityModel;
 
-export type PermissionAssignment = EntityAssignment & {
+export type ModelPermissionAssignment = EntityAssignment & {
     permission_id: number;
     permission: Permission;
     assigned_at: string | null;
 };
 
-export type RoleAssignment = EntityAssignment & {
+export type ModelRoleAssignmetn = EntityAssignment & {
     role_id: number;
     role: Role;
     assigned_at: string | null;
 };
 
-export type TeamAssignment = EntityAssignment & {
+export type ModelTeamAssignment = EntityAssignment & {
     team_id: number;
     team: Team;
     assigned_at: string | null;

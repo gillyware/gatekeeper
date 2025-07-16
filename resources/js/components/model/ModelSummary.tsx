@@ -1,4 +1,5 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
+import { manageModelText, type ModelSummaryText } from '@/lib/lang/en/model/manage';
 import { getEntitySupportForModel } from '@/lib/models';
 import { type ConfiguredModel, type ModelEntitySupport } from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
@@ -19,13 +20,14 @@ interface SupportIndicatorProps {
 export default function ModelSummary({ model }: ModelSummaryProps) {
     const { config } = useGatekeeper();
     const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
+    const language: ModelSummaryText = useMemo(() => manageModelText.modelSummaryText, []);
 
     return (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card>
                 <CardContent className="flex flex-1 flex-col gap-2">
                     <div className="flex flex-row items-center justify-between gap-4">
-                        <span className="font-bold">Model:</span>
+                        <span className="font-bold">{language.modelLabel}</span>
                         <span>{model.model_label}</span>
                     </div>
 
@@ -34,7 +36,7 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
                     {model.displayable.map((x) => (
                         <div key={x.column} className="flex flex-row items-center justify-between gap-4">
                             <span className="font-bold">{x.label}:</span>
-                            <span className="truncate">{model.display[x.column] ?? 'N/A'}</span>
+                            <span className="truncate">{model.display[x.column] ?? ''}</span>
                         </div>
                     ))}
                 </CardContent>
@@ -43,27 +45,27 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
             <Card>
                 <CardContent className="flex flex-1 flex-col gap-2">
                     <div className="flex flex-row items-center justify-start">
-                        <span className="font-bold">Supports</span>
+                        <span className="font-bold">{language.entitySupportLabel}</span>
                     </div>
 
                     <Separator className="bg-sidebar-border my-1" />
 
                     <div className="flex flex-row items-center justify-between gap-4">
-                        <span className="font-bold">Permissions:</span>
+                        <span className="font-bold">{language.entitySupportText.permission.label}</span>
                         <span>
                             <SupportIndicator supported={entitySupport.permission.supported} tooltip={entitySupport.permission.reason || ''} />
                         </span>
                     </div>
 
                     <div className="flex flex-row items-center justify-between gap-4">
-                        <span className="font-bold">Roles:</span>
+                        <span className="font-bold">{language.entitySupportText.role.label}</span>
                         <span>
                             <SupportIndicator supported={entitySupport.role.supported} tooltip={entitySupport.role.reason || ''} />
                         </span>
                     </div>
 
                     <div className="flex flex-row items-center justify-between gap-4">
-                        <span className="font-bold">Teams:</span>
+                        <span className="font-bold">{language.entitySupportText.team.label}</span>
                         <span>
                             <SupportIndicator supported={entitySupport.team.supported} tooltip={entitySupport.team.reason || ''} />
                         </span>

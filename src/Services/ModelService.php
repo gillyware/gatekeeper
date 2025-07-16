@@ -38,7 +38,7 @@ class ModelService
     /**
      * Search for models based on a label and search term.
      */
-    public function searchModels(string $modelLabel, string $searchTerm): Collection
+    public function getModels(string $modelLabel, string $searchTerm): Collection
     {
         $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
         $className = $this->modelMetadataService->getClassFromModelData($modelData ?? []);

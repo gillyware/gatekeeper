@@ -1,4 +1,5 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
+import { manageModelText, type ModelManagementTabsText } from '@/lib/lang/en/model/manage';
 import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
 import { type ModelManagementTab } from '@/types';
@@ -25,12 +26,13 @@ export default function ModelManagementTabs({ tab, changeTab, model }: ModelMana
     const showPermissiosnTab = entitySupport.permission.supported || model.direct_permissions.length > 0;
     const showRolesTab = entitySupport.role.supported || model.direct_roles.length > 0;
     const showTeamsTab = entitySupport.team.supported || model.direct_teams.length > 0;
+    const language: ModelManagementTabsText = useMemo(() => manageModelText.modelManagementTabsText, []);
 
     const tabs: Tab[] = [
-        { value: 'overview', icon: Square, label: 'Overview' },
-        showPermissiosnTab && { value: 'permissions', icon: KeyRound, label: 'Permissions' },
-        showRolesTab && { value: 'roles', icon: ShieldCheck, label: 'Roles' },
-        showTeamsTab && { value: 'teams', icon: Users, label: 'Teams' },
+        { value: 'overview', icon: Square, label: language.navOverview },
+        showPermissiosnTab && { value: 'permissions', icon: KeyRound, label: language.navPermission },
+        showRolesTab && { value: 'roles', icon: ShieldCheck, label: language.navRoles },
+        showTeamsTab && { value: 'teams', icon: Users, label: language.navTeams },
     ].filter((x) => Boolean(x)) as Tab[];
 
     return (

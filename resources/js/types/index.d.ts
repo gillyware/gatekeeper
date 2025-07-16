@@ -49,10 +49,10 @@ export type GatekeeperTeam = 'team';
 
 export type GatekeeperEntity = GatekeeperPermission | GatekeeperRole | GatekeeperTeam;
 
-export type GatekeeperEntityAssignmentMap = {
-    permission: PermissionAssignment;
-    role: RoleAssignment;
-    team: TeamAssignment;
+export type GatekeeperModelEntityAssignmentMap = {
+    permission: ModelPermissionAssignment;
+    role: ModelRoleAssignmetn;
+    team: ModelTeamAssignment;
 };
 
 export type GatekeeperEntityModelMap = {

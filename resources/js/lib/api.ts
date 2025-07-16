@@ -1,6 +1,6 @@
 import { useAxios } from '@/lib/axios';
 import { apiText } from '@/lib/lang/en/api';
-import { GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type GatekeeperEntity, type GatekeeperEntityAssignmentMap } from '@/types';
+import { GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type GatekeeperEntity, type GatekeeperModelEntityAssignmentMap } from '@/types';
 import { type GatekeeperError, type GatekeeperResponse } from '@/types/api';
 import { type AuditLogPageRequest, type AuditLogPageResponse } from '@/types/api/audit';
 import {
@@ -22,16 +22,15 @@ import {
 import {
     type AssignEntityToModelRequest,
     type AssignEntityToModelResponse,
-    type LookupModelRequest,
+    type GetModelEntitiesPageRequest,
     type LookupModelResponse,
+    type ModelEntityAssignmentsPageResponse,
+    type ModelPageRequest,
+    type ModelPageResponse,
+    type ModelUnassignedEntitiesPageResponse,
     type RevokeEntityFromModelRequest,
     type RevokeEntityFromModelResponse,
-    type SearchEntityAssignmentsForModelRequest,
-    type SearchEntityAssignmentsForModelResponse,
-    type SearchModelsRequest,
-    type SearchModelsResponse,
-    type SearchUnassignedEntitiesForModelRequest,
-    type SearchUnassignedEntitiesForModelResponse,
+    type ShowModelRequest,
 } from '@/types/api/model';
 import { type AxiosError, type AxiosResponse } from 'axios';
 import { useMemo } from 'react';
@@ -172,43 +171,53 @@ export function useApi() {
                 });
             },
 
-            searchModels: async (data: SearchModelsRequest): Promise<SearchModelsResponse> => {
+            getModels: async (data: ModelPageRequest): Promise<ModelPageResponse> => {
                 return handleResponse(() => {
-                    return axios.get('/models/search', { params: data });
+                    return axios.get('/models', { params: data });
+                });
+            },
+
+            getModel: async (params: ShowModelRequest): Promise<LookupModelResponse> => {
+                return handleResponse(() => {
+                    return axios.get(`/models/${params.model_label}/${params.model_pk}`);
                 });
             },
 
             getEntityAssignmentsForModel: async <E extends GatekeeperEntity>(
-                data: SearchEntityAssignmentsForModelRequest,
-            ): Promise<SearchEntityAssignmentsForModelResponse<GatekeeperEntityAssignmentMap[E]>> => {
+                params: GetModelEntitiesPageRequest,
+            ): Promise<ModelEntityAssignmentsPageResponse<GatekeeperModelEntityAssignmentMap[E]>> => {
+                const { model_label, model_pk, entity, ...filterParams } = params;
+
                 return handleResponse(() => {
-                    return axios.get('/models/search-entity-assignments-for-model', { params: data });
+                    return axios.get(`/models/${params.model_label}/${params.model_pk}/entities/${params.entity}/assigned`, { params: filterParams });
                 });
             },
 
             getUnassignedEntitiesForModel: async <E extends GatekeeperEntity>(
-                data: SearchUnassignedEntitiesForModelRequest,
-            ): Promise<SearchUnassignedEntitiesForModelResponse<E>> => {
-                return handleResponse(() => {
-                    return axios.get('/models/search-unassigned-entities-for-model', { params: data });
-                });
-            },
+                params: GetModelEntitiesPageRequest,
+            ): Promise<ModelUnassignedEntitiesPageResponse<E>> => {
+                const { model_label, model_pk, entity, ...filterParams } = params;
 
-            lookupModel: async (params: LookupModelRequest): Promise<LookupModelResponse> => {
                 return handleResponse(() => {
-                    return axios.get(`/models/lookup`, { params });
+                    return axios.get(`/models/${params.model_label}/${params.model_pk}/entities/${params.entity}/unassigned`, {
+                        params: filterParams,
+                    });
                 });
             },
 
             assignToModel: async (data: AssignEntityToModelRequest): Promise<AssignEntityToModelResponse> => {
+                const { entity_name } = data;
+
                 return handleResponse(() => {
-                    return axios.post('/models/assign', data);
+                    return axios.post(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/assign`, { entity_name });
                 });
             },
 
-            revokeFromModel: async (params: RevokeEntityFromModelRequest): Promise<RevokeEntityFromModelResponse> => {
+            revokeFromModel: async (data: RevokeEntityFromModelRequest): Promise<RevokeEntityFromModelResponse> => {
+                const { entity_name } = data;
+
                 return handleResponse(() => {
-                    return axios.delete('/models/revoke', { params });
+                    return axios.delete(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/revoke`, { data: { entity_name } });
                 });
             },
 

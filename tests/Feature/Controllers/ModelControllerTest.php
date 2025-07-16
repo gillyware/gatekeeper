@@ -49,7 +49,7 @@ class ModelControllerTest extends TestCase
     {
         $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
 
-        $this->getJson(route('gatekeeper.api.models.lookup', [
+        $this->getJson(route('gatekeeper.api.models.show', [
             'model_label' => 'User',
             'model_pk' => $this->user->getKey(),
         ]))
@@ -88,7 +88,7 @@ class ModelControllerTest extends TestCase
 
         [$pk, $className] = [999999, User::class];
 
-        $this->getJson(route('gatekeeper.api.models.lookup', [
+        $this->getJson(route('gatekeeper.api.models.show', [
             'model_label' => 'User',
             'model_pk' => (string) $pk,
         ]))->assertStatus(Response::HTTP_BAD_REQUEST)
@@ -97,6 +97,6 @@ class ModelControllerTest extends TestCase
 
     public function test_protected_routes_fail_without_permission()
     {
-        $this->getJson(route('gatekeeper.api.models.lookup'))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->getJson(route('gatekeeper.api.models.show'))->assertStatus(Response::HTTP_FORBIDDEN);
     }
 }

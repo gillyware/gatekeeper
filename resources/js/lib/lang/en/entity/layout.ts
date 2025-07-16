@@ -10,7 +10,7 @@ export interface EntityLayoutText {
     navManage: string;
 }
 
-export const entitiesLayoutText: Record<GatekeeperEntity, EntityLayoutText> = {
+export const entityLayoutText: Record<GatekeeperEntity, EntityLayoutText> = {
     permission: {
         title: 'Permissions',
         description: "Manage your application's permissions",

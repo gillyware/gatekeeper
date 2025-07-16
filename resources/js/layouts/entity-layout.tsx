@@ -1,6 +1,6 @@
 import EntityFeatureDisabledAlert from '@/components/entity/EntityFeatureDisabledAlert';
 import { useGatekeeper } from '@/context/GatekeeperContext';
-import { entitiesLayoutText, EntityLayoutText } from '@/lib/lang/en/entity/layout';
+import { entityLayoutText, EntityLayoutText } from '@/lib/lang/en/entity/layout';
 import { cn } from '@/lib/utils';
 import { type GatekeeperEntity, type NavItem } from '@/types';
 import { Button } from '@components/ui/button';
@@ -23,7 +23,7 @@ export default function EntityLayout({ entity, children }: EntityLayoutProps) {
     const { user } = useGatekeeper();
     const location = useLocation();
     const currentPath = location.pathname;
-    const language: EntityLayoutText = useMemo(() => entitiesLayoutText[entity], [entity]);
+    const language: EntityLayoutText = useMemo(() => entityLayoutText[entity], [entity]);
 
     const navItems: NavItem[] = [
         {
