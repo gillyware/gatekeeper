@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
+use UnitEnum;
 
 trait HasTeams
 {
@@ -13,7 +14,7 @@ trait HasTeams
     /**
      * Assign a team to the model.
      */
-    public function addToTeam(Team|string $team): bool
+    public function addToTeam(Team|string|UnitEnum $team): bool
     {
         return Gatekeeper::addModelToTeam($this, $team);
     }
@@ -29,7 +30,7 @@ trait HasTeams
     /**
      * Revoke a team from the model.
      */
-    public function removeFromTeam(Team|string $team): bool
+    public function removeFromTeam(Team|string|UnitEnum $team): bool
     {
         return Gatekeeper::removeModelFromTeam($this, $team);
     }
@@ -45,7 +46,7 @@ trait HasTeams
     /**
      * Check if the model has a given team.
      */
-    public function onTeam(Team|string $team): bool
+    public function onTeam(Team|string|UnitEnum $team): bool
     {
         return Gatekeeper::modelOnTeam($this, $team);
     }

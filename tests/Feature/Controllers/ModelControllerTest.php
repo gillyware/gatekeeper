@@ -3,8 +3,8 @@
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
-use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
@@ -47,7 +47,7 @@ class ModelControllerTest extends TestCase
 
     public function test_lookup_model_with_access()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
+        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.models.show', [
             'modelLabel' => 'User',
@@ -59,7 +59,7 @@ class ModelControllerTest extends TestCase
 
     public function test_assign_and_revoke_permission_to_model()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
+        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $target = User::factory()->create();
         $permission = Permission::factory()->create();
@@ -86,7 +86,7 @@ class ModelControllerTest extends TestCase
 
     public function test_model_lookup_fails_for_missing_model()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
+        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         [$pk, $className] = [999999, User::class];
 

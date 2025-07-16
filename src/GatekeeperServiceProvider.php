@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
@@ -105,7 +105,7 @@ class GatekeeperServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::middleware(['web', 'auth', 'has_permission:'.GatekeeperPermissionName::VIEW])
+        Route::middleware(['web', 'auth', 'has_permission:'.GatekeeperPermissionName::View->value])
             ->namespace('Gillyware\Gatekeeper\Http\Controllers')
             ->name('gatekeeper.')
             ->group(__DIR__.'/../routes/web.php');

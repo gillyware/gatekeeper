@@ -11,6 +11,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use UnitEnum;
 
 class GatekeeperService
 {
@@ -66,7 +67,7 @@ class GatekeeperService
     /**
      * Check if a permission exists.
      */
-    public function permissionExists(string $permissionName): bool
+    public function permissionExists(string|UnitEnum $permissionName): bool
     {
         return $this->permissionService->exists($permissionName);
     }
@@ -74,7 +75,7 @@ class GatekeeperService
     /**
      * Create a new permission.
      */
-    public function createPermission(string $permissionName): Permission
+    public function createPermission(string|UnitEnum $permissionName): Permission
     {
         return $this->permissionService->create($permissionName);
     }
@@ -82,7 +83,7 @@ class GatekeeperService
     /**
      * Update an existing permission.
      */
-    public function updatePermission(Permission|string $permission, string $permissionName): Permission
+    public function updatePermission(Permission|string|UnitEnum $permission, string|UnitEnum $permissionName): Permission
     {
         return $this->permissionService->update($permission, $permissionName);
     }
@@ -90,7 +91,7 @@ class GatekeeperService
     /**
      * Deactivate a permission.
      */
-    public function deactivatePermission(Permission|string $permission): Permission
+    public function deactivatePermission(Permission|string|UnitEnum $permission): Permission
     {
         return $this->permissionService->deactivate($permission);
     }
@@ -98,7 +99,7 @@ class GatekeeperService
     /**
      * Reactivate a permission.
      */
-    public function reactivatePermission(Permission|string $permission): Permission
+    public function reactivatePermission(Permission|string|UnitEnum $permission): Permission
     {
         return $this->permissionService->reactivate($permission);
     }
@@ -106,7 +107,7 @@ class GatekeeperService
     /**
      * Delete a permission.
      */
-    public function deletePermission(Permission|string $permission): bool
+    public function deletePermission(Permission|string|UnitEnum $permission): bool
     {
         return $this->permissionService->delete($permission);
     }
@@ -114,7 +115,7 @@ class GatekeeperService
     /**
      * Assign a permission to a model.
      */
-    public function assignPermissionToModel(Model $model, Permission|string $permission): bool
+    public function assignPermissionToModel(Model $model, Permission|string|UnitEnum $permission): bool
     {
         return $this->permissionService->assignToModel($model, $permission);
     }
@@ -130,7 +131,7 @@ class GatekeeperService
     /**
      * Revoke a permission from a model.
      */
-    public function revokePermissionFromModel(Model $model, Permission|string $permission): bool
+    public function revokePermissionFromModel(Model $model, Permission|string|UnitEnum $permission): bool
     {
         return $this->permissionService->revokeFromModel($model, $permission);
     }
@@ -146,7 +147,7 @@ class GatekeeperService
     /**
      * Check if a model has a specific permission.
      */
-    public function modelHasPermission(Model $model, Permission|string $permission): bool
+    public function modelHasPermission(Model $model, Permission|string|UnitEnum $permission): bool
     {
         return $this->permissionService->modelHas($model, $permission);
     }
@@ -170,7 +171,7 @@ class GatekeeperService
     /**
      * Find a permission by its name.
      */
-    public function findPermissionByName(string $permissionName): ?Permission
+    public function findPermissionByName(string|UnitEnum $permissionName): ?Permission
     {
         return $this->permissionService->findByName($permissionName);
     }
@@ -202,7 +203,7 @@ class GatekeeperService
     /**
      * Check if a role exists.
      */
-    public function roleExists(string $roleName): bool
+    public function roleExists(string|UnitEnum $roleName): bool
     {
         return $this->roleService->exists($roleName);
     }
@@ -210,7 +211,7 @@ class GatekeeperService
     /**
      * Create a new role.
      */
-    public function createRole(string $roleName): Role
+    public function createRole(string|UnitEnum $roleName): Role
     {
         return $this->roleService->create($roleName);
     }
@@ -218,7 +219,7 @@ class GatekeeperService
     /**
      * Update an existing role.
      */
-    public function updateRole(Role|string $role, string $roleName): Role
+    public function updateRole(Role|string|UnitEnum $role, string|UnitEnum $roleName): Role
     {
         return $this->roleService->update($role, $roleName);
     }
@@ -226,7 +227,7 @@ class GatekeeperService
     /**
      * Deactivate a role.
      */
-    public function deactivateRole(Role|string $role): Role
+    public function deactivateRole(Role|string|UnitEnum $role): Role
     {
         return $this->roleService->deactivate($role);
     }
@@ -234,7 +235,7 @@ class GatekeeperService
     /**
      * Reactivate a role.
      */
-    public function reactivateRole(Role|string $role): Role
+    public function reactivateRole(Role|string|UnitEnum $role): Role
     {
         return $this->roleService->reactivate($role);
     }
@@ -242,7 +243,7 @@ class GatekeeperService
     /**
      * Delete a role.
      */
-    public function deleteRole(Role|string $role): bool
+    public function deleteRole(Role|string|UnitEnum $role): bool
     {
         return $this->roleService->delete($role);
     }
@@ -250,7 +251,7 @@ class GatekeeperService
     /**
      * Assign a role to a model.
      */
-    public function assignRoleToModel(Model $model, Role|string $role): bool
+    public function assignRoleToModel(Model $model, Role|string|UnitEnum $role): bool
     {
         return $this->roleService->assignToModel($model, $role);
     }
@@ -266,7 +267,7 @@ class GatekeeperService
     /**
      * Revoke a role from a model.
      */
-    public function revokeRoleFromModel(Model $model, Role|string $role): bool
+    public function revokeRoleFromModel(Model $model, Role|string|UnitEnum $role): bool
     {
         return $this->roleService->revokeFromModel($model, $role);
     }
@@ -282,7 +283,7 @@ class GatekeeperService
     /**
      * Check if a model has a specific role.
      */
-    public function modelHasRole(Model $model, Role|string $role): bool
+    public function modelHasRole(Model $model, Role|string|UnitEnum $role): bool
     {
         return $this->roleService->modelHas($model, $role);
     }
@@ -306,7 +307,7 @@ class GatekeeperService
     /**
      * Find a role by its name.
      */
-    public function findRoleByName(string $roleName): ?Role
+    public function findRoleByName(string|UnitEnum $roleName): ?Role
     {
         return $this->roleService->findByName($roleName);
     }
@@ -338,7 +339,7 @@ class GatekeeperService
     /**
      * Check if a team exists.
      */
-    public function teamExists(string $teamName): bool
+    public function teamExists(string|UnitEnum $teamName): bool
     {
         return $this->teamService->exists($teamName);
     }
@@ -346,7 +347,7 @@ class GatekeeperService
     /**
      * Create a new team.
      */
-    public function createTeam(string $teamName): Team
+    public function createTeam(string|UnitEnum $teamName): Team
     {
         return $this->teamService->create($teamName);
     }
@@ -354,7 +355,7 @@ class GatekeeperService
     /**
      * Update an existing team.
      */
-    public function updateTeam(Team|string $team, string $teamName): Team
+    public function updateTeam(Team|string|UnitEnum $team, string|UnitEnum $teamName): Team
     {
         return $this->teamService->update($team, $teamName);
     }
@@ -362,7 +363,7 @@ class GatekeeperService
     /**
      * Deactivate a team.
      */
-    public function deactivateTeam(Team|string $team): Team
+    public function deactivateTeam(Team|string|UnitEnum $team): Team
     {
         return $this->teamService->deactivate($team);
     }
@@ -370,7 +371,7 @@ class GatekeeperService
     /**
      * Reactivate a team.
      */
-    public function reactivateTeam(Team|string $team): Team
+    public function reactivateTeam(Team|string|UnitEnum $team): Team
     {
         return $this->teamService->reactivate($team);
     }
@@ -378,7 +379,7 @@ class GatekeeperService
     /**
      * Delete a team.
      */
-    public function deleteTeam(Team|string $team): bool
+    public function deleteTeam(Team|string|UnitEnum $team): bool
     {
         return $this->teamService->delete($team);
     }
@@ -386,7 +387,7 @@ class GatekeeperService
     /**
      * Add a model to a team.
      */
-    public function addModelToTeam(Model $model, Team|string $team): bool
+    public function addModelToTeam(Model $model, Team|string|UnitEnum $team): bool
     {
         return $this->teamService->addModelTo($model, $team);
     }
@@ -402,7 +403,7 @@ class GatekeeperService
     /**
      * Remove a model from a team.
      */
-    public function removeModelFromTeam(Model $model, Team|string $team): bool
+    public function removeModelFromTeam(Model $model, Team|string|UnitEnum $team): bool
     {
         return $this->teamService->removeModelFrom($model, $team);
     }
@@ -418,7 +419,7 @@ class GatekeeperService
     /**
      * Check if a model is on a specific team.
      */
-    public function modelOnTeam(Model $model, Team|string $team): bool
+    public function modelOnTeam(Model $model, Team|string|UnitEnum $team): bool
     {
         return $this->teamService->modelOn($model, $team);
     }
@@ -442,7 +443,7 @@ class GatekeeperService
     /**
      * Find a team by its name.
      */
-    public function findTeamByName(string $roleName): ?Role
+    public function findTeamByName(string|UnitEnum $roleName): ?Role
     {
         return $this->teamService->findByName($roleName);
     }

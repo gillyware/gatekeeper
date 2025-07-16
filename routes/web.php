@@ -1,7 +1,7 @@
 <?php
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Constants\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Http\Controllers\AuditLogController;
 use Gillyware\Gatekeeper\Http\Controllers\HomeController;
 use Gillyware\Gatekeeper\Http\Controllers\ModelController;
@@ -33,7 +33,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('{permission}', 'show')->name('show');
 
-        Route::middleware('has_permission:'.GatekeeperPermissionName::MANAGE)->group(function () {
+        Route::middleware('has_permission:'.GatekeeperPermissionName::Manage->value)->group(function () {
 
             Route::post('/', 'store')->name('store');
 
@@ -60,7 +60,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('{role}', 'show')->name('show');
 
-        Route::middleware('has_permission:'.GatekeeperPermissionName::MANAGE)->group(function () {
+        Route::middleware('has_permission:'.GatekeeperPermissionName::Manage->value)->group(function () {
 
             Route::post('/', 'store')->name('store');
 
@@ -87,7 +87,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('{team}', 'show')->name('show');
 
-        Route::middleware('has_permission:'.GatekeeperPermissionName::MANAGE)->group(function () {
+        Route::middleware('has_permission:'.GatekeeperPermissionName::Manage->value)->group(function () {
 
             Route::post('/', 'store')->name('store');
 
@@ -118,7 +118,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('/{modelLabel}/{modelPk}/entities/{entity}/unassigned', 'searchUnassignedEntitiesForModel')->name('search-unassigned-entities');
 
-        Route::middleware('has_permission:'.GatekeeperPermissionName::MANAGE)->group(function () {
+        Route::middleware('has_permission:'.GatekeeperPermissionName::Manage->value)->group(function () {
 
             Route::post('/{modelLabel}/{modelPk}/entities/{entity}/assign', 'assign')->name('assign');
 
