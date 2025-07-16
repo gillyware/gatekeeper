@@ -19,6 +19,7 @@ use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use UnitEnum;
 
 class RoleService extends AbstractGatekeeperEntityService
 {
@@ -32,19 +33,21 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Check if a role with the given name exists.
      */
-    public function exists(string $roleName): bool
+    public function exists(string|UnitEnum $roleName): bool
     {
-        return $this->roleRepository->exists($roleName);
+        return $this->roleRepository->exists($this->resolveEntityName($roleName));
     }
 
     /**
      * Create a new role.
      */
-    public function create(string $roleName): Role
+    public function create(string|UnitEnum $roleName): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
+
+        $roleName = $this->resolveEntityName($roleName);
 
         if ($this->exists($roleName)) {
             throw new RoleAlreadyExistsException($roleName);
@@ -62,11 +65,13 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Update an existing role.
      */
-    public function update(Role|string $role, string $newRoleName): Role
+    public function update(Role|string|UnitEnum $role, string|UnitEnum $newRoleName): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
+
+        $newRoleName = $this->resolveEntityName($newRoleName);
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
@@ -88,7 +93,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Deactivate a role.
      */
-    public function deactivate(Role|string $role): Role
+    public function deactivate(Role|string|UnitEnum $role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -112,7 +117,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Reactivate a role.
      */
-    public function reactivate(Role|string $role): Role
+    public function reactivate(Role|string|UnitEnum $role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -137,7 +142,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Delete a role.
      */
-    public function delete(Role|string $role): bool
+    public function delete(Role|string|UnitEnum $role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -166,7 +171,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Assign a role to a model.
      */
-    public function assignToModel(Model $model, Role|string $role): bool
+    public function assignToModel(Model $model, Role|string|UnitEnum $role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -209,7 +214,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Revoke a role from a model.
      */
-    public function revokeFromModel(Model $model, Role|string $role): bool
+    public function revokeFromModel(Model $model, Role|string|UnitEnum $role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -243,7 +248,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Check if a model has a given role.
      */
-    public function modelHas(Model $model, Role|string $role): bool
+    public function modelHas(Model $model, Role|string|UnitEnum $role): bool
     {
         // To access the role, the roles feature must be enabled and the model must be using the roles trait.
         if (! $this->rolesFeatureEnabled() || ! $this->modelInteractsWithRoles($model)) {
@@ -280,9 +285,11 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Check if a model has a role directly assigned, not through teams.
      */
-    public function modelHasDirectly(Model $model, Role $role): bool
+    public function modelHasDirectly(Model $model, Role|string|UnitEnum $role): bool
     {
-        return $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $role->is($r));
+        $roleName = $this->resolveEntityName($role);
+
+        return $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $roleName === $r->name);
     }
 
     /**
@@ -308,9 +315,9 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Find a role by its name.
      */
-    public function findByName(string $roleName): ?Role
+    public function findByName(string|UnitEnum $roleName): ?Role
     {
-        return $this->roleRepository->findByName($roleName);
+        return $this->roleRepository->findByName($this->resolveEntityName($roleName));
     }
 
     /**

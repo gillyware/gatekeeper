@@ -2,12 +2,16 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use BackedEnum;
 use Gillyware\Gatekeeper\Models\AbstractGatekeeperEntity;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use UnitEnum;
+
+use function Illuminate\Support\enum_value;
 
 abstract class AbstractGatekeeperEntityService
 {
@@ -28,11 +32,16 @@ abstract class AbstractGatekeeperEntityService
     /**
      * Resolve the Gatekeeper entity name from an entity, array, or string.
      */
-    protected function resolveEntityName(AbstractGatekeeperEntity|array|string $entity): string
+    protected function resolveEntityName(AbstractGatekeeperEntity|array|string|UnitEnum $entity): string
     {
         // If the entity is an instance of AbstractGatekeeperEntity, return its name.
         if ($entity instanceof AbstractGatekeeperEntity) {
             return $entity->name;
+        }
+
+        // If the entity is an enum, return the enum value.
+        if ($entity instanceof BackedEnum || $entity instanceof UnitEnum) {
+            return enum_value($entity);
         }
 
         // If the entity is a JSON string, decode it.
