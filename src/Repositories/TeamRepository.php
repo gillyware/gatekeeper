@@ -3,20 +3,34 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 
-class TeamRepository
+/**
+ * @implements EntityRepositoryInterface<Team>
+ */
+class TeamRepository implements EntityRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
         private readonly ModelHasRoleRepository $modelHasRoleRepository,
     ) {}
+
+    /**
+     * Check if the teams table exists.
+     */
+    public function tableExists(): bool
+    {
+        return Schema::hasTable(Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS));
+    }
 
     /**
      * Check if a team with the given name exists.
@@ -57,7 +71,7 @@ class TeamRepository
     }
 
     /**
-     * Create a new Team instance.
+     * Create a new team.
      */
     public function create(string $teamName): Team
     {
@@ -72,10 +86,12 @@ class TeamRepository
 
     /**
      * Update an existing team.
+     *
+     * @param  Team  $team
      */
-    public function update(Team $team, string $teamName): Team
+    public function update($team, string $newTeamName): Team
     {
-        if ($team->update(['name' => $teamName])) {
+        if ($team->update(['name' => $newTeamName])) {
             $this->cacheService->clear();
         }
 
@@ -84,8 +100,10 @@ class TeamRepository
 
     /**
      * Deactivate a team.
+     *
+     * @param  Team  $team
      */
-    public function deactivate(Team $team): Team
+    public function deactivate($team): Team
     {
         if ($team->update(['is_active' => false])) {
             $this->cacheService->clear();
@@ -96,8 +114,10 @@ class TeamRepository
 
     /**
      * Reactivate a team.
+     *
+     * @param  Team  $team
      */
-    public function reactivate(Team $team): Team
+    public function reactivate($team): Team
     {
         if ($team->update(['is_active' => true])) {
             $this->cacheService->clear();
@@ -108,8 +128,10 @@ class TeamRepository
 
     /**
      * Delete a team.
+     *
+     * @param  Team  $team
      */
-    public function delete(Team $team): bool
+    public function delete($team): bool
     {
         // Unassign all permissions and roles from the team (without audit logging).
         $this->modelHasPermissionRepository->deleteForModel($team);
@@ -126,6 +148,8 @@ class TeamRepository
 
     /**
      * Get all teams.
+     *
+     * @return Collection<Team>
      */
     public function all(): Collection
     {
@@ -144,6 +168,8 @@ class TeamRepository
 
     /**
      * Get all active teams.
+     *
+     * @return Collection<Team>
      */
     public function active(): Collection
     {
@@ -152,6 +178,8 @@ class TeamRepository
 
     /**
      * Get all teams where the name is in the provided array or collection.
+     *
+     * @return Collection<Team>
      */
     public function whereNameIn(array|Collection $teamNames): Collection
     {
@@ -160,6 +188,8 @@ class TeamRepository
 
     /**
      * Get all team names for a specific model.
+     *
+     * @return Collection<string>
      */
     public function namesForModel(Model $model): Collection
     {
@@ -185,6 +215,8 @@ class TeamRepository
 
     /**
      * Get all teams for a specific model.
+     *
+     * @return Collection<Team>
      */
     public function forModel(Model $model): Collection
     {
@@ -195,10 +227,32 @@ class TeamRepository
 
     /**
      * Get all active teams for a specific model.
+     *
+     * @return Collection<Team>
      */
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
             ->filter(fn (Team $team) => $team->is_active);
+    }
+
+    /**
+     * Get a page of teams.
+     */
+    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    {
+        $query = Team::query()->whereLike('name', "%{$searchTerm}%");
+
+        if ($importantAttribute === 'is_active') {
+            $query = $query
+                ->orderBy('is_active', $isActiveOrder)
+                ->orderBy('name', $nameOrder);
+        } else {
+            $query = $query
+                ->orderBy('name', $nameOrder)
+                ->orderBy('is_active', $isActiveOrder);
+        }
+
+        return $query->paginate(10, ['*'], 'page', $pageNumber);
     }
 }

@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 trait ActsForGatekeeper
 {
@@ -18,7 +19,7 @@ trait ActsForGatekeeper
     protected function resolveActingAs(): void
     {
         if (! isset($this->actingAs) || ! $this->actingAs instanceof Model) {
-            $this->actingAs = auth()->user();
+            $this->actingAs = Auth::user();
         }
     }
 }

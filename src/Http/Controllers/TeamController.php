@@ -3,17 +3,19 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\StoreTeamRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\TeamPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\UpdateTeamRequest;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Services\TeamService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
-class TeamController extends Controller
+class TeamController extends AbstractBaseController
 {
+    public function __construct(private readonly TeamService $teamService) {}
+
     /**
      * Get a page of teams.
      */
@@ -25,25 +27,13 @@ class TeamController extends Controller
         $nameOrder = $request->validated('name_order');
         $isActiveOrder = $request->validated('is_active_order');
 
-        if (! Team::tableExists()) {
+        if (! $this->teamService->tableExists()) {
             return $this->errorResponse('The teams table does not exist in the database.');
         }
 
-        $query = Team::query()->whereLike('name', "%{$searchTerm}%");
-
-        if ($importantAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $isActiveOrder)
-                ->orderBy('name', $nameOrder);
-        } else {
-            $query = $query
-                ->orderBy('name', $nameOrder)
-                ->orderBy('is_active', $isActiveOrder);
-        }
-
-        $paginator = $query->paginate(10, ['*'], 'page', $pageNumber);
-
-        return Response::json($paginator);
+        return Response::json(
+            $this->teamService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
+        );
     }
 
     /**
@@ -60,7 +50,8 @@ class TeamController extends Controller
     public function store(StoreTeamRequest $request): JsonResponse
     {
         try {
-            $team = Gatekeeper::createTeam($request->validated('name'));
+            $teamName = $request->validated('name');
+            $team = $this->teamService->create($teamName);
 
             return Response::json($team, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -74,7 +65,8 @@ class TeamController extends Controller
     public function update(UpdateTeamRequest $request, Team $team): JsonResponse
     {
         try {
-            $team = Gatekeeper::updateTeam($team, $request->validated('name'));
+            $newTeamName = $request->validated('name');
+            $team = $this->teamService->update($team, $newTeamName);
 
             return Response::json($team);
         } catch (GatekeeperException $e) {
@@ -88,7 +80,7 @@ class TeamController extends Controller
     public function deactivate(Team $team): JsonResponse
     {
         try {
-            $team = Gatekeeper::deactivateTeam($team);
+            $team = $this->teamService->deactivate($team);
 
             return Response::json($team);
         } catch (GatekeeperException $e) {
@@ -102,7 +94,7 @@ class TeamController extends Controller
     public function reactivate(Team $team): JsonResponse
     {
         try {
-            $team = Gatekeeper::reactivateTeam($team);
+            $team = $this->teamService->reactivate($team);
 
             return Response::json($team);
         } catch (GatekeeperException $e) {
@@ -116,9 +108,9 @@ class TeamController extends Controller
     public function delete(Team $team): JsonResponse
     {
         try {
-            Gatekeeper::deleteTeam($team);
+            $this->teamService->delete($team);
 
-            return Response::json([], HttpFoundationResponse::HTTP_NO_CONTENT);
+            return Response::json(status: HttpFoundationResponse::HTTP_NO_CONTENT);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }

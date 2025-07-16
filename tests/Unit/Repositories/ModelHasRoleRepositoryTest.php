@@ -36,12 +36,12 @@ class ModelHasRoleRepositoryTest extends TestCase
     {
         $role = Role::factory()->create();
 
-        $this->assertFalse($this->repository->existsForRole($role));
+        $this->assertFalse($this->repository->existsForEntity($role));
 
         $user = User::factory()->create();
         $this->repository->create($user, $role);
 
-        $this->assertTrue($this->repository->existsForRole($role));
+        $this->assertTrue($this->repository->existsForEntity($role));
     }
 
     public function test_it_can_create_model_role_record()
@@ -74,7 +74,7 @@ class ModelHasRoleRepositoryTest extends TestCase
 
         $this->repository->create($user, $role);
 
-        $this->assertTrue($this->repository->deleteForModelAndRole($user, $role));
+        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $role));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), [
             'model_type' => $user->getMorphClass(),

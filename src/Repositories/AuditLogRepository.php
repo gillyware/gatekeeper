@@ -2,11 +2,24 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\AuditLogRepositoryInterface;
 use Gillyware\Gatekeeper\Dtos\AuditLog\AbstractAuditLogDto;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 
-class AuditLogRepository
+class AuditLogRepository implements AuditLogRepositoryInterface
 {
+    /**
+     * Check if the audit log table exists.
+     */
+    public function tableExists(): bool
+    {
+        return Schema::hasTable(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
+    }
+
     /**
      * Create a new audit log entry.
      */
@@ -20,5 +33,15 @@ class AuditLogRepository
             'action_to_model_id' => $dto->actionToModel?->getKey(),
             'metadata' => $dto->metadata,
         ]);
+    }
+
+    /**
+     * Get a page of audit logs.
+     */
+    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    {
+        return AuditLog::query()
+            ->orderBy('created_at', $createdAtOrder)
+            ->paginate(10, ['*'], 'page', $pageNumber);
     }
 }

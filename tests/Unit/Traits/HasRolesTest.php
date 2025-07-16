@@ -32,9 +32,9 @@ class HasRolesTest extends TestCase
         $user = User::factory()->create();
         $roles = ['admin', 'editor'];
 
-        $user->assignRoles($roles);
+        $user->assignAllRoles($roles);
 
-        Gatekeeper::shouldHaveReceived('assignRolesToModel')->with($user, $roles)->once();
+        Gatekeeper::shouldHaveReceived('assignAllRolesToModel')->with($user, $roles)->once();
     }
 
     public function test_assign_roles_delegates_with_arrayable()
@@ -42,9 +42,9 @@ class HasRolesTest extends TestCase
         $user = User::factory()->create();
         $roles = collect(['admin', 'editor']);
 
-        $user->assignRoles($roles);
+        $user->assignAllRoles($roles);
 
-        Gatekeeper::shouldHaveReceived('assignRolesToModel')->with($user, $roles)->once();
+        Gatekeeper::shouldHaveReceived('assignAllRolesToModel')->with($user, $roles)->once();
     }
 
     public function test_revoke_role_delegates_to_facade()
@@ -62,9 +62,9 @@ class HasRolesTest extends TestCase
         $user = User::factory()->create();
         $roles = ['admin', 'editor'];
 
-        $user->revokeRoles($roles);
+        $user->revokeAllRoles($roles);
 
-        Gatekeeper::shouldHaveReceived('revokeRolesFromModel')->with($user, $roles)->once();
+        Gatekeeper::shouldHaveReceived('revokeAllRolesFromModel')->with($user, $roles)->once();
     }
 
     public function test_has_role_delegates_to_facade()

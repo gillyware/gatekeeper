@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Config;
  *
  * @method static Builder<ModelHasPermission> forModel(Model $model)
  */
-class ModelHasPermission extends AbstractModelHasGatekeeperEntity
+class ModelHasPermission extends AbstractBaseModelHasEntityModel
 {
     /**
      * Get the permission associated with the model.
@@ -29,13 +29,5 @@ class ModelHasPermission extends AbstractModelHasGatekeeperEntity
     public function getTable(): string
     {
         return Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getEntityIdAttribute(): int
-    {
-        return $this->permission_id;
     }
 }

@@ -92,6 +92,6 @@ class AuditLogControllerTest extends TestCase
         $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,
             'created_at_order' => 'asc',
-        ]))->assertStatus(Response::HTTP_FORBIDDEN);
+        ]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

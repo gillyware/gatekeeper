@@ -22,9 +22,9 @@ trait HasTeams
     /**
      * Assign multiple teams to the model.
      */
-    public function addToTeams(array|Arrayable $teams): bool
+    public function addToAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::addModelToTeams($this, $teams);
+        return Gatekeeper::addModelToAllTeams($this, $teams);
     }
 
     /**
@@ -38,9 +38,9 @@ trait HasTeams
     /**
      * Revoke multiple teams from the model.
      */
-    public function removeFromTeams(array|Arrayable $teams): bool
+    public function removeFromAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::removeModelFromTeams($this, $teams);
+        return Gatekeeper::removeModelFromAllTeams($this, $teams);
     }
 
     /**

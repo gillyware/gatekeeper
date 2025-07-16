@@ -3,13 +3,14 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\ModelHasEntityServiceInterface;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 
-class ModelPermissionService
+class ModelHasPermissionService implements ModelHasEntityServiceInterface
 {
     public function __construct(
         private readonly ModelMetadataService $modelMetadataService,
@@ -19,9 +20,9 @@ class ModelPermissionService
     /**
      * Search model permission assignments by permission name.
      */
-    public function searchAssignmentsByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $paginator = $this->modelHasPermissionRepository->searchAssignmentsByPermissionNameForModel($model, $permissionNameSearchTerm, $pageNumber);
+        $paginator = $this->modelHasPermissionRepository->searchAssignmentsByEntityNameForModel($model, $permissionNameSearchTerm, $pageNumber);
         $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         return $paginator->through(function (ModelHasPermission $modelHasPermission) use ($displayTimezone) {
@@ -34,8 +35,8 @@ class ModelPermissionService
     /**
      * Search unassigned permissions by permission name for model.
      */
-    public function searchUnassignedByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        return $this->modelHasPermissionRepository->searchUnassignedByPermissionNameForModel($model, $permissionNameSearchTerm, $pageNumber);
+        return $this->modelHasPermissionRepository->searchUnassignedByEntityNameForModel($model, $permissionNameSearchTerm, $pageNumber);
     }
 }

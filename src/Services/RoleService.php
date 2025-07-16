@@ -18,10 +18,14 @@ use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use UnitEnum;
 
-class RoleService extends AbstractGatekeeperEntityService
+/**
+ * @extends AbstractBaseEntityService<Role>
+ */
+class RoleService extends AbstractBaseEntityService
 {
     public function __construct(
         private readonly RoleRepository $roleRepository,
@@ -29,6 +33,14 @@ class RoleService extends AbstractGatekeeperEntityService
         private readonly ModelHasRoleRepository $modelHasRoleRepository,
         private readonly AuditLogRepository $auditLogRepository,
     ) {}
+
+    /**
+     * Check if the roles table exists.
+     */
+    public function tableExists(): bool
+    {
+        return $this->roleRepository->tableExists();
+    }
 
     /**
      * Check if a role with the given name exists.
@@ -64,8 +76,10 @@ class RoleService extends AbstractGatekeeperEntityService
 
     /**
      * Update an existing role.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function update(Role|string|UnitEnum $role, string|UnitEnum $newRoleName): Role
+    public function update($role, string|UnitEnum $newRoleName): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -92,8 +106,10 @@ class RoleService extends AbstractGatekeeperEntityService
 
     /**
      * Deactivate a role.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function deactivate(Role|string|UnitEnum $role): Role
+    public function deactivate($role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -116,8 +132,10 @@ class RoleService extends AbstractGatekeeperEntityService
 
     /**
      * Reactivate a role.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function reactivate(Role|string|UnitEnum $role): Role
+    public function reactivate($role): Role
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -141,8 +159,10 @@ class RoleService extends AbstractGatekeeperEntityService
 
     /**
      * Delete a role.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function delete(Role|string|UnitEnum $role): bool
+    public function delete($role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -155,8 +175,8 @@ class RoleService extends AbstractGatekeeperEntityService
         }
 
         // Delete any existing assignments for the role being deleted.
-        if ($this->modelHasRoleRepository->existsForRole($role)) {
-            $this->modelHasRoleRepository->deleteForRole($role);
+        if ($this->modelHasRoleRepository->existsForEntity($role)) {
+            $this->modelHasRoleRepository->deleteForEntity($role);
         }
 
         $deleted = $this->roleRepository->delete($role);
@@ -165,13 +185,15 @@ class RoleService extends AbstractGatekeeperEntityService
             $this->auditLogRepository->create(new DeleteRoleAuditLogDto($role));
         }
 
-        return $deleted;
+        return (bool) $deleted;
     }
 
     /**
      * Assign a role to a model.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function assignToModel(Model $model, Role|string|UnitEnum $role): bool
+    public function assignToModel(Model $model, $role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -200,7 +222,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Assign multiple roles to a model.
      */
-    public function assignMultipleToModel(Model $model, array|Arrayable $roles): bool
+    public function assignAllToModel(Model $model, array|Arrayable $roles): bool
     {
         $result = true;
 
@@ -213,8 +235,10 @@ class RoleService extends AbstractGatekeeperEntityService
 
     /**
      * Revoke a role from a model.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function revokeFromModel(Model $model, Role|string|UnitEnum $role): bool
+    public function revokeFromModel(Model $model, $role): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -222,7 +246,7 @@ class RoleService extends AbstractGatekeeperEntityService
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findOrFailByName($roleName);
 
-        $revoked = $this->modelHasRoleRepository->deleteForModelAndRole($model, $role);
+        $revoked = $this->modelHasRoleRepository->deleteForModelAndEntity($model, $role);
 
         if ($revoked && $this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(new RevokeRoleAuditLogDto($model, $role));
@@ -234,7 +258,7 @@ class RoleService extends AbstractGatekeeperEntityService
     /**
      * Revoke multiple roles from a model.
      */
-    public function revokeMultipleFromModel(Model $model, array|Arrayable $roles): bool
+    public function revokeAllFromModel(Model $model, array|Arrayable $roles): bool
     {
         $result = true;
 
@@ -246,9 +270,11 @@ class RoleService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Check if a model has a given role.
+     * Check if a model has the given role.
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function modelHas(Model $model, Role|string|UnitEnum $role): bool
+    public function modelHas(Model $model, $role): bool
     {
         // To access the role, the roles feature must be enabled and the model must be using the roles trait.
         if (! $this->rolesFeatureEnabled() || ! $this->modelInteractsWithRoles($model)) {
@@ -283,9 +309,11 @@ class RoleService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Check if a model has a role directly assigned, not through teams.
+     * Check if a model directly has the given role (not granted through teams).
+     *
+     * @param  Role|string|UnitEnum  $role
      */
-    public function modelHasDirectly(Model $model, Role|string|UnitEnum $role): bool
+    public function modelHasDirectly(Model $model, $role): bool
     {
         $roleName = $this->resolveEntityName($role);
 
@@ -329,7 +357,20 @@ class RoleService extends AbstractGatekeeperEntityService
     }
 
     /**
+     * Get all roles assigned directly or indirectly to a model.
+     *
+     * @return Collection<Role>
+     */
+    public function getForModel(Model $model): Collection
+    {
+        return $this->roleRepository->all()
+            ->filter(fn (Role $role) => $this->modelHas($model, $role));
+    }
+
+    /**
      * Get all roles directly assigned to a model.
+     *
+     * @return Collection<Role>
      */
     public function getDirectForModel(Model $model): Collection
     {
@@ -337,11 +378,10 @@ class RoleService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Get all effective roles for a model, including those from teams.
+     * Get a page of roles.
      */
-    public function getEffectiveForModel(Model $model): Collection
+    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
     {
-        return $this->roleRepository->all()
-            ->filter(fn (Role $role) => $this->modelHas($model, $role));
+        return $this->roleRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
     }
 }

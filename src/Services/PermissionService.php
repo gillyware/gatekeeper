@@ -20,12 +20,16 @@ use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use UnitEnum;
 
 use function Illuminate\Support\enum_value;
 
-class PermissionService extends AbstractGatekeeperEntityService
+/**
+ * @extends AbstractBaseEntityService<Permission>
+ */
+class PermissionService extends AbstractBaseEntityService
 {
     public function __construct(
         private readonly PermissionRepository $permissionRepository,
@@ -34,6 +38,14 @@ class PermissionService extends AbstractGatekeeperEntityService
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
         private readonly AuditLogRepository $auditLogRepository,
     ) {}
+
+    /**
+     * Check if the permissions table exists.
+     */
+    public function tableExists(): bool
+    {
+        return $this->permissionRepository->tableExists();
+    }
 
     /**
      * Check if a permission with the given name exists.
@@ -68,8 +80,10 @@ class PermissionService extends AbstractGatekeeperEntityService
 
     /**
      * Update an existing permission.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function update(Permission|string|UnitEnum $permission, string|UnitEnum $newPermissionName): Permission
+    public function update($permission, string|UnitEnum $newPermissionName): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -95,8 +109,10 @@ class PermissionService extends AbstractGatekeeperEntityService
 
     /**
      * Deactivate a permission.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function deactivate(Permission|string|UnitEnum $permission): Permission
+    public function deactivate($permission): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -119,8 +135,10 @@ class PermissionService extends AbstractGatekeeperEntityService
 
     /**
      * Reactivate a permission.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function reactivate(Permission|string|UnitEnum $permission): Permission
+    public function reactivate($permission): Permission
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -143,8 +161,10 @@ class PermissionService extends AbstractGatekeeperEntityService
 
     /**
      * Delete a permission.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function delete(Permission|string|UnitEnum $permission): bool
+    public function delete($permission): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -157,8 +177,8 @@ class PermissionService extends AbstractGatekeeperEntityService
         }
 
         // Delete any existing assignments for the permission being deleted.
-        if ($this->modelHasPermissionRepository->existsForPermission($permission)) {
-            $this->modelHasPermissionRepository->deleteForPermission($permission);
+        if ($this->modelHasPermissionRepository->existsForEntity($permission)) {
+            $this->modelHasPermissionRepository->deleteForEntity($permission);
         }
 
         $deleted = $this->permissionRepository->delete($permission);
@@ -167,13 +187,15 @@ class PermissionService extends AbstractGatekeeperEntityService
             $this->auditLogRepository->create(new DeletePermissionAuditLogDto($permission));
         }
 
-        return $deleted;
+        return (bool) $deleted;
     }
 
     /**
      * Assign a permission to a model.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function assignToModel(Model $model, Permission|string|UnitEnum $permission): bool
+    public function assignToModel(Model $model, $permission): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -200,7 +222,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Assign multiple permissions to a model.
      */
-    public function assignMultipleToModel(Model $model, array|Arrayable $permissions): bool
+    public function assignAllToModel(Model $model, array|Arrayable $permissions): bool
     {
         $result = true;
 
@@ -213,8 +235,10 @@ class PermissionService extends AbstractGatekeeperEntityService
 
     /**
      * Revoke a permission from a model.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function revokeFromModel(Model $model, Permission|string|UnitEnum $permission): bool
+    public function revokeFromModel(Model $model, $permission): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -222,7 +246,7 @@ class PermissionService extends AbstractGatekeeperEntityService
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findOrFailByName($permissionName);
 
-        $revoked = $this->modelHasPermissionRepository->deleteForModelAndPermission($model, $permission);
+        $revoked = $this->modelHasPermissionRepository->deleteForModelAndEntity($model, $permission);
 
         if ($revoked && $this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(new RevokePermissionAuditLogDto($model, $permission));
@@ -234,7 +258,7 @@ class PermissionService extends AbstractGatekeeperEntityService
     /**
      * Revoke multiple permissions from a model.
      */
-    public function revokeMultipleFromModel(Model $model, array|Arrayable $permissions): bool
+    public function revokeAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
         $result = true;
 
@@ -246,9 +270,11 @@ class PermissionService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Check if a model has a given permission.
+     * Check if a model has the given permission.
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function modelHas(Model $model, Permission|string|UnitEnum $permission): bool
+    public function modelHas(Model $model, $permission): bool
     {
         // To access the permission, the model must be using the roles trait.
         if (! $this->modelInteractsWithPermissions($model)) {
@@ -297,9 +323,11 @@ class PermissionService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Check if a model has a permission directly assigned, not through roles or teams.
+     * Check if a model directly has the given permission (not granted through roles or teams).
+     *
+     * @param  Permission|string|UnitEnum  $permission
      */
-    public function modelHasDirectly(Model $model, Permission|string|UnitEnum $permission): bool
+    public function modelHasDirectly(Model $model, $permission): bool
     {
         $permissionName = $this->resolveEntityName($permission);
 
@@ -343,7 +371,20 @@ class PermissionService extends AbstractGatekeeperEntityService
     }
 
     /**
+     * Get all permissions assigned directly or indirectly to a model.
+     *
+     * @return Collection<Permission>
+     */
+    public function getForModel(Model $model): Collection
+    {
+        return $this->permissionRepository->all()
+            ->filter(fn (Permission $permission) => $this->modelHas($model, $permission));
+    }
+
+    /**
      * Get all permissions directly assigned to a model.
+     *
+     * @return Collection<Permission>
      */
     public function getDirectForModel(Model $model): Collection
     {
@@ -351,11 +392,10 @@ class PermissionService extends AbstractGatekeeperEntityService
     }
 
     /**
-     * Get all effective permissions for a model, including those from roles and teams.
+     * Get a page of permissions.
      */
-    public function getEffectiveForModel(Model $model): Collection
+    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
     {
-        return $this->permissionRepository->all()
-            ->filter(fn (Permission $permission) => $this->modelHas($model, $permission));
+        return $this->permissionRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
     }
 }

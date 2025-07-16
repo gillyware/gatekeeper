@@ -3,13 +3,14 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\ModelHasEntityServiceInterface;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 
-class ModelTeamService
+class ModelHasTeamService implements ModelHasEntityServiceInterface
 {
     public function __construct(
         private readonly ModelMetadataService $modelMetadataService,
@@ -19,9 +20,9 @@ class ModelTeamService
     /**
      * Search model team assignments by team name.
      */
-    public function searchAssignmentsByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        $paginator = $this->modelHasTeamRepository->searchAssignmentsByTeamNameForModel($model, $teamNameSearchTerm, $pageNumber);
+        $paginator = $this->modelHasTeamRepository->searchAssignmentsByEntityNameForModel($model, $teamNameSearchTerm, $pageNumber);
         $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         return $paginator->through(function (ModelHasTeam $modelHasTeam) use ($displayTimezone) {
@@ -34,8 +35,8 @@ class ModelTeamService
     /**
      * Search unassigned teams by team name for model.
      */
-    public function searchUnassignedByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
-        return $this->modelHasTeamRepository->searchUnassignedByTeamNameForModel($model, $teamNameSearchTerm, $pageNumber);
+        return $this->modelHasTeamRepository->searchUnassignedByEntityNameForModel($model, $teamNameSearchTerm, $pageNumber);
     }
 }

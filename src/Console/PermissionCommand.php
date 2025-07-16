@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
@@ -30,7 +30,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
     ) {
         parent::__construct($modelService, $modelMetadataService);
 
-        $this->entity = GatekeeperEntity::PERMISSION;
+        $this->entity = GatekeeperEntity::Permission;
         $this->entityTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
     }
 
@@ -67,7 +67,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
@@ -103,7 +103,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         $permission = $this->permissionRepository->findOrFailByName($permissionName);
 
-        $newPermissionName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
+        $newPermissionName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
@@ -202,7 +202,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::assignPermissionsToModel($actee, $permissions);
+        Gatekeeper::assignAllPermissionsToModel($actee, $permissions);
 
         if ($permissions->count() === 1) {
             info("Permission '{$permissionNames->first()}' assigned to model successfully.");
@@ -229,7 +229,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::revokePermissionsFromModel($actee, $permissions);
+        Gatekeeper::revokeAllPermissionsFromModel($actee, $permissions);
 
         if ($permissions->count() === 1) {
             info("Permission '{$permissionNames->first()}' revoked from model successfully.");

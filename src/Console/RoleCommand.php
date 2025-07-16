@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -31,7 +31,7 @@ class RoleCommand extends AbstractBaseEntityCommand
     ) {
         parent::__construct($modelService, $modelMetadataService);
 
-        $this->entity = GatekeeperEntity::ROLE;
+        $this->entity = GatekeeperEntity::Role;
         $this->entityTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
     }
 
@@ -68,7 +68,7 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
@@ -104,7 +104,7 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         $role = $this->roleRepository->findOrFailByName($roleName);
 
-        $newRoleName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
+        $newRoleName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
@@ -203,7 +203,7 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::assignRolesToModel($actee, $roles);
+        Gatekeeper::assignAllRolesToModel($actee, $roles);
 
         if ($roles->count() === 1) {
             info("Role '{$roleNames->first()}' assigned to model successfully.");
@@ -230,7 +230,7 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::revokeRolesFromModel($actee, $roles);
+        Gatekeeper::revokeAllRolesFromModel($actee, $roles);
 
         if ($roles->count() === 1) {
             info("Role '{$roleNames->first()}' revoked from model successfully.");

@@ -1,13 +1,12 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Http\Controllers;
+namespace Gillyware\Gatekeeper\Traits;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
-class Controller extends BaseController
+trait Responds
 {
     protected function errorResponse(string $message, int $statusCode = HttpFoundationResponse::HTTP_BAD_REQUEST): JsonResponse
     {

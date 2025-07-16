@@ -3,19 +3,33 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 
-class RoleRepository
+/**
+ * @implements EntityRepositoryInterface<Role>
+ */
+class RoleRepository implements EntityRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
     ) {}
+
+    /**
+     * Check if the roles table exists.
+     */
+    public function tableExists(): bool
+    {
+        return Schema::hasTable(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES));
+    }
 
     /**
      * Check if a role with the given name exists.
@@ -56,7 +70,7 @@ class RoleRepository
     }
 
     /**
-     * Create a new Role instance.
+     * Create a new role.
      */
     public function create(string $roleName): Role
     {
@@ -71,10 +85,12 @@ class RoleRepository
 
     /**
      * Update an existing role.
+     *
+     * @param  Role  $role
      */
-    public function update(Role $role, string $roleName): Role
+    public function update($role, string $newRoleName): Role
     {
-        if ($role->update(['name' => $roleName])) {
+        if ($role->update(['name' => $newRoleName])) {
             $this->cacheService->clear();
         }
 
@@ -83,8 +99,10 @@ class RoleRepository
 
     /**
      * Deactivate a role.
+     *
+     * @param  Role  $role
      */
-    public function deactivate(Role $role): Role
+    public function deactivate($role): Role
     {
         if ($role->update(['is_active' => false])) {
             $this->cacheService->clear();
@@ -95,8 +113,10 @@ class RoleRepository
 
     /**
      * Reactivate a role.
+     *
+     * @param  Role  $role
      */
-    public function reactivate(Role $role): Role
+    public function reactivate($role): Role
     {
         if ($role->update(['is_active' => true])) {
             $this->cacheService->clear();
@@ -107,8 +127,10 @@ class RoleRepository
 
     /**
      * Delete a role.
+     *
+     * @param  Role  $role
      */
-    public function delete(Role $role): bool
+    public function delete($role): bool
     {
         // Unassign all permissions from the role (without audit logging).
         $this->modelHasPermissionRepository->deleteForModel($role);
@@ -124,6 +146,8 @@ class RoleRepository
 
     /**
      * Get all roles.
+     *
+     * @return Collection<Role>
      */
     public function all(): Collection
     {
@@ -142,6 +166,8 @@ class RoleRepository
 
     /**
      * Get all active roles.
+     *
+     * @return Collection<Role>
      */
     public function active(): Collection
     {
@@ -150,6 +176,8 @@ class RoleRepository
 
     /**
      * Get all roles where the name is in the provided array or collection.
+     *
+     * @return Collection<Role>
      */
     public function whereNameIn(array|Collection $roleNames): Collection
     {
@@ -158,6 +186,8 @@ class RoleRepository
 
     /**
      * Get all role names for a specific model.
+     *
+     * @return Collection<string>
      */
     public function namesForModel(Model $model): Collection
     {
@@ -183,6 +213,8 @@ class RoleRepository
 
     /**
      * Get all roles for a specific model.
+     *
+     * @return Collection<Role>
      */
     public function forModel(Model $model): Collection
     {
@@ -193,10 +225,32 @@ class RoleRepository
 
     /**
      * Get all active roles for a specific model.
+     *
+     * @return Collection<Role>
      */
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
             ->filter(fn (Role $role) => $role->is_active);
+    }
+
+    /**
+     * Get a page of roles.
+     */
+    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    {
+        $query = Role::query()->whereLike('name', "%{$searchTerm}%");
+
+        if ($importantAttribute === 'is_active') {
+            $query = $query
+                ->orderBy('is_active', $isActiveOrder)
+                ->orderBy('name', $nameOrder);
+        } else {
+            $query = $query
+                ->orderBy('name', $nameOrder)
+                ->orderBy('is_active', $isActiveOrder);
+        }
+
+        return $query->paginate(10, ['*'], 'page', $pageNumber);
     }
 }

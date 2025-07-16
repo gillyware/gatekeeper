@@ -3,17 +3,19 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\RolePageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\StoreRoleRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\UpdateRoleRequest;
 use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Services\RoleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
-class RoleController extends Controller
+class RoleController extends AbstractBaseController
 {
+    public function __construct(private readonly RoleService $roleService) {}
+
     /**
      * Get a page of roles.
      */
@@ -25,25 +27,13 @@ class RoleController extends Controller
         $nameOrder = $request->validated('name_order');
         $isActiveOrder = $request->validated('is_active_order');
 
-        if (! Role::tableExists()) {
+        if (! $this->roleService->tableExists()) {
             return $this->errorResponse('The roles table does not exist in the database.');
         }
 
-        $query = Role::query()->whereLike('name', "%{$searchTerm}%");
-
-        if ($importantAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $isActiveOrder)
-                ->orderBy('name', $nameOrder);
-        } else {
-            $query = $query
-                ->orderBy('name', $nameOrder)
-                ->orderBy('is_active', $isActiveOrder);
-        }
-
-        $paginator = $query->paginate(10, ['*'], 'page', $pageNumber);
-
-        return Response::json($paginator);
+        return Response::json(
+            $this->roleService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
+        );
     }
 
     /**
@@ -60,7 +50,8 @@ class RoleController extends Controller
     public function store(StoreRoleRequest $request): JsonResponse
     {
         try {
-            $role = Gatekeeper::createRole($request->validated('name'));
+            $roleName = $request->validated('name');
+            $role = $this->roleService->create($roleName);
 
             return Response::json($role, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -74,7 +65,8 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         try {
-            $role = Gatekeeper::updateRole($role, $request->validated('name'));
+            $newRoleName = $request->validated('name');
+            $role = $this->roleService->update($role, $newRoleName);
 
             return Response::json($role);
         } catch (GatekeeperException $e) {
@@ -88,7 +80,7 @@ class RoleController extends Controller
     public function deactivate(Role $role): JsonResponse
     {
         try {
-            $role = Gatekeeper::deactivateRole($role);
+            $role = $this->roleService->deactivate($role);
 
             return Response::json($role);
         } catch (GatekeeperException $e) {
@@ -102,7 +94,7 @@ class RoleController extends Controller
     public function reactivate(Role $role): JsonResponse
     {
         try {
-            $role = Gatekeeper::reactivateRole($role);
+            $role = $this->roleService->reactivate($role);
 
             return Response::json($role);
         } catch (GatekeeperException $e) {
@@ -116,9 +108,9 @@ class RoleController extends Controller
     public function delete(Role $role): JsonResponse
     {
         try {
-            Gatekeeper::deleteRole($role);
+            $this->roleService->delete($role);
 
-            return Response::json([], HttpFoundationResponse::HTTP_NO_CONTENT);
+            return Response::json(status: HttpFoundationResponse::HTTP_NO_CONTENT);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }

@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 
-class HomeController extends Controller
+class LandingController extends AbstractBaseController
 {
     public function __invoke(): View
     {

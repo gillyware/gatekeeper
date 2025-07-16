@@ -3,10 +3,40 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\AuditLogServiceInterface;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Config;
 
-class AuditLogService
+class AuditLogService implements AuditLogServiceInterface
 {
+    public function __construct(private readonly AuditLogRepository $auditLogRepository) {}
+
+    /**
+     * Check if the audit log table exists.
+     */
+    public function tableExists(): bool
+    {
+        return $this->auditLogRepository->tableExists();
+    }
+
+    /**
+     * Get a page of audit logs.
+     */
+    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    {
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
+
+        return $this->auditLogRepository->getPage($pageNumber, $createdAtOrder)
+            ->through(fn (AuditLog $log) => [
+                'id' => $log->id,
+                'message' => $this->getMessageForAuditLog($log),
+                'created_at' => $log->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
+            ]);
+    }
+
     /**
      * Get the message for the audit log based on the action type.
      */

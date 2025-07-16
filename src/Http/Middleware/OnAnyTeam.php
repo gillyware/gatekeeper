@@ -3,18 +3,16 @@
 namespace Gillyware\Gatekeeper\Http\Middleware;
 
 use Closure;
-use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-class OnAnyTeam
+class OnAnyTeam extends AbstractBaseEntityMiddleware
 {
     public function handle(Request $request, Closure $next, ...$teamNames)
     {
         $user = $request->user();
 
-        if (! Gatekeeper::modelOnAnyTeam($user, $teamNames)) {
-            abort(Response::HTTP_FORBIDDEN, 'Forbidden');
+        if (! $this->teamService->modelHasAny($user, $teamNames)) {
+            return $this->errorResponse('Access denied.');
         }
 
         return $next($request);

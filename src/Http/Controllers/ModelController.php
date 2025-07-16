@@ -2,32 +2,28 @@
 
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
+use Gillyware\Gatekeeper\Factories\EntityServiceFactory;
+use Gillyware\Gatekeeper\Factories\ModelHasEntityServiceFactory;
 use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntitiesPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntityRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\ModelPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Model\ShowModelRequest;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
-use Gillyware\Gatekeeper\Services\ModelPermissionService;
-use Gillyware\Gatekeeper\Services\ModelRoleService;
 use Gillyware\Gatekeeper\Services\ModelService;
-use Gillyware\Gatekeeper\Services\ModelTeamService;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 
-class ModelController extends Controller
+class ModelController extends AbstractBaseController
 {
     use EnforcesForGatekeeper;
 
     public function __construct(
         private readonly ModelMetadataService $modelMetadataService,
         private readonly ModelService $modelService,
-        private readonly ModelPermissionService $modelPermissionService,
-        private readonly ModelRoleService $modelRoleService,
-        private readonly ModelTeamService $modelTeamService,
     ) {}
 
     /**
@@ -92,17 +88,14 @@ class ModelController extends Controller
             $modelLabel = $request->validated('modelLabel');
             $modelPk = $request->validated('modelPk');
             $pageNumber = $request->validated('page');
-            $entity = $request->validated('entity');
+            $entity = GatekeeperEntity::from($request->validated('entity'));
             $entityNameSearchTerm = (string) $request->validated('search_term');
 
             $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
             $model = $this->modelService->findModelInstance($className, $modelPk);
 
-            $paginator = match ($entity) {
-                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchAssignmentsByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::ROLE => $this->modelRoleService->searchAssignmentsByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::TEAM => $this->modelTeamService->searchAssignmentsByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
-            };
+            $modelHasEntityService = ModelHasEntityServiceFactory::create($entity);
+            $paginator = $modelHasEntityService->searchAssignmentsByEntityNameForModel($model, $entityNameSearchTerm, $pageNumber);
 
             return Response::json($paginator);
         } catch (GatekeeperException $e) {
@@ -119,17 +112,14 @@ class ModelController extends Controller
             $modelLabel = $request->validated('modelLabel');
             $modelPk = $request->validated('modelPk');
             $pageNumber = $request->validated('page');
-            $entity = $request->validated('entity');
+            $entity = GatekeeperEntity::from($request->validated('entity'));
             $entityNameSearchTerm = (string) $request->validated('search_term');
 
             $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
             $model = $this->modelService->findModelInstance($className, $modelPk);
 
-            $paginator = match ($entity) {
-                GatekeeperEntity::PERMISSION => $this->modelPermissionService->searchUnassignedByPermissionNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::ROLE => $this->modelRoleService->searchUnassignedByRoleNameForModel($model, $entityNameSearchTerm, $pageNumber),
-                GatekeeperEntity::TEAM => $this->modelTeamService->searchUnassignedByTeamNameForModel($model, $entityNameSearchTerm, $pageNumber),
-            };
+            $modelHasEntityService = ModelHasEntityServiceFactory::create($entity);
+            $paginator = $modelHasEntityService->searchUnassignedByEntityNameForModel($model, $entityNameSearchTerm, $pageNumber);
 
             return Response::json($paginator);
         } catch (GatekeeperException $e) {
@@ -145,24 +135,22 @@ class ModelController extends Controller
         try {
             $label = $request->validated('modelLabel');
             $pk = $request->validated('modelPk');
-            $entity = $request->validated('entity');
+            $entity = GatekeeperEntity::from($request->validated('entity'));
             $entityName = $request->validated('entity_name');
 
             $modelClass = $this->modelMetadataService->getClassFromLabel($label);
             $model = $this->modelService->findModelInstance($modelClass, $pk);
 
-            if (! $this->entityExists($entity, $entityName)) {
-                return $this->errorResponse(ucfirst($entity).' does not exist');
+            $entityService = EntityServiceFactory::create($entity);
+
+            if (! $entityService->exists($entityName)) {
+                return $this->errorResponse(ucfirst($entity->value).' does not exist');
             }
 
-            match ($entity) {
-                GatekeeperEntity::PERMISSION => Gatekeeper::assignPermissionToModel($model, $entityName),
-                GatekeeperEntity::ROLE => Gatekeeper::assignRoleToModel($model, $entityName),
-                GatekeeperEntity::TEAM => Gatekeeper::addModelToTeam($model, $entityName),
-            };
+            $entityService->assignToModel($model, $entityName);
 
             return Response::json([
-                'message' => ucfirst($entity).' assigned successfully',
+                'message' => ucfirst($entity->value).' assigned successfully',
             ]);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
@@ -177,40 +165,25 @@ class ModelController extends Controller
         try {
             $label = $request->validated('modelLabel');
             $pk = $request->validated('modelPk');
-            $entity = $request->validated('entity');
+            $entity = GatekeeperEntity::from($request->validated('entity'));
             $entityName = $request->validated('entity_name');
 
             $modelClass = $this->modelMetadataService->getClassFromLabel($label);
             $model = $this->modelService->findModelInstance($modelClass, $pk);
 
-            if (! $this->entityExists($entity, $entityName)) {
-                return $this->errorResponse(ucfirst($entity).' does not exist');
+            $entityService = EntityServiceFactory::create($entity);
+
+            if (! $entityService->exists($entityName)) {
+                return $this->errorResponse(ucfirst($entity->value).' does not exist');
             }
 
-            match ($entity) {
-                GatekeeperEntity::PERMISSION => Gatekeeper::revokePermissionFromModel($model, $entityName),
-                GatekeeperEntity::ROLE => Gatekeeper::revokeRoleFromModel($model, $entityName),
-                GatekeeperEntity::TEAM => Gatekeeper::removeModelFromTeam($model, $entityName),
-            };
+            $entityService->revokeFromModel($model, $entityName);
 
             return Response::json([
-                'message' => ucfirst($entity).' revoked successfully',
+                'message' => ucfirst($entity->value).' revoked successfully',
             ]);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
-    }
-
-    /**
-     * Check if an entity exists based on the type and name.
-     */
-    private function entityExists(string $entity, string $entityName): bool
-    {
-        return match ($entity) {
-            GatekeeperEntity::PERMISSION => Gatekeeper::permissionExists($entityName),
-            GatekeeperEntity::ROLE => Gatekeeper::roleExists($entityName),
-            GatekeeperEntity::TEAM => Gatekeeper::teamExists($entityName),
-            default => false,
-        };
     }
 }

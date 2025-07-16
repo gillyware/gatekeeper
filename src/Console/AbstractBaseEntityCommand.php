@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
@@ -23,7 +24,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 {
     use EnforcesForGatekeeper;
 
-    protected string $entity;
+    protected GatekeeperEntity $entity;
 
     protected string $entityTable;
 
@@ -68,9 +69,9 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $actionVerb = str($this->action)->after('_')->toString();
 
         return search(
-            label: "Search for the {$this->entity} to $actionVerb",
+            label: "Search for the {$this->entity->value} to $actionVerb",
             options: fn (string $value) => $this->filterEntityNamesForAction($value),
-            required: "A {$this->entity} name is required.",
+            required: "A {$this->entity->value} name is required.",
             validate: ['string', 'max:255', Rule::exists($this->entityTable, 'name')],
             scroll: 10,
         );
@@ -84,9 +85,9 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $actionVerb = str($this->action)->after('_')->toString();
 
         return collect(multisearch(
-            label: "Search for the {$this->entity}(s) to $actionVerb",
+            label: "Search for the {$this->entity->value}(s) to $actionVerb",
             options: fn (string $value) => $this->filterEntityNamesForAction($value),
-            required: "At least one {$this->entity} name is required.",
+            required: "At least one {$this->entity->value} name is required.",
             validate: ['array', 'min:1', 'max:100', Rule::exists($this->entityTable, 'name')],
             scroll: 10,
             hint: 'Select options with the space bar and confirm with enter.',
@@ -100,7 +101,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     {
         return text(
             label: $label,
-            required: "A {$this->entity} name is required.",
+            required: "A {$this->entity->value} name is required.",
             validate: ['string', 'max:255', Rule::unique($this->entityTable, 'name')->withoutTrashed()],
         );
     }
@@ -114,16 +115,16 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 
         text(
             label: $label,
-            required: "A {$this->entity} name is required.",
+            required: "A {$this->entity->value} name is required.",
             hint: 'For more than one, separate names with commas.',
             validate: function (string $value) use (&$names) {
                 $names = collect(explode(',', $value))->map(fn ($name) => trim($name))->filter()->unique()->values();
 
                 if ($names->isEmpty()) {
-                    return "A {$this->entity} name is required";
+                    return "A {$this->entity->value} name is required";
                 }
                 if ($names->count() > 100) {
-                    return "Must not exceed more than 100 {$this->entity}s at a time";
+                    return "Must not exceed more than 100 {$this->entity->value}s at a time";
                 }
 
                 foreach ($names as $name) {
@@ -131,7 +132,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
                         return 'Names must not exceed 255 characters';
                     }
                     if (DB::table($this->entityTable)->where('name', $name)->whereNull('deleted_at')->exists()) {
-                        return ucfirst($this->entity)." $name already exists";
+                        return ucfirst($this->entity->value)." $name already exists";
                     }
                 }
 

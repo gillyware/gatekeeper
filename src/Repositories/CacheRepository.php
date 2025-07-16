@@ -3,10 +3,11 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\CacheRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
-class CacheRepository
+class CacheRepository implements CacheRepositoryInterface
 {
     private array $localCache = [];
 
@@ -80,7 +81,7 @@ class CacheRepository
     }
 
     /**
-     * Clear the entire cache by incrementing the cache version.
+     * Clear the entire cache Gatekeeper cache.
      */
     public function clear(): void
     {

@@ -36,12 +36,12 @@ class ModelHasPermissionRepositoryTest extends TestCase
     {
         $permission = Permission::factory()->create();
 
-        $this->assertFalse($this->repository->existsForPermission($permission));
+        $this->assertFalse($this->repository->existsForEntity($permission));
 
         $user = User::factory()->create();
         $this->repository->create($user, $permission);
 
-        $this->assertTrue($this->repository->existsForPermission($permission));
+        $this->assertTrue($this->repository->existsForEntity($permission));
     }
 
     public function test_it_can_create_model_permission_record()
@@ -74,7 +74,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
 
         $this->repository->create($user, $permission);
 
-        $this->assertTrue($this->repository->deleteForModelAndPermission($user, $permission));
+        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $permission));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
             'model_type' => $user->getMorphClass(),

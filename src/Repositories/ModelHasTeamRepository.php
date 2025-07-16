@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -11,7 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 
-class ModelHasTeamRepository
+/**
+ * @implements ModelHasEntityRepositoryInterface<Team, ModelHasTeam>
+ */
+class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
@@ -20,16 +24,20 @@ class ModelHasTeamRepository
 
     /**
      * Check if a team is assigned to any model.
+     *
+     * @param  Team  $team
      */
-    public function existsForTeam(Team $team): bool
+    public function existsForEntity($team): bool
     {
         return ModelHasTeam::query()->where('team_id', $team->id)->exists();
     }
 
     /**
-     * Create a new ModelHasTeam instance.
+     * Create a new model team assigment.
+     *
+     * @param  Team  $team
      */
-    public function create(Model $model, Team $team): ModelHasTeam
+    public function create(Model $model, $team): ModelHasTeam
     {
         $modelHasTeam = ModelHasTeam::create([
             'team_id' => $team->id,
@@ -55,9 +63,11 @@ class ModelHasTeamRepository
     }
 
     /**
-     * Delete all team assignments for a given team.
+     * Delete all assignments for a given team.
+     *
+     * @param  Team  $team
      */
-    public function deleteForTeam(Team $team): bool
+    public function deleteForEntity($team): bool
     {
         ModelHasTeam::query()->where('team_id', $team->id)
             ->with('model')
@@ -75,8 +85,10 @@ class ModelHasTeamRepository
 
     /**
      * Delete all team assignments for a given model and team.
+     *
+     * @param  Team  $team
      */
-    public function deleteForModelAndTeam(Model $model, Team $team): bool
+    public function deleteForModelAndEntity(Model $model, $team): bool
     {
         ModelHasTeam::forModel($model)->where('team_id', $team->id)->delete();
 
@@ -88,7 +100,7 @@ class ModelHasTeamRepository
     /**
      * Search model team assignments by team name.
      */
-    public function searchAssignmentsByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
         $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
@@ -112,7 +124,7 @@ class ModelHasTeamRepository
     /**
      * Search unassigned teams by team name for model.
      */
-    public function searchUnassignedByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 

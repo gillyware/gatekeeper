@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Config;
  *
  * @method static Builder<ModelHasTeam> forModel(Model $model)
  */
-class ModelHasTeam extends AbstractModelHasGatekeeperEntity
+class ModelHasTeam extends AbstractBaseModelHasEntityModel
 {
     /**
      * Get the team associated with the model.
@@ -29,13 +29,5 @@ class ModelHasTeam extends AbstractModelHasGatekeeperEntity
     public function getTable(): string
     {
         return Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getEntityIdAttribute(): int
-    {
-        return $this->team_id;
     }
 }

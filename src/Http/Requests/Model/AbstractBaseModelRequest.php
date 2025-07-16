@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class AbstractBaseModelRequest extends FormRequest
+abstract class AbstractBaseModelRequest extends FormRequest
 {
     public function authorize(): bool
     {
