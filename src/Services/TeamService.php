@@ -17,6 +17,7 @@ use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use UnitEnum;
 
 class TeamService extends AbstractGatekeeperEntityService
 {
@@ -29,19 +30,21 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Check if a team with the given name exists.
      */
-    public function exists(string $teamName): bool
+    public function exists(string|UnitEnum $teamName): bool
     {
-        return $this->teamRepository->exists($teamName);
+        return $this->teamRepository->exists($this->resolveEntityName($teamName));
     }
 
     /**
      * Create a new team.
      */
-    public function create(string $teamName): Team
+    public function create(string|UnitEnum $teamName): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
+
+        $teamName = $this->resolveEntityName($teamName);
 
         if ($this->exists($teamName)) {
             throw new TeamAlreadyExistsException($teamName);
@@ -59,11 +62,13 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Update an existing team.
      */
-    public function update(Team|string $team, string $newTeamName): Team
+    public function update(Team|string|UnitEnum $team, string|UnitEnum $newTeamName): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
+
+        $newTeamName = $this->resolveEntityName($newTeamName);
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
@@ -85,7 +90,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Deactivate a team.
      */
-    public function deactivate(Team|string $team): Team
+    public function deactivate(Team|string|UnitEnum $team): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -109,7 +114,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Reactivate a team.
      */
-    public function reactivate(Team|string $team): Team
+    public function reactivate(Team|string|UnitEnum $team): Team
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -134,7 +139,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Delete a team.
      */
-    public function delete(Team|string $team): bool
+    public function delete(Team|string|UnitEnum $team): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -163,7 +168,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Add a model to a team.
      */
-    public function addModelTo(Model $model, Team|string $team): bool
+    public function addModelTo(Model $model, Team|string|UnitEnum $team): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -207,7 +212,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Remove a model from a team.
      */
-    public function removeModelFrom(Model $model, Team|string $team): bool
+    public function removeModelFrom(Model $model, Team|string|UnitEnum $team): bool
     {
         $this->resolveActingAs();
         $this->enforceAuditFeature();
@@ -241,7 +246,7 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Check if a model is on a given team.
      */
-    public function modelOn(Model $model, Team|string $team): bool
+    public function modelOn(Model $model, Team|string|UnitEnum $team): bool
     {
         // To access the team, the teams feature must be enabled and the model must be using the teams trait.
         if (! $this->teamsFeatureEnabled() || ! $this->modelInteractsWithTeams($model)) {
@@ -262,9 +267,11 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Check if a model is directly assigned to a team.
      */
-    public function modelOnDirectly(Model $model, Team $team): bool
+    public function modelOnDirectly(Model $model, Team|string|UnitEnum $team): bool
     {
-        return $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $team->is($t));
+        $teamName = $this->resolveEntityName($team);
+
+        return $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $teamName === $t->name);
     }
 
     /**
@@ -290,9 +297,9 @@ class TeamService extends AbstractGatekeeperEntityService
     /**
      * Find a team by its name.
      */
-    public function findByName(string $teamName): ?Team
+    public function findByName(string|UnitEnum $teamName): ?Team
     {
-        return $this->teamRepository->findByName($teamName);
+        return $this->teamRepository->findByName($this->resolveEntityName($teamName));
     }
 
     /**
