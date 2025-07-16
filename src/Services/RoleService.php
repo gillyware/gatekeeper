@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Role\DeleteRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\ReactivateRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\RevokeRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\UpdateRoleAuditLogDto;
-use Gillyware\Gatekeeper\Exceptions\Role\DeletingAssignedRoleException;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -150,9 +149,9 @@ class RoleService extends AbstractGatekeeperEntityService
             return true;
         }
 
-        // If the role is currently assigned to any model, we cannot delete it.
+        // Delete any existing assignments for the role being deleted.
         if ($this->modelHasRoleRepository->existsForRole($role)) {
-            throw new DeletingAssignedRoleException($roleName);
+            $this->modelHasRoleRepository->deleteForRole($role);
         }
 
         $deleted = $this->roleRepository->delete($role);

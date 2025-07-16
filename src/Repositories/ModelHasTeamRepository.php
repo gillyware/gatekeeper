@@ -55,6 +55,25 @@ class ModelHasTeamRepository
     }
 
     /**
+     * Delete all team assignments for a given team.
+     */
+    public function deleteForTeam(Team $team): bool
+    {
+        ModelHasTeam::query()->where('team_id', $team->id)
+            ->with('model')
+            ->get()
+            ->each(function (ModelHasTeam $modelHasTeam) {
+                $modelHasTeam->delete();
+
+                if ($modelHasTeam->model) {
+                    $this->cacheService->invalidateCacheForModelTeamNames($modelHasTeam->model);
+                }
+            });
+
+        return true;
+    }
+
+    /**
      * Delete all team assignments for a given model and team.
      */
     public function deleteForModelAndTeam(Model $model, Team $team): bool

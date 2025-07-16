@@ -4,7 +4,6 @@ namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
-use Gillyware\Gatekeeper\Exceptions\Role\DeletingAssignedRoleException;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -304,18 +303,17 @@ class RoleServiceTest extends TestCase
         $this->assertSoftDeleted($role);
     }
 
-    public function test_delete_role_fails_if_role_assigned_to_model()
+    public function test_delete_role_deletes_assignments_if_role_assigned_to_model()
     {
-        $name = fake()->unique()->word();
-        $role = Role::factory()->withName($name)->create();
-
+        $role = Role::factory()->create();
         $user = User::factory()->create();
-        $this->service->assignToModel($user, $name);
 
-        $this->expectException(DeletingAssignedRoleException::class);
+        $this->service->assignToModel($user, $role);
+
         $this->service->delete($role);
 
-        $this->assertTrue($this->service->exists($name));
+        $this->assertFalse($this->service->exists($role));
+        $this->assertCount(0, $this->service->getDirectForModel($user));
     }
 
     public function test_audit_log_inserted_on_role_deletion_when_auditing_enabled()

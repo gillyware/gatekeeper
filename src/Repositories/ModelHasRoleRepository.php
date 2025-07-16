@@ -55,6 +55,25 @@ class ModelHasRoleRepository
     }
 
     /**
+     * Delete all role assignments for a given role.
+     */
+    public function deleteForRole(Role $role): bool
+    {
+        ModelHasRole::query()->where('role_id', $role->id)
+            ->with('model')
+            ->get()
+            ->each(function (ModelHasRole $modelHasRole) {
+                $modelHasRole->delete();
+
+                if ($modelHasRole->model) {
+                    $this->cacheService->invalidateCacheForModelRoleNames($modelHasRole->model);
+                }
+            });
+
+        return true;
+    }
+
+    /**
      * Delete all role assignments for a given model and role.
      */
     public function deleteForModelAndRole(Model $model, Role $role): bool
