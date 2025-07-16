@@ -50,8 +50,8 @@ class ModelControllerTest extends TestCase
         $this->user->assignPermissions([GatekeeperPermissionName::VIEW, GatekeeperPermissionName::MANAGE]);
 
         $this->getJson(route('gatekeeper.api.models.show', [
-            'model_label' => 'User',
-            'model_pk' => $this->user->getKey(),
+            'modelLabel' => 'User',
+            'modelPk' => $this->user->getKey(),
         ]))
             ->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(['model_label' => 'User']);
@@ -65,18 +65,20 @@ class ModelControllerTest extends TestCase
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->postJson(route('gatekeeper.api.models.assign'), [
-            'model_label' => 'User',
-            'model_pk' => (string) $target->getKey(),
+        $this->postJson(route('gatekeeper.api.models.assign', [
+            'modelLabel' => 'User',
+            'modelPk' => (string) $target->getKey(),
             'entity' => GatekeeperEntity::PERMISSION,
+        ]), [
             'entity_name' => $permission->name,
         ])->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(['message' => 'Permission assigned successfully']);
 
-        $this->deleteJson(route('gatekeeper.api.models.revoke'), [
-            'model_label' => 'User',
-            'model_pk' => (string) $target->getKey(),
+        $this->deleteJson(route('gatekeeper.api.models.revoke', [
+            'modelLabel' => 'User',
+            'modelPk' => (string) $target->getKey(),
             'entity' => GatekeeperEntity::PERMISSION,
+        ]), [
             'entity_name' => $permission->name,
         ])->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(['message' => 'Permission revoked successfully']);
@@ -89,14 +91,17 @@ class ModelControllerTest extends TestCase
         [$pk, $className] = [999999, User::class];
 
         $this->getJson(route('gatekeeper.api.models.show', [
-            'model_label' => 'User',
-            'model_pk' => (string) $pk,
+            'modelLabel' => 'User',
+            'modelPk' => (string) $pk,
         ]))->assertStatus(Response::HTTP_BAD_REQUEST)
             ->assertJsonFragment(['message' => "Model with primary key '{$pk}' not found in class '{$className}'."]);
     }
 
     public function test_protected_routes_fail_without_permission()
     {
-        $this->getJson(route('gatekeeper.api.models.show'))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->getJson(route('gatekeeper.api.models.show', [
+            'modelLabel' => 'User',
+            'modelPk' => fake()->word(),
+        ]))->assertStatus(Response::HTTP_FORBIDDEN);
     }
 }
