@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeletePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\ReactivatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\RevokePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Exceptions\Permission\DeletingAssignedPermissionException;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
@@ -150,9 +149,9 @@ class PermissionService extends AbstractGatekeeperEntityService
             return true;
         }
 
-        // If the permission is currently assigned to any model, we cannot delete it.
+        // Delete any existing assignments for the permission being deleted.
         if ($this->modelHasPermissionRepository->existsForPermission($permission)) {
-            throw new DeletingAssignedPermissionException($permissionName);
+            $this->modelHasPermissionRepository->deleteForPermission($permission);
         }
 
         $deleted = $this->permissionRepository->delete($permission);

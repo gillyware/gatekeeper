@@ -5,7 +5,6 @@ namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
-use Gillyware\Gatekeeper\Exceptions\Permission\DeletingAssignedPermissionException;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
@@ -273,18 +272,17 @@ class PermissionServiceTest extends TestCase
         $this->assertSoftDeleted($permission);
     }
 
-    public function test_delete_permission_fails_if_permission_is_assigned_to_model()
+    public function test_delete_permission_deletes_assignments_if_permission_is_assigned_to_model()
     {
-        $name = fake()->unique()->word();
-        $permission = Permission::factory()->withName($name)->create();
-
+        $permission = Permission::factory()->create();
         $user = User::factory()->create();
-        $this->service->assignToModel($user, $name);
 
-        $this->expectException(DeletingAssignedPermissionException::class);
+        $this->service->assignToModel($user, $permission);
+
         $this->service->delete($permission);
 
-        $this->assertTrue($this->service->exists($name));
+        $this->assertFalse($this->service->exists($permission));
+        $this->assertCount(0, $this->service->getDirectForModel($user));
     }
 
     public function test_audit_log_inserted_on_permission_deletion_when_auditing_enabled()

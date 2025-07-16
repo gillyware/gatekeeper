@@ -55,6 +55,25 @@ class ModelHasPermissionRepository
     }
 
     /**
+     * Delete all permission assignments for a given permission.
+     */
+    public function deleteForPermission(Permission $permission): bool
+    {
+        ModelHasPermission::query()->where('permission_id', $permission->id)
+            ->with('model')
+            ->get()
+            ->each(function (ModelHasPermission $modelHasPermission) {
+                $modelHasPermission->delete();
+
+                if ($modelHasPermission->model) {
+                    $this->cacheService->invalidateCacheForModelPermissionNames($modelHasPermission->model);
+                }
+            });
+
+        return true;
+    }
+
+    /**
      * Delete all permission assignments for a given model and permission.
      */
     public function deleteForModelAndPermission(Model $model, Permission $permission): bool

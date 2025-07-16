@@ -9,7 +9,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Team\DeleteTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\ReactivateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
-use Gillyware\Gatekeeper\Exceptions\Team\DeletingAssignedTeamException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
@@ -147,9 +146,9 @@ class TeamService extends AbstractGatekeeperEntityService
             return true;
         }
 
-        // If the team is currently assigned to any model, we cannot delete it.
+        // Delete any existing assignments for the team being deleted.
         if ($this->modelHasTeamRepository->existsForTeam($team)) {
-            throw new DeletingAssignedTeamException($teamName);
+            $this->modelHasTeamRepository->deleteForTeam($team);
         }
 
         $deleted = $this->teamRepository->delete($team);

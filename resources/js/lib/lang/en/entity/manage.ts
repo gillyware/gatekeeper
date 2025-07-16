@@ -87,7 +87,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entityDeactivationText: {
             title: 'Deactivate Permission',
             description:
-                'The permission and its assignments will remain, but the permission will no longer grant access to anything until reactivated.',
+                'Deactivating this permission will keep all assignments intact but will temporarily stop granting access to assigned models.',
             confirmTitle: 'Are you sure you want to deactivate this permission?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm deactivation of this permission.`,
             inputLabel: 'Permission Name',
@@ -97,7 +97,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityReactivationText: {
             title: 'Reactivate Permission',
-            description: "Once reactivated, the permission will once again grant access to all models it's currently assigned to.",
+            description: 'Reactivating this permission will resume granting access to its assigned models.',
             confirmTitle: 'Are you sure you want to reactivate this permission?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm reactivation of this permission.`,
             inputLabel: 'Permission Name',
@@ -107,7 +107,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityDeletionText: {
             title: 'Delete Permission',
-            description: 'This permission will be removed from the application.',
+            description: 'Deleting this permission will remove it from the application and unassign it from all models.',
             confirmTitle: 'Are you sure you want to delete this permission?',
             confirmDescription: (entityName: string) => `Type "${entityName}" to confirm deletion of this permission.`,
             inputLabel: 'Permission Name',
@@ -142,7 +142,8 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityDeactivationText: {
             title: 'Deactivate Role',
-            description: 'The role and its assignments will remain, but the role will no longer grant any permissions until reactivated.',
+            description:
+                'Deactivating this role will keep all assignments intact but will temporarily stop granting its permissions to assigned models.',
             confirmTitle: 'Are you sure you want to deactivate this role?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm deactivation of this role.`,
             inputLabel: 'Role Name',
@@ -152,7 +153,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityReactivationText: {
             title: 'Reactivate Role',
-            description: 'Once reactivated, the role will once again grant its assigned permissions to all associated models.',
+            description: 'Reactivating this role will resume granting permissions to its assigned models.',
             confirmTitle: 'Are you sure you want to reactivate this role?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm reactivation of this role.`,
             inputLabel: 'Role Name',
@@ -162,7 +163,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityDeletionText: {
             title: 'Delete Role',
-            description: 'This role will be removed from the application.',
+            description: 'Deleting this role will remove it from the application and unassign it from all models.',
             confirmTitle: 'Are you sure you want to delete this role?',
             confirmDescription: (entityName: string) => `Type "${entityName}" to confirm deletion of this role.`,
             inputLabel: 'Role Name',
@@ -197,7 +198,8 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityDeactivationText: {
             title: 'Deactivate Team',
-            description: 'The team and its memberships will remain, but it will no longer grant roles or permissions until reactivated.',
+            description:
+                'Deactivating this team will keep all memberships intact but will temporarily stop granting its roles and permissions to members.',
             confirmTitle: 'Are you sure you want to deactivate this team?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm deactivation of this team.`,
             inputLabel: 'Team Name',
@@ -207,7 +209,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityReactivationText: {
             title: 'Reactivate Team',
-            description: 'Once reactivated, the team will resume granting its roles and permissions to all members.',
+            description: 'Reactivating this team will resume granting its roles and permissions to all members.',
             confirmTitle: 'Are you sure you want to reactivate this team?',
             confirmDescription: (entityName) => `Type "${entityName}" to confirm reactivation of this team.`,
             inputLabel: 'Team Name',
@@ -217,7 +219,7 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         },
         entityDeletionText: {
             title: 'Delete Team',
-            description: 'This team will be removed from the application.',
+            description: 'Deleting this team will remove it from the application and unassign it from all models.',
             confirmTitle: 'Are you sure you want to delete this team?',
             confirmDescription: (entityName: string) => `Type "${entityName}" to confirm deletion of this team.`,
             inputLabel: 'Team Name',
