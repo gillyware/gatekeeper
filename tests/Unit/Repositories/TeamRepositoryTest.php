@@ -48,7 +48,7 @@ class TeamRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllTeams')
-            ->willReturn(collect([$team]));
+            ->willReturn(collect([$team->name => $team]));
 
         $result = $this->repository->findByName($team->name);
 
@@ -72,7 +72,7 @@ class TeamRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllTeams')
-            ->willReturn(collect([$team]));
+            ->willReturn(collect([$team->name => $team]));
 
         $result = $this->repository->findOrFailByName($team->name);
 
@@ -173,7 +173,7 @@ class TeamRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('putAllTeams')
-            ->with(Team::all()->values());
+            ->with(Team::all()->mapWithKeys(fn (Team $t) => [$t->name => $t]));
 
         $this->assertEqualsCanonicalizing(
             $teams->pluck('id')->toArray(),
@@ -262,7 +262,7 @@ class TeamRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllTeams')
-            ->willReturn(collect([$team]));
+            ->willReturn(collect([$team->name => $team]));
 
         $teams = $this->repository->forModel($user);
 
@@ -324,7 +324,7 @@ class TeamRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllTeams')
-            ->willReturn(collect([$team]));
+            ->willReturn(collect([$team->name => $team]));
 
         $result = $this->repository->findByNameForModel($user, $team->name);
         $this->assertTrue($result->is($team));

@@ -48,7 +48,7 @@ class PermissionRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllPermissions')
-            ->willReturn(collect([$permission]));
+            ->willReturn(collect([$permission->name => $permission]));
 
         $result = $this->repository->findByName($permission->name);
 
@@ -72,7 +72,7 @@ class PermissionRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllPermissions')
-            ->willReturn(collect([$permission]));
+            ->willReturn(collect([$permission->name => $permission]));
 
         $result = $this->repository->findOrFailByName($permission->name);
 
@@ -173,7 +173,7 @@ class PermissionRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('putAllPermissions')
-            ->with(Permission::all()->values());
+            ->with(Permission::all()->mapWithKeys(fn (Permission $p) => [$p->name => $p]));
 
         $this->assertEqualsCanonicalizing(
             $permissions->pluck('id')->toArray(),
@@ -262,7 +262,7 @@ class PermissionRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllPermissions')
-            ->willReturn(collect([$permission]));
+            ->willReturn(collect([$permission->name => $permission]));
 
         $permissions = $this->repository->forModel($user);
 
@@ -324,7 +324,7 @@ class PermissionRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllPermissions')
-            ->willReturn(collect([$permission]));
+            ->willReturn(collect([$permission->name => $permission]));
 
         $result = $this->repository->findByNameForModel($user, $permission->name);
         $this->assertTrue($result->is($permission));

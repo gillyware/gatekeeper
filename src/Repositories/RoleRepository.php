@@ -30,7 +30,15 @@ class RoleRepository
      */
     public function findByName(string $roleName): ?Role
     {
-        return $this->all()->firstWhere('name', $roleName);
+        return $this->all()->get($roleName);
+    }
+
+    /**
+     * Find a role by its name for a specific model.
+     */
+    public function findByNameForModel(Model $model, string $roleName): ?Role
+    {
+        return $this->forModel($model)->get($roleName);
     }
 
     /**
@@ -125,7 +133,7 @@ class RoleRepository
             return $roles;
         }
 
-        $roles = Role::all()->values();
+        $roles = Role::all()->mapWithKeys(fn (Role $r) => [$r->name => $r]);
 
         $this->cacheService->putAllRoles($roles);
 
@@ -137,7 +145,7 @@ class RoleRepository
      */
     public function active(): Collection
     {
-        return $this->all()->filter(fn (Role $role) => $role->is_active)->values();
+        return $this->all()->filter(fn (Role $role) => $role->is_active);
     }
 
     /**
@@ -145,7 +153,7 @@ class RoleRepository
      */
     public function whereNameIn(array|Collection $roleNames): Collection
     {
-        return $this->all()->whereIn('name', $roleNames)->values();
+        return $this->all()->whereIn('name', $roleNames);
     }
 
     /**
@@ -189,15 +197,6 @@ class RoleRepository
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Role $role) => $role->is_active)
-            ->values();
-    }
-
-    /**
-     * Find a role by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $roleName): ?Role
-    {
-        return $this->forModel($model)->firstWhere('name', $roleName);
+            ->filter(fn (Role $role) => $role->is_active);
     }
 }

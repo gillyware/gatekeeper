@@ -31,7 +31,15 @@ class TeamRepository
      */
     public function findByName(string $teamName): ?Team
     {
-        return $this->all()->firstWhere('name', $teamName);
+        return $this->all()->get($teamName);
+    }
+
+    /**
+     * Find a team by its name for a specific model.
+     */
+    public function findByNameForModel(Model $model, string $teamName): ?Team
+    {
+        return $this->forModel($model)->get($teamName);
     }
 
     /**
@@ -127,7 +135,7 @@ class TeamRepository
             return $teams;
         }
 
-        $teams = Team::all()->values();
+        $teams = Team::all()->mapWithKeys(fn (Team $t) => [$t->name => $t]);
 
         $this->cacheService->putAllTeams($teams);
 
@@ -139,7 +147,7 @@ class TeamRepository
      */
     public function active(): Collection
     {
-        return $this->all()->filter(fn (Team $team) => $team->is_active)->values();
+        return $this->all()->filter(fn (Team $team) => $team->is_active);
     }
 
     /**
@@ -147,7 +155,7 @@ class TeamRepository
      */
     public function whereNameIn(array|Collection $teamNames): Collection
     {
-        return $this->all()->whereIn('name', $teamNames)->values();
+        return $this->all()->whereIn('name', $teamNames);
     }
 
     /**
@@ -191,15 +199,6 @@ class TeamRepository
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Team $team) => $team->is_active)
-            ->values();
-    }
-
-    /**
-     * Find a team by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $teamName): ?Team
-    {
-        return $this->forModel($model)->firstWhere('name', $teamName);
+            ->filter(fn (Team $team) => $team->is_active);
     }
 }

@@ -27,7 +27,15 @@ class PermissionRepository
      */
     public function findByName(string $permissionName): ?Permission
     {
-        return $this->all()->firstWhere('name', $permissionName);
+        return $this->all()->get($permissionName);
+    }
+
+    /**
+     * Find a permission by its name for a specific model.
+     */
+    public function findByNameForModel(Model $model, string $permissionName): ?Permission
+    {
+        return $this->forModel($model)->get($permissionName);
     }
 
     /**
@@ -119,7 +127,7 @@ class PermissionRepository
             return $permissions;
         }
 
-        $permissions = Permission::all()->values();
+        $permissions = Permission::all()->mapWithKeys(fn (Permission $p) => [$p->name => $p]);
 
         $this->cacheService->putAllPermissions($permissions);
 
@@ -131,7 +139,7 @@ class PermissionRepository
      */
     public function active(): Collection
     {
-        return $this->all()->filter(fn (Permission $permission) => $permission->is_active)->values();
+        return $this->all()->filter(fn (Permission $permission) => $permission->is_active);
     }
 
     /**
@@ -139,7 +147,7 @@ class PermissionRepository
      */
     public function whereNameIn(array|Collection $permissionNames): Collection
     {
-        return $this->all()->whereIn('name', $permissionNames)->values();
+        return $this->all()->whereIn('name', $permissionNames);
     }
 
     /**
@@ -183,15 +191,6 @@ class PermissionRepository
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Permission $permission) => $permission->is_active)
-            ->values();
-    }
-
-    /**
-     * Find a permission by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $permissionName): ?Permission
-    {
-        return $this->forModel($model)->firstWhere('name', $permissionName);
+            ->filter(fn (Permission $permission) => $permission->is_active);
     }
 }
