@@ -2,15 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Http\Requests\Audit\AuditLogPageRequest;
-use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Response;
 
-class AuditLogController extends Controller
+class AuditLogController extends AbstractBaseController
 {
     public function __construct(private readonly AuditLogService $auditLogService) {}
 
@@ -22,21 +19,10 @@ class AuditLogController extends Controller
         $pageNumber = $request->validated('page');
         $createdAtOrder = $request->validated('created_at_order');
 
-        if (! AuditLog::tableExists()) {
+        if (! $this->auditLogService->tableExists()) {
             return $this->errorResponse('The audit log table does not exist in the database.');
         }
 
-        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
-
-        $paginator = AuditLog::query()
-            ->orderBy('created_at', $createdAtOrder)
-            ->paginate(10, ['*'], 'page', $pageNumber)
-            ->through(fn (AuditLog $log) => [
-                'id' => $log->id,
-                'message' => $this->auditLogService->getMessageForAuditLog($log),
-                'created_at' => $log->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
-            ]);
-
-        return Response::json($paginator);
+        return Response::json($this->auditLogService->getPage($pageNumber, $createdAtOrder));
     }
 }

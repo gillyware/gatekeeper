@@ -8,7 +8,7 @@ use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class HomeControllerTest extends TestCase
+class LandingControllerTest extends TestCase
 {
     private User $user;
 
@@ -25,14 +25,14 @@ class HomeControllerTest extends TestCase
     {
         $this->user->assignPermission(GatekeeperPermissionName::View);
 
-        $this->get(route('gatekeeper.home'))
+        $this->get(route('gatekeeper.landing'))
             ->assertStatus(Response::HTTP_OK)
             ->assertViewIs('gatekeeper::layout');
     }
 
     public function test_user_without_permission_cannot_access_the_gatekeeper_dashboard()
     {
-        $this->get(route('gatekeeper.home'))
-            ->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->get(route('gatekeeper.landing'))
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

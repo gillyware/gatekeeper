@@ -32,9 +32,9 @@ class HasPermissionsTest extends TestCase
         $user = User::factory()->create();
         $permissions = ['edit-posts', 'delete-posts'];
 
-        $user->assignPermissions($permissions);
+        $user->assignAllPermissions($permissions);
 
-        Gatekeeper::shouldHaveReceived('assignPermissionsToModel')->with($user, $permissions)->once();
+        Gatekeeper::shouldHaveReceived('assignAllPermissionsToModel')->with($user, $permissions)->once();
     }
 
     public function test_assign_permissions_delegates_with_arrayable()
@@ -42,9 +42,9 @@ class HasPermissionsTest extends TestCase
         $user = User::factory()->create();
         $permissions = collect(['edit-posts', 'delete-posts']);
 
-        $user->assignPermissions($permissions);
+        $user->assignAllPermissions($permissions);
 
-        Gatekeeper::shouldHaveReceived('assignPermissionsToModel')->with($user, $permissions)->once();
+        Gatekeeper::shouldHaveReceived('assignAllPermissionsToModel')->with($user, $permissions)->once();
     }
 
     public function test_revoke_permission_delegates_to_facade()
@@ -62,9 +62,9 @@ class HasPermissionsTest extends TestCase
         $user = User::factory()->create();
         $permissions = ['edit-posts', 'delete-posts'];
 
-        $user->revokePermissions($permissions);
+        $user->revokeAllPermissions($permissions);
 
-        Gatekeeper::shouldHaveReceived('revokePermissionsFromModel')->with($user, $permissions)->once();
+        Gatekeeper::shouldHaveReceived('revokeAllPermissionsFromModel')->with($user, $permissions)->once();
     }
 
     public function test_has_permission_delegates_to_facade()

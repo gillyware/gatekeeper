@@ -9,6 +9,7 @@ use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpFoundation\Response;
 
 class MiddlewareTest extends TestCase
 {
@@ -31,7 +32,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_permission:$permissionName"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -44,7 +45,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_permission:$permissionName"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     public function test_has_any_permission_middleware_allows_access()
@@ -58,7 +59,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_permission:$p1,$p2"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -72,7 +73,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_permission:$p1,$p2"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     public function test_has_role_middleware_allows_access()
@@ -87,7 +88,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_role:$roleName"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -102,7 +103,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_role:$roleName"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     public function test_has_any_role_middleware_allows_access()
@@ -118,7 +119,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_role:$r1,$r2"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -134,7 +135,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_role:$r1,$r2"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     public function test_on_team_middleware_allows_access()
@@ -149,7 +150,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("on_team:$teamName"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -164,7 +165,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("on_team:$teamName"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     public function test_on_any_team_middleware_allows_access()
@@ -180,7 +181,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("on_any_team:$t1,$t2"))
-            ->assertOk()
+            ->assertStatus(Response::HTTP_OK)
             ->assertSee('OK');
     }
 
@@ -196,7 +197,7 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("on_any_team:$t1,$t2"))
-            ->assertForbidden();
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     protected function registerTestRoute(string $middleware): string

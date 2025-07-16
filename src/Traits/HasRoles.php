@@ -22,9 +22,9 @@ trait HasRoles
     /**
      * Assign multiple roles to the model.
      */
-    public function assignRoles(array|Arrayable $roles): bool
+    public function assignAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::assignRolesToModel($this, $roles);
+        return Gatekeeper::assignAllRolesToModel($this, $roles);
     }
 
     /**
@@ -38,9 +38,9 @@ trait HasRoles
     /**
      * Revoke multiple roles from the model.
      */
-    public function revokeRoles(array|Arrayable $roles): bool
+    public function revokeAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::revokeRolesFromModel($this, $roles);
+        return Gatekeeper::revokeAllRolesFromModel($this, $roles);
     }
 
     /**

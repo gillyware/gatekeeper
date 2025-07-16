@@ -36,12 +36,12 @@ class ModelHasTeamRepositoryTest extends TestCase
     {
         $team = Team::factory()->create();
 
-        $this->assertFalse($this->repository->existsForTeam($team));
+        $this->assertFalse($this->repository->existsForEntity($team));
 
         $user = User::factory()->create();
         $this->repository->create($user, $team);
 
-        $this->assertTrue($this->repository->existsForTeam($team));
+        $this->assertTrue($this->repository->existsForEntity($team));
     }
 
     public function test_it_can_create_model_team_record()
@@ -74,7 +74,7 @@ class ModelHasTeamRepositoryTest extends TestCase
 
         $this->repository->create($user, $team);
 
-        $this->assertTrue($this->repository->deleteForModelAndTeam($user, $team));
+        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $team));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'model_type' => $user->getMorphClass(),

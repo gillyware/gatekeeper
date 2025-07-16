@@ -199,12 +199,12 @@ class GatekeeperServiceTest extends TestCase
         $perm2 = Permission::factory()->create(['name' => fake()->unique()->word()]);
 
         $this->assertTrue($this->service->assignPermissionToModel($user, $perm1->name));
-        $this->assertTrue($this->service->assignPermissionsToModel($user, [$perm2->name]));
+        $this->assertTrue($this->service->assignAllPermissionsToModel($user, [$perm2->name]));
         $this->assertTrue($this->service->modelHasPermission($user, $perm1->name));
         $this->assertTrue($this->service->modelHasAnyPermission($user, [$perm1->name, $perm2->name]));
         $this->assertTrue($this->service->modelHasAllPermissions($user, [$perm1->name, $perm2->name]));
         $this->assertTrue($this->service->revokePermissionFromModel($user, $perm1->name));
-        $this->assertTrue($this->service->revokePermissionsFromModel($user, [$perm2->name]));
+        $this->assertTrue($this->service->revokeAllPermissionsFromModel($user, [$perm2->name]));
     }
 
     public function test_model_role_methods_delegate()
@@ -216,12 +216,12 @@ class GatekeeperServiceTest extends TestCase
         $role2 = Role::factory()->create(['name' => fake()->unique()->word()]);
 
         $this->assertTrue($this->service->assignRoleToModel($user, $role1->name));
-        $this->assertTrue($this->service->assignRolesToModel($user, [$role2->name]));
+        $this->assertTrue($this->service->assignAllRolesToModel($user, [$role2->name]));
         $this->assertTrue($this->service->modelHasRole($user, $role1->name));
         $this->assertTrue($this->service->modelHasAnyRole($user, [$role1->name, $role2->name]));
         $this->assertTrue($this->service->modelHasAllRoles($user, [$role1->name, $role2->name]));
         $this->assertTrue($this->service->revokeRoleFromModel($user, $role1->name));
-        $this->assertTrue($this->service->revokeRolesFromModel($user, [$role2->name]));
+        $this->assertTrue($this->service->revokeAllRolesFromModel($user, [$role2->name]));
     }
 
     public function test_model_team_methods_delegate()
@@ -233,11 +233,11 @@ class GatekeeperServiceTest extends TestCase
         $team2 = Team::factory()->create(['name' => fake()->unique()->word()]);
 
         $this->assertTrue($this->service->addModelToTeam($user, $team1->name));
-        $this->assertTrue($this->service->addModelToTeams($user, [$team2->name]));
+        $this->assertTrue($this->service->addModelToAllTeams($user, [$team2->name]));
         $this->assertTrue($this->service->modelOnTeam($user, $team1->name));
         $this->assertTrue($this->service->modelOnAnyTeam($user, [$team1->name, $team2->name]));
         $this->assertTrue($this->service->modelOnAllTeams($user, [$team1->name, $team2->name]));
         $this->assertTrue($this->service->removeModelFromTeam($user, $team1->name));
-        $this->assertTrue($this->service->removeModelFromTeams($user, [$team2->name]));
+        $this->assertTrue($this->service->removeModelFromAllTeams($user, [$team2->name]));
     }
 }

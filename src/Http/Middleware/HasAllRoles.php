@@ -3,18 +3,16 @@
 namespace Gillyware\Gatekeeper\Http\Middleware;
 
 use Closure;
-use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-class HasAllRoles
+class HasAllRoles extends AbstractBaseEntityMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roleNames)
     {
         $user = $request->user();
 
-        if (! Gatekeeper::modelHasAllRoles($user, $roleNames)) {
-            abort(Response::HTTP_FORBIDDEN, 'Forbidden');
+        if (! $this->roleService->modelHasAll($user, $roleNames)) {
+            return $this->errorResponse('Access denied.');
         }
 
         return $next($request);

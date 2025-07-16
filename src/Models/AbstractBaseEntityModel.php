@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-abstract class AbstractGatekeeperEntity extends Model
+abstract class AbstractBaseEntityModel extends Model
 {
     use HasFactory;
     use SoftDeletes;

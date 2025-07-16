@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -11,7 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 
-class ModelHasRoleRepository
+/**
+ * @implements ModelHasEntityRepositoryInterface<Role, ModelHasRole>
+ */
+class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
@@ -20,16 +24,20 @@ class ModelHasRoleRepository
 
     /**
      * Check if a role is assigned to any model.
+     *
+     * @param  Role  $role
      */
-    public function existsForRole(Role $role): bool
+    public function existsForEntity($role): bool
     {
         return ModelHasRole::query()->where('role_id', $role->id)->exists();
     }
 
     /**
-     * Create a new ModelHasRole instance.
+     * Create a new model role assigment.
+     *
+     * @param  Role  $role
      */
-    public function create(Model $model, Role $role): ModelHasRole
+    public function create(Model $model, $role): ModelHasRole
     {
         $modelHasRole = ModelHasRole::create([
             'role_id' => $role->id,
@@ -55,9 +63,11 @@ class ModelHasRoleRepository
     }
 
     /**
-     * Delete all role assignments for a given role.
+     * Delete all assignments for a given role.
+     *
+     * @param  Role  $role
      */
-    public function deleteForRole(Role $role): bool
+    public function deleteForEntity($role): bool
     {
         ModelHasRole::query()->where('role_id', $role->id)
             ->with('model')
@@ -75,8 +85,10 @@ class ModelHasRoleRepository
 
     /**
      * Delete all role assignments for a given model and role.
+     *
+     * @param  Role  $role
      */
-    public function deleteForModelAndRole(Model $model, Role $role): bool
+    public function deleteForModelAndEntity(Model $model, $role): bool
     {
         ModelHasRole::forModel($model)->where('role_id', $role->id)->delete();
 
@@ -88,7 +100,7 @@ class ModelHasRoleRepository
     /**
      * Search model role assignments by role name.
      */
-    public function searchAssignmentsByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
         $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
@@ -112,7 +124,7 @@ class ModelHasRoleRepository
     /**
      * Search unassigned roles by role name for model.
      */
-    public function searchUnassignedByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 

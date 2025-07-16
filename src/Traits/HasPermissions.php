@@ -22,9 +22,9 @@ trait HasPermissions
     /**
      * Assign multiple permissions to the model.
      */
-    public function assignPermissions(array|Arrayable $permissions): bool
+    public function assignAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::assignPermissionsToModel($this, $permissions);
+        return Gatekeeper::assignAllPermissionsToModel($this, $permissions);
     }
 
     /**
@@ -38,9 +38,9 @@ trait HasPermissions
     /**
      * Revoke multiple permissions from the model.
      */
-    public function revokePermissions(array|Arrayable $permissions): bool
+    public function revokeAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::revokePermissionsFromModel($this, $permissions);
+        return Gatekeeper::revokeAllPermissionsFromModel($this, $permissions);
     }
 
     /**

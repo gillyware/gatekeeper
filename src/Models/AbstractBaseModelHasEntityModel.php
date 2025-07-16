@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-abstract class AbstractModelHasGatekeeperEntity extends Model
+abstract class AbstractBaseModelHasEntityModel extends Model
 {
     use SoftDeletes;
 
@@ -40,7 +40,7 @@ abstract class AbstractModelHasGatekeeperEntity extends Model
     ];
 
     /**
-     * Get the associated model (polymorphic relationship).
+     * Get the associated model.
      */
     public function model(): MorphTo
     {
@@ -56,9 +56,4 @@ abstract class AbstractModelHasGatekeeperEntity extends Model
             ->where('model_type', $model->getMorphClass())
             ->where('model_id', $model->getKey());
     }
-
-    /**
-     * Get the primary key for the associated Gatekeeper entity.
-     */
-    abstract public function getEntityIdAttribute(): int;
 }

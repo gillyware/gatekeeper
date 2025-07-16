@@ -6,11 +6,13 @@ use Gillyware\Gatekeeper\Database\Factories\UserFactory;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Gillyware\Gatekeeper\Traits\HasRoles;
 use Gillyware\Gatekeeper\Traits\HasTeams;
+use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Model;
 
 class User extends Model
 {
+    use Authenticatable;
     use HasFactory;
     use HasPermissions;
     use HasRoles;

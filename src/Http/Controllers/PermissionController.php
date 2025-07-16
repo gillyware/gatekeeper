@@ -3,17 +3,19 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\PermissionPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\StorePermissionRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\UpdatePermissionRequest;
 use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
-class PermissionController extends Controller
+class PermissionController extends AbstractBaseController
 {
+    public function __construct(private readonly PermissionService $permissionService) {}
+
     /**
      * Get a page of permissions.
      */
@@ -25,25 +27,13 @@ class PermissionController extends Controller
         $nameOrder = $request->validated('name_order');
         $isActiveOrder = $request->validated('is_active_order');
 
-        if (! Permission::tableExists()) {
+        if (! $this->permissionService->tableExists()) {
             return $this->errorResponse('The permissions table does not exist in the database.');
         }
 
-        $query = Permission::query()->whereLike('name', "%{$searchTerm}%");
-
-        if ($importantAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $isActiveOrder)
-                ->orderBy('name', $nameOrder);
-        } else {
-            $query = $query
-                ->orderBy('name', $nameOrder)
-                ->orderBy('is_active', $isActiveOrder);
-        }
-
-        $paginator = $query->paginate(10, ['*'], 'page', $pageNumber);
-
-        return Response::json($paginator);
+        return Response::json(
+            $this->permissionService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
+        );
     }
 
     /**
@@ -60,7 +50,8 @@ class PermissionController extends Controller
     public function store(StorePermissionRequest $request): JsonResponse
     {
         try {
-            $permission = Gatekeeper::createPermission($request->validated('name'));
+            $permissionName = $request->validated('name');
+            $permission = $this->permissionService->create($permissionName);
 
             return Response::json($permission, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -74,7 +65,8 @@ class PermissionController extends Controller
     public function update(UpdatePermissionRequest $request, Permission $permission): JsonResponse
     {
         try {
-            $permission = Gatekeeper::updatePermission($permission, $request->validated('name'));
+            $newPermissionName = $request->validated('name');
+            $permission = $this->permissionService->update($permission, $newPermissionName);
 
             return Response::json($permission);
         } catch (GatekeeperException $e) {
@@ -88,7 +80,7 @@ class PermissionController extends Controller
     public function deactivate(Permission $permission): JsonResponse
     {
         try {
-            $permission = Gatekeeper::deactivatePermission($permission);
+            $permission = $this->permissionService->deactivate($permission);
 
             return Response::json($permission);
         } catch (GatekeeperException $e) {
@@ -102,7 +94,7 @@ class PermissionController extends Controller
     public function reactivate(Permission $permission): JsonResponse
     {
         try {
-            $permission = Gatekeeper::reactivatePermission($permission);
+            $permission = $this->permissionService->reactivate($permission);
 
             return Response::json($permission);
         } catch (GatekeeperException $e) {
@@ -116,9 +108,9 @@ class PermissionController extends Controller
     public function delete(Permission $permission): JsonResponse
     {
         try {
-            Gatekeeper::deletePermission($permission);
+            $this->permissionService->delete($permission);
 
-            return Response::json([], HttpFoundationResponse::HTTP_NO_CONTENT);
+            return Response::json(status: HttpFoundationResponse::HTTP_NO_CONTENT);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }

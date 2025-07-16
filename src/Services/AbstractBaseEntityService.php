@@ -3,7 +3,8 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use BackedEnum;
-use Gillyware\Gatekeeper\Models\AbstractGatekeeperEntity;
+use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
+use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -13,7 +14,12 @@ use UnitEnum;
 
 use function Illuminate\Support\enum_value;
 
-abstract class AbstractGatekeeperEntityService
+/**
+ * @template TModel of AbstractBaseEntityModel
+ *
+ * @implements EntityServiceInterface<TModel>
+ */
+abstract class AbstractBaseEntityService implements EntityServiceInterface
 {
     use EnforcesForGatekeeper;
 
@@ -25,17 +31,17 @@ abstract class AbstractGatekeeperEntityService
         $entityArray = $entities instanceof Arrayable ? $entities->toArray() : $entities;
 
         return collect($entityArray)->map(
-            fn (AbstractGatekeeperEntity|array|string|UnitEnum $entity) => $this->resolveEntityName($entity)
+            fn (AbstractBaseEntityModel|array|string|UnitEnum $entity) => $this->resolveEntityName($entity)
         );
     }
 
     /**
      * Resolve the Gatekeeper entity name from an entity, array, or string.
      */
-    protected function resolveEntityName(AbstractGatekeeperEntity|array|string|UnitEnum $entity): string
+    protected function resolveEntityName(AbstractBaseEntityModel|array|string|UnitEnum $entity): string
     {
-        // If the entity is an instance of AbstractGatekeeperEntity, return its name.
-        if ($entity instanceof AbstractGatekeeperEntity) {
+        // If the entity is an instance of AbstractBaseEntityModel, return its name.
+        if ($entity instanceof AbstractBaseEntityModel) {
             return $entity->name;
         }
 

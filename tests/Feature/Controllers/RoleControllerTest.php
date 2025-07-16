@@ -34,7 +34,7 @@ class RoleControllerTest extends TestCase
     {
         Role::factory()->count(15)->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.roles.index', [
             'page' => 1,
@@ -52,7 +52,7 @@ class RoleControllerTest extends TestCase
     {
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.roles.show', $role->id))
             ->assertStatus(Response::HTTP_OK)
@@ -61,7 +61,7 @@ class RoleControllerTest extends TestCase
 
     public function test_store_creates_role()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $response = $this->postJson(route('gatekeeper.api.roles.store'), ['name' => 'example.role']);
 
@@ -71,7 +71,7 @@ class RoleControllerTest extends TestCase
 
     public function test_store_fails_with_duplicate()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         Role::factory()->withName('duplicate.role')->create();
         $this->cacheRepository->clear();
 
@@ -81,7 +81,7 @@ class RoleControllerTest extends TestCase
 
     public function test_update_role()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $role = Role::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
@@ -92,7 +92,7 @@ class RoleControllerTest extends TestCase
 
     public function test_deactivate_role()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
 
@@ -103,7 +103,7 @@ class RoleControllerTest extends TestCase
 
     public function test_reactivate_role()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $role = Role::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
@@ -114,7 +114,7 @@ class RoleControllerTest extends TestCase
 
     public function test_delete_role()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
 
@@ -129,10 +129,10 @@ class RoleControllerTest extends TestCase
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->postJson(route('gatekeeper.api.roles.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->putJson(route('gatekeeper.api.roles.update', ['role' => $role]), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.roles.deactivate', ['role' => $role]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.roles.reactivate', ['role' => $role]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->deleteJson(route('gatekeeper.api.roles.delete', ['role' => $role]))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->postJson(route('gatekeeper.api.roles.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->putJson(route('gatekeeper.api.roles.update', ['role' => $role]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.roles.deactivate', ['role' => $role]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.roles.reactivate', ['role' => $role]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->deleteJson(route('gatekeeper.api.roles.delete', ['role' => $role]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

@@ -31,7 +31,7 @@ class PermissionControllerTest extends TestCase
     {
         Permission::factory()->count(15)->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.permissions.index', [
             'page' => 1,
@@ -49,7 +49,7 @@ class PermissionControllerTest extends TestCase
     {
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.permissions.show', $permission->id))
             ->assertStatus(Response::HTTP_OK)
@@ -58,7 +58,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_store_creates_permission()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $response = $this->postJson(route('gatekeeper.api.permissions.store'), ['name' => 'example.permission']);
 
@@ -68,7 +68,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_store_fails_with_duplicate()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         Permission::factory()->withName('duplicate.permission')->create();
         $this->cacheRepository->clear();
 
@@ -78,7 +78,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_update_permission()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $permission = Permission::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
@@ -89,7 +89,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_deactivate_permission()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
 
@@ -100,7 +100,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_reactivate_permission()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $permission = Permission::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
@@ -111,7 +111,7 @@ class PermissionControllerTest extends TestCase
 
     public function test_delete_permission()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
 
@@ -126,10 +126,10 @@ class PermissionControllerTest extends TestCase
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->postJson(route('gatekeeper.api.permissions.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->putJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.permissions.deactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.permissions.reactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->deleteJson(route('gatekeeper.api.permissions.delete', ['permission' => $permission]))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->postJson(route('gatekeeper.api.permissions.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->putJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.permissions.deactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.permissions.reactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->deleteJson(route('gatekeeper.api.permissions.delete', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

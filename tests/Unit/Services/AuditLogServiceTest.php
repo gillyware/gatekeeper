@@ -17,7 +17,7 @@ class AuditLogServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new AuditLogService;
+        $this->service = app(AuditLogService::class);
     }
 
     public function test_create_message()

@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper;
 
 use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
@@ -14,15 +15,16 @@ use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
+use Gillyware\Gatekeeper\Services\ModelHasPermissionService;
+use Gillyware\Gatekeeper\Services\ModelHasRoleService;
+use Gillyware\Gatekeeper\Services\ModelHasTeamService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
-use Gillyware\Gatekeeper\Services\ModelPermissionService;
-use Gillyware\Gatekeeper\Services\ModelRoleService;
 use Gillyware\Gatekeeper\Services\ModelService;
-use Gillyware\Gatekeeper\Services\ModelTeamService;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -70,9 +72,9 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->app->singleton(PermissionService::class);
         $this->app->singleton(RoleService::class);
         $this->app->singleton(TeamService::class);
-        $this->app->singleton(ModelPermissionService::class);
-        $this->app->singleton(ModelRoleService::class);
-        $this->app->singleton(ModelTeamService::class);
+        $this->app->singleton(ModelHasPermissionService::class);
+        $this->app->singleton(ModelHasRoleService::class);
+        $this->app->singleton(ModelHasTeamService::class);
         $this->app->singleton(AuditLogService::class);
 
         $this->app->singleton('gatekeeper', fn ($app) => new GatekeeperService(
@@ -155,73 +157,100 @@ class GatekeeperServiceProvider extends ServiceProvider
         /**
          * Permissions.
          */
-        Blade::if('hasPermission', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $permissionName = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasPermission', function ($model, $permission = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasPermission($model, $permission);
+            }
 
-            return $user && method_exists($user, 'hasPermission') && $user->hasPermission($permissionName);
+            [$model, $permission] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasPermission($model, $permission);
         });
 
-        Blade::if('hasAnyPermission', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $permissionNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasAnyPermission', function ($model, $permissions = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasAnyPermission($model, $permissions);
+            }
 
-            return $user && method_exists($user, 'hasAnyPermission') && $user->hasAnyPermission($permissionNames);
+            [$model, $permissions] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasAnyPermission($model, $permissions);
         });
 
-        Blade::if('hasAllPermissions', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $permissionNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasAllPermissions', function ($model, $permissions = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasAllPermissions($model, $permissions);
+            }
 
-            return $user && method_exists($user, 'hasAllPermissions') && $user->hasAllPermissions($permissionNames);
+            [$model, $permissions] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasAllPermissions($model, $permissions);
         });
 
         /**
          * Roles.
          */
-        Blade::if('hasRole', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $roleName = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasRole', function ($model, $role = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasRole($model, $role);
+            }
 
-            return $user && method_exists($user, 'hasRole') && $user->hasRole($roleName);
+            [$model, $role] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasRole($model, $role);
         });
 
-        Blade::if('hasAnyRole', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $roleNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasAnyRole', function ($model, $roles = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasAnyRole($model, $roles);
+            }
 
-            return $user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole($roleNames);
+            [$model, $roles] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasAnyRole($model, $roles);
         });
 
-        Blade::if('hasAllRoles', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $roleNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('hasAllRoles', function ($model, $roles = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelHasAllRoles($model, $roles);
+            }
 
-            return $user && method_exists($user, 'hasAllRoles') && $user->hasAllRoles($roleNames);
+            [$model, $roles] = [Auth::user(), $model];
+
+            return Gatekeeper::modelHasAllRoles($model, $roles);
         });
 
         /**
          * Teams.
          */
-        Blade::if('onTeam', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $teamName = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('onTeam', function ($model, $team = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelOnTeam($model, $team);
+            }
 
-            return $user && method_exists($user, 'onTeam') && $user->onTeam($teamName);
+            [$model, $team] = [Auth::user(), $model];
+
+            return Gatekeeper::modelOnTeam($model, $team);
         });
 
-        Blade::if('onAnyTeam', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $teamNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('onAnyTeam', function ($model, $teams = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelOnAnyTeam($model, $teams);
+            }
 
-            return $user && method_exists($user, 'onAnyTeam') && $user->onAnyTeam($teamNames);
+            [$model, $teams] = [Auth::user(), $model];
+
+            return Gatekeeper::modelOnAnyTeam($model, $teams);
         });
 
-        Blade::if('onAllTeams', function (...$args) {
-            $user = count($args) === 2 ? $args[0] : auth()->user();
-            $teamNames = count($args) === 2 ? $args[1] : $args[0];
+        Blade::if('onAllTeams', function ($model, $teams = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::modelOnAllTeams($model, $teams);
+            }
 
-            return $user && method_exists($user, 'onAllTeams') && $user->onAllTeams($teamNames);
+            [$model, $teams] = [Auth::user(), $model];
+
+            return Gatekeeper::modelOnAllTeams($model, $teams);
         });
     }
 

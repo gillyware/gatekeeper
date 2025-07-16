@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -11,7 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 
-class ModelHasPermissionRepository
+/**
+ * @implements ModelHasEntityRepositoryInterface<Permission, ModelHasPermission>
+ */
+class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
@@ -20,16 +24,20 @@ class ModelHasPermissionRepository
 
     /**
      * Check if a permission is assigned to any model.
+     *
+     * @param  Permission  $permission
      */
-    public function existsForPermission(Permission $permission): bool
+    public function existsForEntity($permission): bool
     {
         return ModelHasPermission::query()->where('permission_id', $permission->id)->exists();
     }
 
     /**
-     * Create a new ModelHasPermission instance.
+     * Create a new model permission assigment.
+     *
+     * @param  Permission  $permission
      */
-    public function create(Model $model, Permission $permission): ModelHasPermission
+    public function create(Model $model, $permission): ModelHasPermission
     {
         $modelHasPermission = ModelHasPermission::create([
             'permission_id' => $permission->id,
@@ -55,9 +63,11 @@ class ModelHasPermissionRepository
     }
 
     /**
-     * Delete all permission assignments for a given permission.
+     * Delete all assignments for a given permission.
+     *
+     * @param  Permission  $permission
      */
-    public function deleteForPermission(Permission $permission): bool
+    public function deleteForEntity($permission): bool
     {
         ModelHasPermission::query()->where('permission_id', $permission->id)
             ->with('model')
@@ -75,8 +85,10 @@ class ModelHasPermissionRepository
 
     /**
      * Delete all permission assignments for a given model and permission.
+     *
+     * @param  Permission  $permission
      */
-    public function deleteForModelAndPermission(Model $model, Permission $permission): bool
+    public function deleteForModelAndEntity(Model $model, $permission): bool
     {
         ModelHasPermission::forModel($model)->where('permission_id', $permission->id)->delete();
 
@@ -88,7 +100,7 @@ class ModelHasPermissionRepository
     /**
      * Search model permission assignments by permission name.
      */
-    public function searchAssignmentsByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
         $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
@@ -112,7 +124,7 @@ class ModelHasPermissionRepository
     /**
      * Search unassigned permissions by permission name for model.
      */
-    public function searchUnassignedByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 

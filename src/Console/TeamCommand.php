@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Team;
@@ -30,7 +30,7 @@ class TeamCommand extends AbstractBaseEntityCommand
     ) {
         parent::__construct($modelService, $modelMetadataService);
 
-        $this->entity = GatekeeperEntity::TEAM;
+        $this->entity = GatekeeperEntity::Team;
         $this->entityTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
     }
 
@@ -67,7 +67,7 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity} you want to create?");
+        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
@@ -103,7 +103,7 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         $team = $this->teamRepository->findOrFailByName($teamName);
 
-        $newTeamName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity} name?");
+        $newTeamName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
@@ -202,7 +202,7 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::addModelToTeams($actee, $teams);
+        Gatekeeper::addModelToAllTeams($actee, $teams);
 
         if ($teams->count() === 1) {
             info("Model added to team '{$teamNames->first()}' successfully.");
@@ -229,7 +229,7 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::removeModelFromTeams($actee, $teams);
+        Gatekeeper::removeModelFromAllTeams($actee, $teams);
 
         if ($teams->count() === 1) {
             info("Model removed from team '{$teamNames->first()}' successfully.");

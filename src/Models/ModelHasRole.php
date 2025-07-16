@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Config;
  *
  * @method static Builder<ModelHasRole> forModel(Model $model)
  */
-class ModelHasRole extends AbstractModelHasGatekeeperEntity
+class ModelHasRole extends AbstractBaseModelHasEntityModel
 {
     /**
      * Get the role associated with the model.
@@ -29,13 +29,5 @@ class ModelHasRole extends AbstractModelHasGatekeeperEntity
     public function getTable(): string
     {
         return Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getEntityIdAttribute(): int
-    {
-        return $this->role_id;
     }
 }

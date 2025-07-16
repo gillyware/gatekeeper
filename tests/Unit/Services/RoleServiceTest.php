@@ -419,7 +419,7 @@ class RoleServiceTest extends TestCase
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
 
-        $this->assertTrue($this->service->assignMultipleToModel($user, $roles));
+        $this->assertTrue($this->service->assignAllToModel($user, $roles));
 
         $this->assertTrue($user->hasAllRoles($roles));
     }
@@ -431,7 +431,7 @@ class RoleServiceTest extends TestCase
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $roles);
+        $this->service->assignAllToModel($user, $roles);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(3, $auditLogs);
@@ -490,9 +490,9 @@ class RoleServiceTest extends TestCase
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $roles);
+        $this->service->assignAllToModel($user, $roles);
 
-        $this->assertTrue($this->service->revokeMultipleFromModel($user, $roles));
+        $this->assertTrue($this->service->revokeAllFromModel($user, $roles));
 
         $this->assertFalse($user->hasAnyRole($roles));
     }
@@ -504,9 +504,9 @@ class RoleServiceTest extends TestCase
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $roles);
+        $this->service->assignAllToModel($user, $roles);
 
-        $this->service->revokeMultipleFromModel($user, $roles);
+        $this->service->revokeAllFromModel($user, $roles);
 
         $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
         $this->assertCount(3, $auditLogs);
@@ -555,7 +555,7 @@ class RoleServiceTest extends TestCase
         $roles = Role::factory()->count(2)->create();
         $names = $roles->pluck('name');
 
-        $this->service->assignMultipleToModel($user, $names);
+        $this->service->assignAllToModel($user, $names);
 
         $this->assertTrue($this->service->modelHasAll($user, $names));
 
@@ -644,7 +644,7 @@ class RoleServiceTest extends TestCase
         $directRoles = Role::factory()->count(2)->create();
         $unrelatedRole = Role::factory()->create();
 
-        $this->service->assignMultipleToModel($user, $directRoles);
+        $this->service->assignAllToModel($user, $directRoles);
 
         $direct = $this->service->getDirectForModel($user);
 
@@ -669,7 +669,7 @@ class RoleServiceTest extends TestCase
 
         $this->service->assignToModel($user, $directRole);
 
-        $effective = $this->service->getEffectiveForModel($user);
+        $effective = $this->service->getForModel($user);
 
         $this->assertCount(2, $effective);
         $this->assertTrue($effective->contains('id', $directRole->id));

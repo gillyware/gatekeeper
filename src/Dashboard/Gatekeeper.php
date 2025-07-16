@@ -4,8 +4,10 @@ namespace Gillyware\Gatekeeper\Dashboard;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Facades\Gatekeeper as GatekeeperFacade;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Js;
@@ -51,7 +53,7 @@ class Gatekeeper
      */
     private static function scriptVariables(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $modelMetadataService = app(ModelMetadataService::class);
 
         return [
@@ -66,8 +68,8 @@ class Gatekeeper
                 'name' => (string) $user?->name,
                 'email' => (string) $user?->email,
                 'permissions' => [
-                    'can_view' => (bool) $user?->hasPermission(GatekeeperPermissionName::View),
-                    'can_manage' => (bool) $user?->hasPermission(GatekeeperPermissionName::Manage),
+                    'can_view' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermissionName::View),
+                    'can_manage' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermissionName::Manage),
                 ],
             ],
         ];

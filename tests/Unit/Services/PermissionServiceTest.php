@@ -381,7 +381,7 @@ class PermissionServiceTest extends TestCase
         $permissions = Permission::factory()->count(3)->create();
         $names = $permissions->pluck('name')->toArray();
 
-        $this->assertTrue($this->service->assignMultipleToModel($user, $names));
+        $this->assertTrue($this->service->assignAllToModel($user, $names));
 
         $permissions->each(function (Permission $permission) use ($user) {
             $this->assertTrue($user->hasPermission($permission->name));
@@ -393,7 +393,7 @@ class PermissionServiceTest extends TestCase
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
 
-        $this->assertTrue($this->service->assignMultipleToModel($user, $permissions));
+        $this->assertTrue($this->service->assignAllToModel($user, $permissions));
         $this->assertTrue($this->service->modelHasAll($user, $permissions));
     }
 
@@ -404,7 +404,7 @@ class PermissionServiceTest extends TestCase
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $permissions);
+        $this->service->assignAllToModel($user, $permissions);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(3, $auditLogs);
@@ -466,9 +466,9 @@ class PermissionServiceTest extends TestCase
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $permissions);
+        $this->service->assignAllToModel($user, $permissions);
 
-        $this->service->revokeMultipleFromModel($user, $permissions);
+        $this->service->revokeAllFromModel($user, $permissions);
 
         $this->assertFalse($user->hasAnyPermission($permissions));
     }
@@ -480,9 +480,9 @@ class PermissionServiceTest extends TestCase
         $user = User::factory()->create();
         $permissions = Permission::factory()->count(3)->create();
 
-        $this->service->assignMultipleToModel($user, $permissions);
+        $this->service->assignAllToModel($user, $permissions);
 
-        $this->service->revokeMultipleFromModel($user, $permissions);
+        $this->service->revokeAllFromModel($user, $permissions);
 
         $auditLogs = AuditLog::query()->where('action', Action::PERMISSION_REVOKE)->get();
         $this->assertCount(3, $auditLogs);
@@ -573,7 +573,7 @@ class PermissionServiceTest extends TestCase
         $permissions = Permission::factory()->count(2)->create();
         $names = $permissions->pluck('name');
 
-        $this->service->assignMultipleToModel($user, $names);
+        $this->service->assignAllToModel($user, $names);
 
         $this->assertTrue($this->service->modelHasAll($user, $names));
 
@@ -628,7 +628,7 @@ class PermissionServiceTest extends TestCase
         $directPermissions = Permission::factory()->count(2)->create();
         $unrelatedPermission = Permission::factory()->create();
 
-        $this->service->assignMultipleToModel($user, $directPermissions);
+        $this->service->assignAllToModel($user, $directPermissions);
 
         $direct = $this->service->getDirectForModel($user);
 
@@ -658,7 +658,7 @@ class PermissionServiceTest extends TestCase
 
         $this->service->assignToModel($user, $directPermission);
 
-        $effective = $this->service->getEffectiveForModel($user);
+        $effective = $this->service->getForModel($user);
 
         $this->assertCount(3, $effective);
         $this->assertTrue($effective->contains('id', $directPermission->id));

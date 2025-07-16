@@ -3,16 +3,30 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 
-class PermissionRepository
+/**
+ * @implements EntityRepositoryInterface<Permission>
+ */
+class PermissionRepository implements EntityRepositoryInterface
 {
     public function __construct(private readonly CacheService $cacheService) {}
+
+    /**
+     * Check if the permissions table exists.
+     */
+    public function tableExists(): bool
+    {
+        return Schema::hasTable(Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS));
+    }
 
     /**
      * Check if a permission with the given name exists.
@@ -53,7 +67,7 @@ class PermissionRepository
     }
 
     /**
-     * Create a new Permission instance.
+     * Create a new permission.
      */
     public function create(string $permissionName): Permission
     {
@@ -68,10 +82,12 @@ class PermissionRepository
 
     /**
      * Update an existing permission.
+     *
+     * @param  Permission  $permission
      */
-    public function update(Permission $permission, string $permissionName): Permission
+    public function update($permission, string $newPermissionName): Permission
     {
-        if ($permission->update(['name' => $permissionName])) {
+        if ($permission->update(['name' => $newPermissionName])) {
             $this->cacheService->clear();
         }
 
@@ -80,8 +96,10 @@ class PermissionRepository
 
     /**
      * Deactivate a permission.
+     *
+     * @param  Permission  $permission
      */
-    public function deactivate(Permission $permission): Permission
+    public function deactivate($permission): Permission
     {
         if ($permission->update(['is_active' => false])) {
             $this->cacheService->clear();
@@ -92,8 +110,10 @@ class PermissionRepository
 
     /**
      * Reactivate a permission.
+     *
+     * @param  Permission  $permission
      */
-    public function reactivate(Permission $permission): Permission
+    public function reactivate($permission): Permission
     {
         if ($permission->update(['is_active' => true])) {
             $this->cacheService->clear();
@@ -104,8 +124,10 @@ class PermissionRepository
 
     /**
      * Delete a permission.
+     *
+     * @param  Permission  $permission
      */
-    public function delete(Permission $permission): bool
+    public function delete($permission): bool
     {
         $deleted = $permission->delete();
 
@@ -118,6 +140,8 @@ class PermissionRepository
 
     /**
      * Get all permissions.
+     *
+     * @return Collection<Permission>
      */
     public function all(): Collection
     {
@@ -136,6 +160,8 @@ class PermissionRepository
 
     /**
      * Get all active permissions.
+     *
+     * @return Collection<Permission>
      */
     public function active(): Collection
     {
@@ -144,6 +170,8 @@ class PermissionRepository
 
     /**
      * Get all permissions where the name is in the provided array or collection.
+     *
+     * @return Collection<Permission>
      */
     public function whereNameIn(array|Collection $permissionNames): Collection
     {
@@ -152,6 +180,8 @@ class PermissionRepository
 
     /**
      * Get all permission names for a specific model.
+     *
+     * @return Collection<string>
      */
     public function namesForModel(Model $model): Collection
     {
@@ -177,6 +207,8 @@ class PermissionRepository
 
     /**
      * Get all permissions for a specific model.
+     *
+     * @return Collection<Permission>
      */
     public function forModel(Model $model): Collection
     {
@@ -187,10 +219,32 @@ class PermissionRepository
 
     /**
      * Get all active permissions for a specific model.
+     *
+     * @return Collection<Permission>
      */
     public function activeForModel(Model $model): Collection
     {
         return $this->forModel($model)
             ->filter(fn (Permission $permission) => $permission->is_active);
+    }
+
+    /**
+     * Get a page of permissions.
+     */
+    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    {
+        $query = Permission::query()->whereLike('name', "%{$searchTerm}%");
+
+        if ($importantAttribute === 'is_active') {
+            $query = $query
+                ->orderBy('is_active', $isActiveOrder)
+                ->orderBy('name', $nameOrder);
+        } else {
+            $query = $query
+                ->orderBy('name', $nameOrder)
+                ->orderBy('is_active', $isActiveOrder);
+        }
+
+        return $query->paginate(10, ['*'], 'page', $pageNumber);
     }
 }

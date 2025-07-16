@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperEntity;
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
+use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
@@ -47,7 +47,7 @@ class ModelControllerTest extends TestCase
 
     public function test_lookup_model_with_access()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.models.show', [
             'modelLabel' => 'User',
@@ -59,7 +59,7 @@ class ModelControllerTest extends TestCase
 
     public function test_assign_and_revoke_permission_to_model()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $target = User::factory()->create();
         $permission = Permission::factory()->create();
@@ -68,7 +68,7 @@ class ModelControllerTest extends TestCase
         $this->postJson(route('gatekeeper.api.models.assign', [
             'modelLabel' => 'User',
             'modelPk' => (string) $target->getKey(),
-            'entity' => GatekeeperEntity::PERMISSION,
+            'entity' => GatekeeperEntity::Permission->value,
         ]), [
             'entity_name' => $permission->name,
         ])->assertStatus(Response::HTTP_OK)
@@ -77,7 +77,7 @@ class ModelControllerTest extends TestCase
         $this->deleteJson(route('gatekeeper.api.models.revoke', [
             'modelLabel' => 'User',
             'modelPk' => (string) $target->getKey(),
-            'entity' => GatekeeperEntity::PERMISSION,
+            'entity' => GatekeeperEntity::Permission->value,
         ]), [
             'entity_name' => $permission->name,
         ])->assertStatus(Response::HTTP_OK)
@@ -86,7 +86,7 @@ class ModelControllerTest extends TestCase
 
     public function test_model_lookup_fails_for_missing_model()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         [$pk, $className] = [999999, User::class];
 
@@ -102,6 +102,6 @@ class ModelControllerTest extends TestCase
         $this->getJson(route('gatekeeper.api.models.show', [
             'modelLabel' => 'User',
             'modelPk' => fake()->word(),
-        ]))->assertStatus(Response::HTTP_FORBIDDEN);
+        ]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

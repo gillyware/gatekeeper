@@ -123,9 +123,9 @@ class GatekeeperService
     /**
      * Assign multiple permissions to a model.
      */
-    public function assignPermissionsToModel(Model $model, array|Arrayable $permissions): bool
+    public function assignAllPermissionsToModel(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->assignMultipleToModel($model, $permissions);
+        return $this->permissionService->assignAllToModel($model, $permissions);
     }
 
     /**
@@ -139,9 +139,9 @@ class GatekeeperService
     /**
      * Revoke multiple permissions from a model.
      */
-    public function revokePermissionsFromModel(Model $model, array|Arrayable $permissions): bool
+    public function revokeAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->permissionService->revokeMultipleFromModel($model, $permissions);
+        return $this->permissionService->revokeAllFromModel($model, $permissions);
     }
 
     /**
@@ -185,19 +185,19 @@ class GatekeeperService
     }
 
     /**
+     * Get effective permissions for a model.
+     */
+    public function getEffectivePermissionsForModel(Model $model): Collection
+    {
+        return $this->permissionService->getForModel($model);
+    }
+
+    /**
      * Get all permissions directly assigned to a model.
      */
     public function getDirectPermissionsForModel(Model $model): Collection
     {
         return $this->permissionService->getDirectForModel($model);
-    }
-
-    /**
-     * Get effective permissions for a model.
-     */
-    public function getEffectivePermissionsForModel(Model $model): Collection
-    {
-        return $this->permissionService->getEffectiveForModel($model);
     }
 
     /**
@@ -259,9 +259,9 @@ class GatekeeperService
     /**
      * Assign multiple roles to a model.
      */
-    public function assignRolesToModel(Model $model, array|Arrayable $roles): bool
+    public function assignAllRolesToModel(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->assignMultipleToModel($model, $roles);
+        return $this->roleService->assignAllToModel($model, $roles);
     }
 
     /**
@@ -275,9 +275,9 @@ class GatekeeperService
     /**
      * Revoke multiple roles from a model.
      */
-    public function revokeRolesFromModel(Model $model, array|Arrayable $roles): bool
+    public function revokeAllRolesFromModel(Model $model, array|Arrayable $roles): bool
     {
-        return $this->roleService->revokeMultipleFromModel($model, $roles);
+        return $this->roleService->revokeAllFromModel($model, $roles);
     }
 
     /**
@@ -321,19 +321,19 @@ class GatekeeperService
     }
 
     /**
+     * Get effective roles for a model.
+     */
+    public function getEffectiveRolesForModel(Model $model): Collection
+    {
+        return $this->roleService->getForModel($model);
+    }
+
+    /**
      * Get all roles directly assigned to a model.
      */
     public function getDirectRolesForModel(Model $model): Collection
     {
         return $this->roleService->getDirectForModel($model);
-    }
-
-    /**
-     * Get effective roles for a model.
-     */
-    public function getEffectiveRolesForModel(Model $model): Collection
-    {
-        return $this->roleService->getEffectiveForModel($model);
     }
 
     /**
@@ -389,15 +389,15 @@ class GatekeeperService
      */
     public function addModelToTeam(Model $model, Team|string|UnitEnum $team): bool
     {
-        return $this->teamService->addModelTo($model, $team);
+        return $this->teamService->assignToModel($model, $team);
     }
 
     /**
      * Add a model to multiple teams.
      */
-    public function addModelToTeams(Model $model, array|Arrayable $teams): bool
+    public function addModelToAllTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->addModelToAll($model, $teams);
+        return $this->teamService->assignAllToModel($model, $teams);
     }
 
     /**
@@ -405,15 +405,15 @@ class GatekeeperService
      */
     public function removeModelFromTeam(Model $model, Team|string|UnitEnum $team): bool
     {
-        return $this->teamService->removeModelFrom($model, $team);
+        return $this->teamService->revokeFromModel($model, $team);
     }
 
     /**
      * Remove a model from multiple teams.
      */
-    public function removeModelFromTeams(Model $model, array|Arrayable $teams): bool
+    public function removeModelFromAllTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->removeModelFromAll($model, $teams);
+        return $this->teamService->revokeAllFromModel($model, $teams);
     }
 
     /**
@@ -421,7 +421,7 @@ class GatekeeperService
      */
     public function modelOnTeam(Model $model, Team|string|UnitEnum $team): bool
     {
-        return $this->teamService->modelOn($model, $team);
+        return $this->teamService->modelHas($model, $team);
     }
 
     /**
@@ -429,7 +429,7 @@ class GatekeeperService
      */
     public function modelOnAnyTeam(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->modelOnAny($model, $teams);
+        return $this->teamService->modelHasAny($model, $teams);
     }
 
     /**
@@ -437,7 +437,7 @@ class GatekeeperService
      */
     public function modelOnAllTeams(Model $model, array|Arrayable $teams): bool
     {
-        return $this->teamService->modelOnAll($model, $teams);
+        return $this->teamService->modelHasAll($model, $teams);
     }
 
     /**

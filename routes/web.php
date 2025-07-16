@@ -3,7 +3,7 @@
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
 use Gillyware\Gatekeeper\Http\Controllers\AuditLogController;
-use Gillyware\Gatekeeper\Http\Controllers\HomeController;
+use Gillyware\Gatekeeper\Http\Controllers\LandingController;
 use Gillyware\Gatekeeper\Http\Controllers\ModelController;
 use Gillyware\Gatekeeper\Http\Controllers\PermissionController;
 use Gillyware\Gatekeeper\Http\Controllers\RoleController;
@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
-Route::get(Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH), HomeController::class)->name('home');
+Route::get(Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH), LandingController::class)->name('landing');
 
 Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 

@@ -2,11 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Contracts\CacheServiceInterface;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class CacheService
+class CacheService implements CacheServiceInterface
 {
     public function __construct(private readonly CacheRepository $cacheRepository) {}
 

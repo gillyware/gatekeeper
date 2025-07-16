@@ -34,7 +34,7 @@ class TeamControllerTest extends TestCase
     {
         Team::factory()->count(15)->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.teams.index', [
             'page' => 1,
@@ -52,7 +52,7 @@ class TeamControllerTest extends TestCase
     {
         $team = Team::factory()->create();
         $this->cacheRepository->clear();
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $this->getJson(route('gatekeeper.api.teams.show', $team->id))
             ->assertStatus(Response::HTTP_OK)
@@ -61,7 +61,7 @@ class TeamControllerTest extends TestCase
 
     public function test_store_creates_team()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
 
         $response = $this->postJson(route('gatekeeper.api.teams.store'), ['name' => 'example.team']);
 
@@ -71,7 +71,7 @@ class TeamControllerTest extends TestCase
 
     public function test_store_fails_with_duplicate()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         Team::factory()->withName('duplicate.team')->create();
         $this->cacheRepository->clear();
 
@@ -81,7 +81,7 @@ class TeamControllerTest extends TestCase
 
     public function test_update_team()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $team = Team::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
@@ -92,7 +92,7 @@ class TeamControllerTest extends TestCase
 
     public function test_deactivate_team()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $team = Team::factory()->create();
         $this->cacheRepository->clear();
 
@@ -103,7 +103,7 @@ class TeamControllerTest extends TestCase
 
     public function test_reactivate_team()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $team = Team::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
@@ -114,7 +114,7 @@ class TeamControllerTest extends TestCase
 
     public function test_delete_team()
     {
-        $this->user->assignPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
         $team = Team::factory()->create();
         $this->cacheRepository->clear();
 
@@ -129,10 +129,10 @@ class TeamControllerTest extends TestCase
         $team = Team::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->postJson(route('gatekeeper.api.teams.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->putJson(route('gatekeeper.api.teams.update', ['team' => $team]), ['name' => fake()->word()])->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.teams.deactivate', ['team' => $team]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->patchJson(route('gatekeeper.api.teams.reactivate', ['team' => $team]))->assertStatus(Response::HTTP_FORBIDDEN);
-        $this->deleteJson(route('gatekeeper.api.teams.delete', ['team' => $team]))->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->postJson(route('gatekeeper.api.teams.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->putJson(route('gatekeeper.api.teams.update', ['team' => $team]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.teams.deactivate', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.teams.reactivate', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->deleteJson(route('gatekeeper.api.teams.delete', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

@@ -32,9 +32,9 @@ class HasTeamsTest extends TestCase
         $user = User::factory()->create();
         $teams = ['engineering', 'marketing'];
 
-        $user->addToTeams($teams);
+        $user->addToAllTeams($teams);
 
-        Gatekeeper::shouldHaveReceived('addModelToTeams')->with($user, $teams)->once();
+        Gatekeeper::shouldHaveReceived('addModelToAllTeams')->with($user, $teams)->once();
     }
 
     public function test_add_to_teams_delegates_with_arrayable()
@@ -42,9 +42,9 @@ class HasTeamsTest extends TestCase
         $user = User::factory()->create();
         $teams = collect(['engineering', 'marketing']);
 
-        $user->addToTeams($teams);
+        $user->addToAllTeams($teams);
 
-        Gatekeeper::shouldHaveReceived('addModelToTeams')->with($user, $teams)->once();
+        Gatekeeper::shouldHaveReceived('addModelToAllTeams')->with($user, $teams)->once();
     }
 
     public function test_remove_from_team_delegates_to_facade()
@@ -62,9 +62,9 @@ class HasTeamsTest extends TestCase
         $user = User::factory()->create();
         $teams = ['engineering', 'marketing'];
 
-        $user->removeFromTeams($teams);
+        $user->removeFromAllTeams($teams);
 
-        Gatekeeper::shouldHaveReceived('removeModelFromTeams')->with($user, $teams)->once();
+        Gatekeeper::shouldHaveReceived('removeModelFromAllTeams')->with($user, $teams)->once();
     }
 
     public function test_on_team_delegates_to_facade()

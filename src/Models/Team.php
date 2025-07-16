@@ -7,9 +7,8 @@ use Gillyware\Gatekeeper\Database\Factories\TeamFactory;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Gillyware\Gatekeeper\Traits\HasRoles;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Schema;
 
-class Team extends AbstractGatekeeperEntity
+class Team extends AbstractBaseEntityModel
 {
     use HasPermissions;
     use HasRoles;
@@ -28,13 +27,5 @@ class Team extends AbstractGatekeeperEntity
     protected static function newFactory(): TeamFactory
     {
         return TeamFactory::new();
-    }
-
-    /**
-     * Check if the table for this model exists in the database.
-     */
-    public static function tableExists(): bool
-    {
-        return Schema::hasTable(Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS));
     }
 }
