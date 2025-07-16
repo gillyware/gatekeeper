@@ -2,10 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Config;
 
 class ModelRoleService
 {
@@ -20,9 +22,10 @@ class ModelRoleService
     public function searchAssignmentsByRoleNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $paginator = $this->modelHasRoleRepository->searchAssignmentsByRoleNameForModel($model, $roleNameSearchTerm, $pageNumber);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
-        return $paginator->through(function (ModelHasRole $modelHasRole) {
-            $modelHasRole->offsetSet('assigned_at', $modelHasRole->created_at->format('Y-m-d H:i:s T'));
+        return $paginator->through(function (ModelHasRole $modelHasRole) use ($displayTimezone) {
+            $modelHasRole->offsetSet('assigned_at', $modelHasRole->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
 
             return $modelHasRole;
         });

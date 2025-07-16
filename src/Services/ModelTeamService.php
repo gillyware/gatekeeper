@@ -2,10 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Config;
 
 class ModelTeamService
 {
@@ -20,9 +22,10 @@ class ModelTeamService
     public function searchAssignmentsByTeamNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $paginator = $this->modelHasTeamRepository->searchAssignmentsByTeamNameForModel($model, $teamNameSearchTerm, $pageNumber);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
-        return $paginator->through(function (ModelHasTeam $modelHasTeam) {
-            $modelHasTeam->offsetSet('assigned_at', $modelHasTeam->created_at->format('Y-m-d H:i:s T'));
+        return $paginator->through(function (ModelHasTeam $modelHasTeam) use ($displayTimezone) {
+            $modelHasTeam->offsetSet('assigned_at', $modelHasTeam->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
 
             return $modelHasTeam;
         });

@@ -1,5 +1,5 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
-import AuditLogIndex from '@/screens/audit-log/AuditLogIndex';
+import AuditLogIndexScreen from '@/screens/audit-log/AuditLogIndexScreen';
 import CreateEntityScreen from '@/screens/entity/CreateEntityScreen';
 import EntityIndexScreen from '@/screens/entity/EntityIndexScreen';
 import ManageEntityScreen from '@/screens/entity/ManageEntityScreen';
@@ -32,7 +32,7 @@ const GatekeeperApp = () => {
                 <Route path="/models" element={<ModelIndexScreen />} />
                 <Route path="/models/:modelLabel/:modelPk" element={<ManageModelScreen />} />
 
-                <Route path="/audit" element={<AuditLogIndex />} />
+                <Route path="/audit" element={<AuditLogIndexScreen />} />
 
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
