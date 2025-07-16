@@ -48,7 +48,7 @@ class RoleRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllRoles')
-            ->willReturn(collect([$role]));
+            ->willReturn(collect([$role->name => $role]));
 
         $result = $this->repository->findByName($role->name);
 
@@ -72,7 +72,7 @@ class RoleRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllRoles')
-            ->willReturn(collect([$role]));
+            ->willReturn(collect([$role->name => $role]));
 
         $result = $this->repository->findOrFailByName($role->name);
 
@@ -173,7 +173,7 @@ class RoleRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('putAllRoles')
-            ->with(Role::all()->values());
+            ->with(Role::all()->mapWithKeys(fn (Role $r) => [$r->name => $r]));
 
         $this->assertEqualsCanonicalizing(
             $roles->pluck('id')->toArray(),
@@ -262,7 +262,7 @@ class RoleRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllRoles')
-            ->willReturn(collect([$role]));
+            ->willReturn(collect([$role->name => $role]));
 
         $roles = $this->repository->forModel($user);
 
@@ -324,7 +324,7 @@ class RoleRepositoryTest extends TestCase
 
         $this->cacheService->expects($this->once())
             ->method('getAllRoles')
-            ->willReturn(collect([$role]));
+            ->willReturn(collect([$role->name => $role]));
 
         $result = $this->repository->findByNameForModel($user, $role->name);
         $this->assertTrue($result->is($role));
