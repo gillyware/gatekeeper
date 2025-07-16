@@ -2,10 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Config;
 
 class ModelPermissionService
 {
@@ -20,9 +22,10 @@ class ModelPermissionService
     public function searchAssignmentsByPermissionNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
     {
         $paginator = $this->modelHasPermissionRepository->searchAssignmentsByPermissionNameForModel($model, $permissionNameSearchTerm, $pageNumber);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
-        return $paginator->through(function (ModelHasPermission $modelHasPermission) {
-            $modelHasPermission->offsetSet('assigned_at', $modelHasPermission->created_at->format('Y-m-d H:i:s T'));
+        return $paginator->through(function (ModelHasPermission $modelHasPermission) use ($displayTimezone) {
+            $modelHasPermission->offsetSet('assigned_at', $modelHasPermission->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
 
             return $modelHasPermission;
         });

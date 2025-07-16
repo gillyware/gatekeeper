@@ -102,7 +102,7 @@ class ModelHasRoleRepository
                     ->from($rolesTable)
                     ->whereLike('name', "%{$roleNameSearchTerm}%");
             })
-            ->orderBy("$rolesTable.is_active")
+            ->orderByDesc("$rolesTable.is_active")
             ->orderBy("$rolesTable.name")
             ->with('role:id,name,is_active');
 

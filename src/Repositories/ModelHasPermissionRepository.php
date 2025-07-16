@@ -102,7 +102,7 @@ class ModelHasPermissionRepository
                     ->from($permissionsTable)
                     ->whereLike('name', "%{$permissionNameSearchTerm}%");
             })
-            ->orderBy("$permissionsTable.is_active")
+            ->orderByDesc("$permissionsTable.is_active")
             ->orderBy("$permissionsTable.name")
             ->with('permission:id,name,is_active');
 

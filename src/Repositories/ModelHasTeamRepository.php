@@ -102,7 +102,7 @@ class ModelHasTeamRepository
                     ->from($teamsTable)
                     ->whereLike('name', "%{$teamNameSearchTerm}%");
             })
-            ->orderBy("$teamsTable.is_active")
+            ->orderByDesc("$teamsTable.is_active")
             ->orderBy("$teamsTable.name")
             ->with('team:id,name,is_active');
 

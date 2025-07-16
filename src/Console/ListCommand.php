@@ -2,9 +2,11 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
+use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Illuminate\Support\Facades\Config;
 
 use function Laravel\Prompts\table;
 use function Laravel\Prompts\warning;
@@ -25,6 +27,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
         $showPermissions = $this->option('permissions') || (! $this->option('roles') && ! $this->option('teams'));
         $showRoles = $this->option('roles') || (! $this->option('permissions') && ! $this->option('teams'));
         $showTeams = $this->option('teams') || (! $this->option('permissions') && ! $this->option('roles'));
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         if ($showPermissions) {
             $permissions = Permission::query()
@@ -36,7 +39,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($permissions->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $permissions->map(fn (Permission $p) => [
-                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->format('Y-m-d H:i:s T'), $p->updated_at->format('Y-m-d H:i:s T'),
+                    $p->name, $p->is_active ? 'Yes' : 'No', $p->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'), $p->updated_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No permissions found.');
@@ -53,7 +56,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($roles->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $roles->map(fn (Role $r) => [
-                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->format('Y-m-d H:i:s T'), $r->updated_at->format('Y-m-d H:i:s T'),
+                    $r->name, $r->is_active ? 'Yes' : 'No', $r->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'), $r->updated_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No roles found.');
@@ -70,7 +73,7 @@ class ListCommand extends AbstractBaseGatekeeperCommand
 
             if ($teams->isNotEmpty()) {
                 table(['Name', 'Active', 'Created', 'Updated'], $teams->map(fn (Team $t) => [
-                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->format('Y-m-d H:i:s T'), $t->updated_at->format('Y-m-d H:i:s T'),
+                    $t->name, $t->is_active ? 'Yes' : 'No', $t->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'), $t->updated_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
                 ]));
             } else {
                 warning('No teams found.');

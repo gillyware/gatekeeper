@@ -75,7 +75,7 @@ export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>
                                 <th className="px-4 py-2 text-left font-semibold">{language[entity].nameHeader}</th>
                                 <th className="px-4 py-2 text-center font-semibold">{language[entity].statusHeader}</th>
                                 {user.permissions.can_manage && entitySupported.supported && (
-                                    <th className="px-4 py-2 text-left font-semibold">{language.actionHeader}</th>
+                                    <th className="px-6 py-2 text-left font-semibold">{language.actionHeader}</th>
                                 )}
                             </tr>
                         </thead>
@@ -126,7 +126,7 @@ export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>
                                         {user.permissions.can_manage && entitySupported.supported && (
                                             <td className="px-4 py-2">
                                                 <Button
-                                                    className="px-0"
+                                                    className="px-2"
                                                     variant="ghost"
                                                     size="sm"
                                                     disabled={processingEntityAssignment}

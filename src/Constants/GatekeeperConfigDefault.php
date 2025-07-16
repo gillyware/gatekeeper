@@ -18,6 +18,8 @@ class GatekeeperConfigDefault
      */
     public const FEATURES_AUDIT_ENABLED = true;
 
+    public const TIMEZONE = 'UTC';
+
     public const FEATURES_ROLES_ENABLED = true;
 
     public const FEATURES_TEAMS_ENABLED = false;
