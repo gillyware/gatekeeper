@@ -197,6 +197,14 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function getDirectPermissionsForModel(Model $model): Collection
+    {
+        return $this->permissionService->getDirectForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getEffectivePermissionsForModel(Model $model): Collection
     {
         return $this->permissionService->getForModel($model);
@@ -205,9 +213,9 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getDirectPermissionsForModel(Model $model): Collection
+    public function getVerbosePermissionsForModel(Model $model): Collection
     {
-        return $this->permissionService->getDirectForModel($model);
+        return $this->permissionService->getVerboseForModel($model);
     }
 
     /**
@@ -333,6 +341,14 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function getDirectRolesForModel(Model $model): Collection
+    {
+        return $this->roleService->getDirectForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getEffectiveRolesForModel(Model $model): Collection
     {
         return $this->roleService->getForModel($model);
@@ -341,9 +357,9 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getDirectRolesForModel(Model $model): Collection
+    public function getVerboseRolesForModel(Model $model): Collection
     {
-        return $this->roleService->getDirectForModel($model);
+        return $this->roleService->getVerboseForModel($model);
     }
 
     /**
@@ -464,14 +480,6 @@ class GatekeeperService implements GatekeeperServiceInterface
     public function getAllTeams(): Collection
     {
         return $this->teamService->getAll();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getEffectiveTeamsForModel(Model $model): Collection
-    {
-        return $this->teamService->getForModel($model);
     }
 
     /**

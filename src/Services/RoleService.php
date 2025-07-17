@@ -9,6 +9,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Role\DeleteRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\ReactivateRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\RevokeRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\UpdateRoleAuditLogDto;
+use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -383,6 +384,43 @@ class RoleService extends AbstractBaseEntityService
     public function getDirectForModel(Model $model): Collection
     {
         return $this->roleRepository->forModel($model);
+    }
+
+    /**
+     * Get all effective roles for the given model with the role source(s).
+     */
+    public function getVerboseForModel(Model $model): Collection
+    {
+        $sourcesMap = [];
+
+        $this->roleRepository->activeForModel($model)
+            ->each(function (Role $role) use (&$sourcesMap) {
+                $sourcesMap[$role->name][] = ['type' => RoleSourceType::DIRECT];
+            });
+
+        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
+            $this->teamRepository->activeForModel($model)
+                ->each(function (Team $team) use (&$sourcesMap) {
+                    $this->roleRepository->activeForModel($team)
+                        ->each(function (Role $role) use (&$sourcesMap, $team) {
+                            $sourcesMap[$role->name][] = [
+                                'type' => RoleSourceType::TEAM,
+                                'team' => $team->name,
+                            ];
+                        });
+                });
+        }
+
+        $result = collect();
+
+        foreach ($sourcesMap as $roleName => $sources) {
+            $result->push([
+                'name' => $roleName,
+                'sources' => $sources,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

@@ -62,6 +62,13 @@ interface GatekeeperForModelServiceInterface
     public function hasAllPermissions(array|Arrayable $permissions): bool;
 
     /**
+     * Get all permissions assigned directly to a model.
+     *
+     * @return Collection<Permission>
+     */
+    public function getDirectPermissions(): Collection;
+
+    /**
      * Get all permissions assigned directly or indirectly to a model.
      *
      * @return Collection<Permission>
@@ -69,11 +76,9 @@ interface GatekeeperForModelServiceInterface
     public function getEffectivePermissions(): Collection;
 
     /**
-     * Get all permissions assigned directly to a model.
-     *
-     * @return Collection<Permission>
+     * Get all effective permissions for the given model with the permission source(s).
      */
-    public function getDirectPermissions(): Collection;
+    public function getVerbosePermissions(): Collection;
 
     /**
      * Assign a role to a model.
@@ -119,6 +124,13 @@ interface GatekeeperForModelServiceInterface
     public function hasAllRoles(array|Arrayable $roles): bool;
 
     /**
+     * Get all roles assigned directly to a model.
+     *
+     * @return Collection<Role>
+     */
+    public function getDirectRoles(): Collection;
+
+    /**
      * Get all roles assigned directly or indirectly to a model.
      *
      * @return Collection<Role>
@@ -126,11 +138,9 @@ interface GatekeeperForModelServiceInterface
     public function getEffectiveRoles(): Collection;
 
     /**
-     * Get all roles assigned directly to a model.
-     *
-     * @return Collection<Role>
+     * Get all effective roles for the given model with the role source(s).
      */
-    public function getDirectRoles(): Collection;
+    public function getVerboseRoles(): Collection;
 
     /**
      * Add a model to a team.
@@ -174,13 +184,6 @@ interface GatekeeperForModelServiceInterface
      * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
      */
     public function onAllTeams(array|Arrayable $teams): bool;
-
-    /**
-     * Get all teams assigned directly or indirectly to a model.
-     *
-     * @return Collection<Team>
-     */
-    public function getEffectiveTeams(): Collection;
 
     /**
      * Get all teams assigned directly to a model.

@@ -1,6 +1,5 @@
 import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperModelEntityAssignmentMap } from '@/types';
 import { type GatekeeperResponse, type Pagination } from '@/types/api/index';
-import { type Permission, type Role, type Team } from '@/types/models';
 
 export interface ConfiguredModelMetadata {
     model_label: string;
@@ -26,10 +25,37 @@ export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
     display: { [key: string]: any };
 }
 
+export interface PermissionSource {
+    type: 'direct' | 'role' | 'team' | 'team-role';
+    role?: string;
+    team?: string;
+}
+
+export interface VerbosePermission {
+    name: string;
+    sources: PermissionSource[];
+}
+
+export interface RoleSource {
+    type: 'direct' | 'team';
+    team?: string;
+}
+
+export interface VerboseRole {
+    name: string;
+    sources: RoleSource[];
+}
+
+export interface AccessSources {
+    permissions: VerbosePermission[];
+    roles: VerboseRole[];
+    direct_permissions_count: number;
+    direct_roles_count: number;
+    direct_teams_count: number;
+}
+
 export interface ConfiguredModel extends ConfiguredModelSearchResult {
-    direct_permissions: Permission[];
-    direct_roles: Role[];
-    direct_teams: Team[];
+    access_sources: AccessSources;
 }
 
 /**

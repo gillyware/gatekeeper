@@ -23,9 +23,9 @@ export default function ModelManagementTabs({ tab, changeTab, model }: ModelMana
     const { config } = useGatekeeper();
     const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
 
-    const showPermissiosnTab = entitySupport.permission.supported || model.direct_permissions.length > 0;
-    const showRolesTab = entitySupport.role.supported || model.direct_roles.length > 0;
-    const showTeamsTab = entitySupport.team.supported || model.direct_teams.length > 0;
+    const showPermissiosnTab = entitySupport.permission.supported || model.access_sources.direct_permissions_count > 0;
+    const showRolesTab = entitySupport.role.supported || model.access_sources.direct_roles_count > 0;
+    const showTeamsTab = entitySupport.team.supported || model.access_sources.direct_teams_count > 0;
     const language: ModelManagementTabsText = useMemo(() => manageModelText.modelManagementTabsText, []);
 
     const tabs: Tab[] = [

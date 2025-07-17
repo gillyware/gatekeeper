@@ -54,6 +54,12 @@ class ModelController extends AbstractBaseController
             $modelClass = $this->modelMetadataService->getClassFromModelData($modelData);
             $model = $this->modelService->findModelInstance($modelClass, $pk);
 
+            $verbosePermissions = Gatekeeper::for($model)->getVerbosePermissions();
+            $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
+            $directPermissionsCount = Gatekeeper::for($model)->getDirectPermissions()->count();
+            $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
+            $directTeamsCount = Gatekeeper::for($model)->getDirectTeams()->count();
+
             return Response::json([
                 'model_label' => $modelData['label'],
                 'model_pk' => (string) $model->getKey(),
@@ -70,9 +76,13 @@ class ModelController extends AbstractBaseController
                 'has_roles' => $this->modelInteractsWithRoles($model),
                 'has_teams' => $this->modelInteractsWithTeams($model),
 
-                'direct_permissions' => Gatekeeper::getDirectPermissionsForModel($model),
-                'direct_roles' => Gatekeeper::getDirectRolesForModel($model),
-                'direct_teams' => Gatekeeper::getDirectTeamsForModel($model),
+                'access_sources' => [
+                    'permissions' => $verbosePermissions,
+                    'roles' => $verboseRoles,
+                    'direct_permissions_count' => $directPermissionsCount,
+                    'direct_roles_count' => $directRolesCount,
+                    'direct_teams_count' => $directTeamsCount,
+                ],
             ]);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
