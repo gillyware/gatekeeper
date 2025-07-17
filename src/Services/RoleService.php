@@ -221,6 +221,8 @@ class RoleService extends AbstractBaseEntityService
 
     /**
      * Assign multiple roles to a model.
+     *
+     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
      */
     public function assignAllToModel(Model $model, array|Arrayable $roles): bool
     {
@@ -257,6 +259,8 @@ class RoleService extends AbstractBaseEntityService
 
     /**
      * Revoke multiple roles from a model.
+     *
+     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $roles): bool
     {
@@ -322,6 +326,8 @@ class RoleService extends AbstractBaseEntityService
 
     /**
      * Check if a model has any of the given roles.
+     *
+     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
      */
     public function modelHasAny(Model $model, array|Arrayable $roles): bool
     {
@@ -332,6 +338,8 @@ class RoleService extends AbstractBaseEntityService
 
     /**
      * Check if a model has all of the given roles.
+     *
+     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
      */
     public function modelHasAll(Model $model, array|Arrayable $roles): bool
     {

@@ -203,7 +203,7 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::assignAllRolesToModel($actee, $roles);
+        Gatekeeper::for($actee)->assignAllRoles($roles);
 
         if ($roles->count() === 1) {
             info("Role '{$roleNames->first()}' assigned to model successfully.");
@@ -230,7 +230,7 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::revokeAllRolesFromModel($actee, $roles);
+        Gatekeeper::for($actee)->revokeAllRoles($roles);
 
         if ($roles->count() === 1) {
             info("Role '{$roleNames->first()}' revoked from model successfully.");

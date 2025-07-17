@@ -16,7 +16,7 @@ trait HasRoles
      */
     public function assignRole(Role|string|UnitEnum $role): bool
     {
-        return Gatekeeper::assignRoleToModel($this, $role);
+        return Gatekeeper::for($this)->assignRole($role);
     }
 
     /**
@@ -24,7 +24,7 @@ trait HasRoles
      */
     public function assignAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::assignAllRolesToModel($this, $roles);
+        return Gatekeeper::for($this)->assignAllRoles($roles);
     }
 
     /**
@@ -32,7 +32,7 @@ trait HasRoles
      */
     public function revokeRole(Role|string|UnitEnum $role): bool
     {
-        return Gatekeeper::revokeRoleFromModel($this, $role);
+        return Gatekeeper::for($this)->revokeRole($role);
     }
 
     /**
@@ -40,7 +40,7 @@ trait HasRoles
      */
     public function revokeAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::revokeAllRolesFromModel($this, $roles);
+        return Gatekeeper::for($this)->revokeAllRoles($roles);
     }
 
     /**
@@ -48,7 +48,7 @@ trait HasRoles
      */
     public function hasRole(Role|string|UnitEnum $role): bool
     {
-        return Gatekeeper::modelHasRole($this, $role);
+        return Gatekeeper::for($this)->hasRole($role);
     }
 
     /**
@@ -56,7 +56,7 @@ trait HasRoles
      */
     public function hasAnyRole(array|Arrayable $roles): bool
     {
-        return Gatekeeper::modelHasAnyRole($this, $roles);
+        return Gatekeeper::for($this)->hasAnyRole($roles);
     }
 
     /**
@@ -64,6 +64,6 @@ trait HasRoles
      */
     public function hasAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::modelHasAllRoles($this, $roles);
+        return Gatekeeper::for($this)->hasAllRoles($roles);
     }
 }

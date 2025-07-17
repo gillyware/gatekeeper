@@ -202,7 +202,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::assignAllPermissionsToModel($actee, $permissions);
+        Gatekeeper::for($actee)->assignAllPermissions($permissions);
 
         if ($permissions->count() === 1) {
             info("Permission '{$permissionNames->first()}' assigned to model successfully.");
@@ -229,7 +229,7 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::revokeAllPermissionsFromModel($actee, $permissions);
+        Gatekeeper::for($actee)->revokeAllPermissions($permissions);
 
         if ($permissions->count() === 1) {
             info("Permission '{$permissionNames->first()}' revoked from model successfully.");

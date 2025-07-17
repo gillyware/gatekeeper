@@ -221,6 +221,8 @@ class PermissionService extends AbstractBaseEntityService
 
     /**
      * Assign multiple permissions to a model.
+     *
+     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
      */
     public function assignAllToModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -257,6 +259,8 @@ class PermissionService extends AbstractBaseEntityService
 
     /**
      * Revoke multiple permissions from a model.
+     *
+     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -336,6 +340,8 @@ class PermissionService extends AbstractBaseEntityService
 
     /**
      * Check if a model has any of the given permissions.
+     *
+     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
      */
     public function modelHasAny(Model $model, array|Arrayable $permissions): bool
     {
@@ -346,6 +352,8 @@ class PermissionService extends AbstractBaseEntityService
 
     /**
      * Check if a model has all of the given permissions.
+     *
+     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
      */
     public function modelHasAll(Model $model, array|Arrayable $permissions): bool
     {

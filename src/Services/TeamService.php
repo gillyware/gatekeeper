@@ -216,6 +216,8 @@ class TeamService extends AbstractBaseEntityService
 
     /**
      * Assign multiple teams to a model.
+     *
+     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
      */
     public function assignAllToModel(Model $model, array|Arrayable $teams): bool
     {
@@ -252,6 +254,8 @@ class TeamService extends AbstractBaseEntityService
 
     /**
      * Revoke multiple teams from a model.
+     *
+     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -301,6 +305,8 @@ class TeamService extends AbstractBaseEntityService
 
     /**
      * Check if a model has any of the given teams.
+     *
+     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
      */
     public function modelHasAny(Model $model, array|Arrayable $teams): bool
     {
@@ -311,6 +317,8 @@ class TeamService extends AbstractBaseEntityService
 
     /**
      * Check if a model has all of the given teams.
+     *
+     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
      */
     public function modelHasAll(Model $model, array|Arrayable $teams): bool
     {

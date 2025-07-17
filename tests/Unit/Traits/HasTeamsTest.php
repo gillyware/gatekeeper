@@ -3,97 +3,102 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Traits;
 
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
+use Gillyware\Gatekeeper\Services\GatekeeperForModelService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
-use Illuminate\Support\Facades\Facade;
 
 class HasTeamsTest extends TestCase
 {
+    private GatekeeperForModelService $gatekeeperForModelService;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Facade::clearResolvedInstances();
-        Gatekeeper::spy();
+        $this->gatekeeperForModelService = app(GatekeeperForModelService::class);
     }
 
-    public function test_add_to_team_delegates_to_facade()
+    public function test_assign_team_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $team = 'engineering';
+        $team = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('addModelToTeam')->with($user, $team)->once();
 
         $user->addToTeam($team);
-
-        Gatekeeper::shouldHaveReceived('addModelToTeam')->with($user, $team)->once();
     }
 
-    public function test_add_to_teams_delegates_to_facade()
+    public function test_assign_teams_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $teams = ['engineering', 'marketing'];
+        $teams = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('addModelToAllTeams')->with($user, $teams)->once();
 
         $user->addToAllTeams($teams);
-
-        Gatekeeper::shouldHaveReceived('addModelToAllTeams')->with($user, $teams)->once();
     }
 
-    public function test_add_to_teams_delegates_with_arrayable()
+    public function test_revoke_team_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $teams = collect(['engineering', 'marketing']);
+        $team = 'edit-posts';
 
-        $user->addToAllTeams($teams);
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldHaveReceived('addModelToAllTeams')->with($user, $teams)->once();
-    }
-
-    public function test_remove_from_team_delegates_to_facade()
-    {
-        $user = User::factory()->create();
-        $team = 'engineering';
+        Gatekeeper::shouldReceive('removeModelFromTeam')->with($user, $team)->once();
 
         $user->removeFromTeam($team);
-
-        Gatekeeper::shouldHaveReceived('removeModelFromTeam')->with($user, $team)->once();
     }
 
-    public function test_remove_from_teams_delegates_to_facade()
+    public function test_revoke_teams_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $teams = ['engineering', 'marketing'];
+        $teams = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('removeModelFromAllTeams')->with($user, $teams)->once();
 
         $user->removeFromAllTeams($teams);
-
-        Gatekeeper::shouldHaveReceived('removeModelFromAllTeams')->with($user, $teams)->once();
     }
 
-    public function test_on_team_delegates_to_facade()
+    public function test_has_team_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $team = 'engineering';
+        $team = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelOnTeam')->with($user, $team)->once();
 
         $user->onTeam($team);
-
-        Gatekeeper::shouldHaveReceived('modelOnTeam')->with($user, $team)->once();
     }
 
-    public function test_on_any_team_delegates_to_facade()
+    public function test_has_any_team_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $teams = ['engineering', 'marketing'];
+        $teams = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelOnAnyTeam')->with($user, $teams)->once();
 
         $user->onAnyTeam($teams);
-
-        Gatekeeper::shouldHaveReceived('modelOnAnyTeam')->with($user, $teams)->once();
     }
 
-    public function test_on_all_teams_delegates_to_facade()
+    public function test_has_all_teams_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $teams = ['engineering', 'marketing'];
+        $teams = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelOnAllTeams')->with($user, $teams)->once();
 
         $user->onAllTeams($teams);
-
-        Gatekeeper::shouldHaveReceived('modelOnAllTeams')->with($user, $teams)->once();
     }
 }

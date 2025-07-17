@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Contracts\GatekeeperServiceInterface;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -13,7 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use UnitEnum;
 
-class GatekeeperService
+class GatekeeperService implements GatekeeperServiceInterface
 {
     use ActsForGatekeeper;
 
@@ -23,12 +24,13 @@ class GatekeeperService
         private readonly PermissionService $permissionService,
         private readonly RoleService $roleService,
         private readonly TeamService $teamService,
+        private readonly GatekeeperForModelService $gatekeeperForModelService,
     ) {
         $this->setLifecycleId();
     }
 
     /**
-     * Get the currently acting as model.
+     * {@inheritDoc}
      */
     public function getActor(): ?Model
     {
@@ -38,7 +40,7 @@ class GatekeeperService
     }
 
     /**
-     * Get the lifecycle ID for the current request or CLI execution.
+     * {@inheritDoc}
      */
     public function getLifecycleId(): string
     {
@@ -46,9 +48,9 @@ class GatekeeperService
     }
 
     /**
-     * Set the acting as model.
+     * {@inheritDoc}
      */
-    public function setActor(Model $model): static
+    public function setActor(Model $model): GatekeeperService
     {
         $this->actingAs($model);
         $this->propagateActor($model);
@@ -57,15 +59,23 @@ class GatekeeperService
     }
 
     /**
-     * Set the actor to a system actor.
+     * {@inheritDoc}
      */
-    public function systemActor(): static
+    public function systemActor(): GatekeeperService
     {
         return $this->setActor(new SystemActor);
     }
 
     /**
-     * Check if a permission exists.
+     * {@inheritDoc}
+     */
+    public function for(Model $model): GatekeeperForModelService
+    {
+        return $this->gatekeeperForModelService->setModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public function permissionExists(string|UnitEnum $permissionName): bool
     {
@@ -73,7 +83,7 @@ class GatekeeperService
     }
 
     /**
-     * Create a new permission.
+     * {@inheritDoc}
      */
     public function createPermission(string|UnitEnum $permissionName): Permission
     {
@@ -81,7 +91,7 @@ class GatekeeperService
     }
 
     /**
-     * Update an existing permission.
+     * {@inheritDoc}
      */
     public function updatePermission(Permission|string|UnitEnum $permission, string|UnitEnum $permissionName): Permission
     {
@@ -89,7 +99,7 @@ class GatekeeperService
     }
 
     /**
-     * Deactivate a permission.
+     * {@inheritDoc}
      */
     public function deactivatePermission(Permission|string|UnitEnum $permission): Permission
     {
@@ -97,7 +107,7 @@ class GatekeeperService
     }
 
     /**
-     * Reactivate a permission.
+     * {@inheritDoc}
      */
     public function reactivatePermission(Permission|string|UnitEnum $permission): Permission
     {
@@ -105,7 +115,7 @@ class GatekeeperService
     }
 
     /**
-     * Delete a permission.
+     * {@inheritDoc}
      */
     public function deletePermission(Permission|string|UnitEnum $permission): bool
     {
@@ -113,7 +123,7 @@ class GatekeeperService
     }
 
     /**
-     * Assign a permission to a model.
+     * {@inheritDoc}
      */
     public function assignPermissionToModel(Model $model, Permission|string|UnitEnum $permission): bool
     {
@@ -121,7 +131,7 @@ class GatekeeperService
     }
 
     /**
-     * Assign multiple permissions to a model.
+     * {@inheritDoc}
      */
     public function assignAllPermissionsToModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -129,7 +139,7 @@ class GatekeeperService
     }
 
     /**
-     * Revoke a permission from a model.
+     * {@inheritDoc}
      */
     public function revokePermissionFromModel(Model $model, Permission|string|UnitEnum $permission): bool
     {
@@ -137,7 +147,7 @@ class GatekeeperService
     }
 
     /**
-     * Revoke multiple permissions from a model.
+     * {@inheritDoc}
      */
     public function revokeAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -145,7 +155,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has a specific permission.
+     * {@inheritDoc}
      */
     public function modelHasPermission(Model $model, Permission|string|UnitEnum $permission): bool
     {
@@ -153,7 +163,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has any of the specified permissions.
+     * {@inheritDoc}
      */
     public function modelHasAnyPermission(Model $model, array|Arrayable $permissions): bool
     {
@@ -161,7 +171,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has all of the specified permissions.
+     * {@inheritDoc}
      */
     public function modelHasAllPermissions(Model $model, array|Arrayable $permissions): bool
     {
@@ -169,7 +179,7 @@ class GatekeeperService
     }
 
     /**
-     * Find a permission by its name.
+     * {@inheritDoc}
      */
     public function findPermissionByName(string|UnitEnum $permissionName): ?Permission
     {
@@ -177,7 +187,7 @@ class GatekeeperService
     }
 
     /**
-     * Get all permissions.
+     * {@inheritDoc}
      */
     public function getAllPermissions(): Collection
     {
@@ -185,7 +195,7 @@ class GatekeeperService
     }
 
     /**
-     * Get effective permissions for a model.
+     * {@inheritDoc}
      */
     public function getEffectivePermissionsForModel(Model $model): Collection
     {
@@ -193,7 +203,7 @@ class GatekeeperService
     }
 
     /**
-     * Get all permissions directly assigned to a model.
+     * {@inheritDoc}
      */
     public function getDirectPermissionsForModel(Model $model): Collection
     {
@@ -201,7 +211,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a role exists.
+     * {@inheritDoc}
      */
     public function roleExists(string|UnitEnum $roleName): bool
     {
@@ -209,7 +219,7 @@ class GatekeeperService
     }
 
     /**
-     * Create a new role.
+     * {@inheritDoc}
      */
     public function createRole(string|UnitEnum $roleName): Role
     {
@@ -217,7 +227,7 @@ class GatekeeperService
     }
 
     /**
-     * Update an existing role.
+     * {@inheritDoc}
      */
     public function updateRole(Role|string|UnitEnum $role, string|UnitEnum $roleName): Role
     {
@@ -225,7 +235,7 @@ class GatekeeperService
     }
 
     /**
-     * Deactivate a role.
+     * {@inheritDoc}
      */
     public function deactivateRole(Role|string|UnitEnum $role): Role
     {
@@ -233,7 +243,7 @@ class GatekeeperService
     }
 
     /**
-     * Reactivate a role.
+     * {@inheritDoc}
      */
     public function reactivateRole(Role|string|UnitEnum $role): Role
     {
@@ -241,7 +251,7 @@ class GatekeeperService
     }
 
     /**
-     * Delete a role.
+     * {@inheritDoc}
      */
     public function deleteRole(Role|string|UnitEnum $role): bool
     {
@@ -249,7 +259,7 @@ class GatekeeperService
     }
 
     /**
-     * Assign a role to a model.
+     * {@inheritDoc}
      */
     public function assignRoleToModel(Model $model, Role|string|UnitEnum $role): bool
     {
@@ -257,7 +267,7 @@ class GatekeeperService
     }
 
     /**
-     * Assign multiple roles to a model.
+     * {@inheritDoc}
      */
     public function assignAllRolesToModel(Model $model, array|Arrayable $roles): bool
     {
@@ -265,7 +275,7 @@ class GatekeeperService
     }
 
     /**
-     * Revoke a role from a model.
+     * {@inheritDoc}
      */
     public function revokeRoleFromModel(Model $model, Role|string|UnitEnum $role): bool
     {
@@ -273,7 +283,7 @@ class GatekeeperService
     }
 
     /**
-     * Revoke multiple roles from a model.
+     * {@inheritDoc}
      */
     public function revokeAllRolesFromModel(Model $model, array|Arrayable $roles): bool
     {
@@ -281,7 +291,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has a specific role.
+     * {@inheritDoc}
      */
     public function modelHasRole(Model $model, Role|string|UnitEnum $role): bool
     {
@@ -289,7 +299,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has any of the specified roles.
+     * {@inheritDoc}
      */
     public function modelHasAnyRole(Model $model, array|Arrayable $roles): bool
     {
@@ -297,7 +307,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model has all of the specified roles.
+     * {@inheritDoc}
      */
     public function modelHasAllRoles(Model $model, array|Arrayable $roles): bool
     {
@@ -305,7 +315,7 @@ class GatekeeperService
     }
 
     /**
-     * Find a role by its name.
+     * {@inheritDoc}
      */
     public function findRoleByName(string|UnitEnum $roleName): ?Role
     {
@@ -313,7 +323,7 @@ class GatekeeperService
     }
 
     /**
-     * Get all roles.
+     * {@inheritDoc}
      */
     public function getAllRoles(): Collection
     {
@@ -321,7 +331,7 @@ class GatekeeperService
     }
 
     /**
-     * Get effective roles for a model.
+     * {@inheritDoc}
      */
     public function getEffectiveRolesForModel(Model $model): Collection
     {
@@ -329,7 +339,7 @@ class GatekeeperService
     }
 
     /**
-     * Get all roles directly assigned to a model.
+     * {@inheritDoc}
      */
     public function getDirectRolesForModel(Model $model): Collection
     {
@@ -337,7 +347,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a team exists.
+     * {@inheritDoc}
      */
     public function teamExists(string|UnitEnum $teamName): bool
     {
@@ -345,7 +355,7 @@ class GatekeeperService
     }
 
     /**
-     * Create a new team.
+     * {@inheritDoc}
      */
     public function createTeam(string|UnitEnum $teamName): Team
     {
@@ -353,7 +363,7 @@ class GatekeeperService
     }
 
     /**
-     * Update an existing team.
+     * {@inheritDoc}
      */
     public function updateTeam(Team|string|UnitEnum $team, string|UnitEnum $teamName): Team
     {
@@ -361,7 +371,7 @@ class GatekeeperService
     }
 
     /**
-     * Deactivate a team.
+     * {@inheritDoc}
      */
     public function deactivateTeam(Team|string|UnitEnum $team): Team
     {
@@ -369,7 +379,7 @@ class GatekeeperService
     }
 
     /**
-     * Reactivate a team.
+     * {@inheritDoc}
      */
     public function reactivateTeam(Team|string|UnitEnum $team): Team
     {
@@ -377,7 +387,7 @@ class GatekeeperService
     }
 
     /**
-     * Delete a team.
+     * {@inheritDoc}
      */
     public function deleteTeam(Team|string|UnitEnum $team): bool
     {
@@ -385,7 +395,7 @@ class GatekeeperService
     }
 
     /**
-     * Add a model to a team.
+     * {@inheritDoc}
      */
     public function addModelToTeam(Model $model, Team|string|UnitEnum $team): bool
     {
@@ -393,7 +403,7 @@ class GatekeeperService
     }
 
     /**
-     * Add a model to multiple teams.
+     * {@inheritDoc}
      */
     public function addModelToAllTeams(Model $model, array|Arrayable $teams): bool
     {
@@ -401,7 +411,7 @@ class GatekeeperService
     }
 
     /**
-     * Remove a model from a team.
+     * {@inheritDoc}
      */
     public function removeModelFromTeam(Model $model, Team|string|UnitEnum $team): bool
     {
@@ -409,7 +419,7 @@ class GatekeeperService
     }
 
     /**
-     * Remove a model from multiple teams.
+     * {@inheritDoc}
      */
     public function removeModelFromAllTeams(Model $model, array|Arrayable $teams): bool
     {
@@ -417,7 +427,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model is on a specific team.
+     * {@inheritDoc}
      */
     public function modelOnTeam(Model $model, Team|string|UnitEnum $team): bool
     {
@@ -425,7 +435,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model is on any of the specified teams.
+     * {@inheritDoc}
      */
     public function modelOnAnyTeam(Model $model, array|Arrayable $teams): bool
     {
@@ -433,7 +443,7 @@ class GatekeeperService
     }
 
     /**
-     * Check if a model is on all of the specified teams.
+     * {@inheritDoc}
      */
     public function modelOnAllTeams(Model $model, array|Arrayable $teams): bool
     {
@@ -441,15 +451,15 @@ class GatekeeperService
     }
 
     /**
-     * Find a team by its name.
+     * {@inheritDoc}
      */
-    public function findTeamByName(string|UnitEnum $roleName): ?Role
+    public function findTeamByName(string|UnitEnum $roleName): ?Team
     {
         return $this->teamService->findByName($roleName);
     }
 
     /**
-     * Get all teams.
+     * {@inheritDoc}
      */
     public function getAllTeams(): Collection
     {
@@ -457,7 +467,15 @@ class GatekeeperService
     }
 
     /**
-     * Get all teams directly assigned to a model.
+     * {@inheritDoc}
+     */
+    public function getEffectiveTeamsForModel(Model $model): Collection
+    {
+        return $this->teamService->getForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public function getDirectTeamsForModel(Model $model): Collection
     {
