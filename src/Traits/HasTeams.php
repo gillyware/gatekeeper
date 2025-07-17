@@ -16,7 +16,7 @@ trait HasTeams
      */
     public function addToTeam(Team|string|UnitEnum $team): bool
     {
-        return Gatekeeper::addModelToTeam($this, $team);
+        return Gatekeeper::for($this)->addToTeam($team);
     }
 
     /**
@@ -24,7 +24,7 @@ trait HasTeams
      */
     public function addToAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::addModelToAllTeams($this, $teams);
+        return Gatekeeper::for($this)->addToAllTeams($teams);
     }
 
     /**
@@ -32,7 +32,7 @@ trait HasTeams
      */
     public function removeFromTeam(Team|string|UnitEnum $team): bool
     {
-        return Gatekeeper::removeModelFromTeam($this, $team);
+        return Gatekeeper::for($this)->removeFromTeam($team);
     }
 
     /**
@@ -40,7 +40,7 @@ trait HasTeams
      */
     public function removeFromAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::removeModelFromAllTeams($this, $teams);
+        return Gatekeeper::for($this)->removeFromAllTeams($teams);
     }
 
     /**
@@ -48,7 +48,7 @@ trait HasTeams
      */
     public function onTeam(Team|string|UnitEnum $team): bool
     {
-        return Gatekeeper::modelOnTeam($this, $team);
+        return Gatekeeper::for($this)->onTeam($team);
     }
 
     /**
@@ -56,7 +56,7 @@ trait HasTeams
      */
     public function onAnyTeam(array|Arrayable $teams): bool
     {
-        return Gatekeeper::modelOnAnyTeam($this, $teams);
+        return Gatekeeper::for($this)->onAnyTeam($teams);
     }
 
     /**
@@ -64,6 +64,6 @@ trait HasTeams
      */
     public function onAllTeams(array|Arrayable $teams): bool
     {
-        return Gatekeeper::modelOnAllTeams($this, $teams);
+        return Gatekeeper::for($this)->onAllTeams($teams);
     }
 }

@@ -14,6 +14,7 @@ use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Services\GatekeeperForModelService;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
 use Gillyware\Gatekeeper\Services\ModelHasPermissionService;
 use Gillyware\Gatekeeper\Services\ModelHasRoleService;
@@ -76,11 +77,13 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->app->singleton(ModelHasRoleService::class);
         $this->app->singleton(ModelHasTeamService::class);
         $this->app->singleton(AuditLogService::class);
+        $this->app->singleton(GatekeeperForModelService::class);
 
         $this->app->singleton('gatekeeper', fn ($app) => new GatekeeperService(
             $app->make(PermissionService::class),
             $app->make(RoleService::class),
             $app->make(TeamService::class),
+            $app->make(GatekeeperForModelService::class),
         ));
     }
 
@@ -159,32 +162,32 @@ class GatekeeperServiceProvider extends ServiceProvider
          */
         Blade::if('hasPermission', function ($model, $permission = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasPermission($model, $permission);
+                return Gatekeeper::for($model)->hasPermission($permission);
             }
 
             [$model, $permission] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasPermission($model, $permission);
+            return Gatekeeper::for($model)->hasPermission($permission);
         });
 
         Blade::if('hasAnyPermission', function ($model, $permissions = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasAnyPermission($model, $permissions);
+                return Gatekeeper::for($model)->hasAnyPermission($permissions);
             }
 
             [$model, $permissions] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasAnyPermission($model, $permissions);
+            return Gatekeeper::for($model)->hasAnyPermission($permissions);
         });
 
         Blade::if('hasAllPermissions', function ($model, $permissions = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasAllPermissions($model, $permissions);
+                return Gatekeeper::for($model)->hasAllPermissions($permissions);
             }
 
             [$model, $permissions] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasAllPermissions($model, $permissions);
+            return Gatekeeper::for($model)->hasAllPermissions($permissions);
         });
 
         /**
@@ -192,32 +195,32 @@ class GatekeeperServiceProvider extends ServiceProvider
          */
         Blade::if('hasRole', function ($model, $role = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasRole($model, $role);
+                return Gatekeeper::for($model)->hasRole($role);
             }
 
             [$model, $role] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasRole($model, $role);
+            return Gatekeeper::for($model)->hasRole($role);
         });
 
         Blade::if('hasAnyRole', function ($model, $roles = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasAnyRole($model, $roles);
+                return Gatekeeper::for($model)->hasAnyRole($roles);
             }
 
             [$model, $roles] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasAnyRole($model, $roles);
+            return Gatekeeper::for($model)->hasAnyRole($roles);
         });
 
         Blade::if('hasAllRoles', function ($model, $roles = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelHasAllRoles($model, $roles);
+                return Gatekeeper::for($model)->hasAllRoles($roles);
             }
 
             [$model, $roles] = [Auth::user(), $model];
 
-            return Gatekeeper::modelHasAllRoles($model, $roles);
+            return Gatekeeper::for($model)->hasAllRoles($roles);
         });
 
         /**
@@ -225,32 +228,32 @@ class GatekeeperServiceProvider extends ServiceProvider
          */
         Blade::if('onTeam', function ($model, $team = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelOnTeam($model, $team);
+                return Gatekeeper::for($model)->onTeam($team);
             }
 
             [$model, $team] = [Auth::user(), $model];
 
-            return Gatekeeper::modelOnTeam($model, $team);
+            return Gatekeeper::for($model)->onTeam($team);
         });
 
         Blade::if('onAnyTeam', function ($model, $teams = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelOnAnyTeam($model, $teams);
+                return Gatekeeper::for($model)->onAnyTeam($teams);
             }
 
             [$model, $teams] = [Auth::user(), $model];
 
-            return Gatekeeper::modelOnAnyTeam($model, $teams);
+            return Gatekeeper::for($model)->onAnyTeam($teams);
         });
 
         Blade::if('onAllTeams', function ($model, $teams = null) {
             if (func_num_args() === 2) {
-                return Gatekeeper::modelOnAllTeams($model, $teams);
+                return Gatekeeper::for($model)->onAllTeams($teams);
             }
 
             [$model, $teams] = [Auth::user(), $model];
 
-            return Gatekeeper::modelOnAllTeams($model, $teams);
+            return Gatekeeper::for($model)->onAllTeams($teams);
         });
     }
 

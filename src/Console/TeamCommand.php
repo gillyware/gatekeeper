@@ -202,7 +202,7 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::addModelToAllTeams($actee, $teams);
+        Gatekeeper::for($actee)->addToAllTeams($teams);
 
         if ($teams->count() === 1) {
             info("Model added to team '{$teamNames->first()}' successfully.");
@@ -229,7 +229,7 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         $this->resolveActor();
 
-        Gatekeeper::removeModelFromAllTeams($actee, $teams);
+        Gatekeeper::for($actee)->removeFromAllTeams($teams);
 
         if ($teams->count() === 1) {
             info("Model removed from team '{$teamNames->first()}' successfully.");

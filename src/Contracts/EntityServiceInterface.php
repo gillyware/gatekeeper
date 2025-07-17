@@ -71,6 +71,8 @@ interface EntityServiceInterface
 
     /**
      * Assign multiple entities to a model.
+     *
+     * @param  array<TModel|string|UnitEnum>|Arrayable<TModel|string|UnitEnum>  $entities
      */
     public function assignAllToModel(Model $model, array|Arrayable $entities): bool;
 
@@ -83,6 +85,8 @@ interface EntityServiceInterface
 
     /**
      * Revoke multiple entities from a model.
+     *
+     * @param  array<TModel|string|UnitEnum>|Arrayable<TModel|string|UnitEnum>  $entities
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $entities): bool;
 
@@ -102,11 +106,15 @@ interface EntityServiceInterface
 
     /**
      * Check if a model has any of the given entities.
+     *
+     * @param  array<TModel|string|UnitEnum>|Arrayable<TModel|string|UnitEnum>  $entities
      */
     public function modelHasAny(Model $model, array|Arrayable $entities): bool;
 
     /**
      * Check if a model has all of the given entities.
+     *
+     * @param  array<TModel|string|UnitEnum>|Arrayable<TModel|string|UnitEnum>  $entities
      */
     public function modelHasAll(Model $model, array|Arrayable $entities): bool;
 

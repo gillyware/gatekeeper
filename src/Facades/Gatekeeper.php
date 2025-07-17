@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Facades;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Services\GatekeeperForModelService;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use UnitEnum;
  * @method static string getLifecycleId()
  * @method static GatekeeperService setActor(Model $model)
  * @method static GatekeeperService systemActor()
+ * @method static GatekeeperForModelService for(Model $model)
  * @method static bool permissionExists(string|UnitEnum $permissionName)
  * @method static Permission createPermission(string|UnitEnum $permissionName)
  * @method static Permission updatePermission(Permission|string|UnitEnum $permission, string|UnitEnum $permissionName)
@@ -68,6 +70,7 @@ use UnitEnum;
  * @method static bool modelOnAllTeams(Model $model, array|Arrayable $teams)
  * @method static ?Team findTeamByName(string|UnitEnum $teamName)
  * @method static Collection getAllTeams()
+ * @method static Collection getEffectiveTeamsForModel(Model $model)
  * @method static Collection getDirectTeamsForModel(Model $model)
  *
  * @see \Gillyware\Gatekeeper\Services\GatekeeperService

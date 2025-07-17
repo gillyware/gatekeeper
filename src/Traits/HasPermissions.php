@@ -16,7 +16,7 @@ trait HasPermissions
      */
     public function assignPermission(Permission|string|UnitEnum $permission): bool
     {
-        return Gatekeeper::assignPermissionToModel($this, $permission);
+        return Gatekeeper::for($this)->assignPermission($permission);
     }
 
     /**
@@ -24,7 +24,7 @@ trait HasPermissions
      */
     public function assignAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::assignAllPermissionsToModel($this, $permissions);
+        return Gatekeeper::for($this)->assignAllPermissions($permissions);
     }
 
     /**
@@ -32,7 +32,7 @@ trait HasPermissions
      */
     public function revokePermission(Permission|string|UnitEnum $permission): bool
     {
-        return Gatekeeper::revokePermissionFromModel($this, $permission);
+        return Gatekeeper::for($this)->revokePermission($permission);
     }
 
     /**
@@ -40,7 +40,7 @@ trait HasPermissions
      */
     public function revokeAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::revokeAllPermissionsFromModel($this, $permissions);
+        return Gatekeeper::for($this)->revokeAllPermissions($permissions);
     }
 
     /**
@@ -48,7 +48,7 @@ trait HasPermissions
      */
     public function hasPermission(Permission|string|UnitEnum $permission): bool
     {
-        return Gatekeeper::modelHasPermission($this, $permission);
+        return Gatekeeper::for($this)->hasPermission($permission);
     }
 
     /**
@@ -56,7 +56,7 @@ trait HasPermissions
      */
     public function hasAnyPermission(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::modelHasAnyPermission($this, $permissions);
+        return Gatekeeper::for($this)->hasAnyPermission($permissions);
     }
 
     /**
@@ -64,6 +64,6 @@ trait HasPermissions
      */
     public function hasAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::modelHasAllPermissions($this, $permissions);
+        return Gatekeeper::for($this)->hasAllPermissions($permissions);
     }
 }

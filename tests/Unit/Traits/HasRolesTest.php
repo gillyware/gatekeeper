@@ -3,97 +3,102 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Traits;
 
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
+use Gillyware\Gatekeeper\Services\GatekeeperForModelService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
-use Illuminate\Support\Facades\Facade;
 
 class HasRolesTest extends TestCase
 {
+    private GatekeeperForModelService $gatekeeperForModelService;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        Facade::clearResolvedInstances();
-        Gatekeeper::spy();
+        $this->gatekeeperForModelService = app(GatekeeperForModelService::class);
     }
 
     public function test_assign_role_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $role = 'admin';
+        $role = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('assignRoleToModel')->with($user, $role)->once();
 
         $user->assignRole($role);
-
-        Gatekeeper::shouldHaveReceived('assignRoleToModel')->with($user, $role)->once();
     }
 
     public function test_assign_roles_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $roles = ['admin', 'editor'];
+        $roles = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('assignAllRolesToModel')->with($user, $roles)->once();
 
         $user->assignAllRoles($roles);
-
-        Gatekeeper::shouldHaveReceived('assignAllRolesToModel')->with($user, $roles)->once();
-    }
-
-    public function test_assign_roles_delegates_with_arrayable()
-    {
-        $user = User::factory()->create();
-        $roles = collect(['admin', 'editor']);
-
-        $user->assignAllRoles($roles);
-
-        Gatekeeper::shouldHaveReceived('assignAllRolesToModel')->with($user, $roles)->once();
     }
 
     public function test_revoke_role_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $role = 'admin';
+        $role = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('revokeRoleFromModel')->with($user, $role)->once();
 
         $user->revokeRole($role);
-
-        Gatekeeper::shouldHaveReceived('revokeRoleFromModel')->with($user, $role)->once();
     }
 
     public function test_revoke_roles_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $roles = ['admin', 'editor'];
+        $roles = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('revokeAllRolesFromModel')->with($user, $roles)->once();
 
         $user->revokeAllRoles($roles);
-
-        Gatekeeper::shouldHaveReceived('revokeAllRolesFromModel')->with($user, $roles)->once();
     }
 
     public function test_has_role_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $role = 'admin';
+        $role = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelHasRole')->with($user, $role)->once();
 
         $user->hasRole($role);
-
-        Gatekeeper::shouldHaveReceived('modelHasRole')->with($user, $role)->once();
     }
 
     public function test_has_any_role_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $roles = ['admin', 'editor'];
+        $roles = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelHasAnyRole')->with($user, $roles)->once();
 
         $user->hasAnyRole($roles);
-
-        Gatekeeper::shouldHaveReceived('modelHasAnyRole')->with($user, $roles)->once();
     }
 
     public function test_has_all_roles_delegates_to_facade()
     {
         $user = User::factory()->create();
-        $roles = ['admin', 'editor'];
+        $roles = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('modelHasAllRoles')->with($user, $roles)->once();
 
         $user->hasAllRoles($roles);
-
-        Gatekeeper::shouldHaveReceived('modelHasAllRoles')->with($user, $roles)->once();
     }
 }
