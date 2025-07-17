@@ -23,9 +23,13 @@ export default function ManageModelScreen() {
     const [tab, setTab] = useState<ModelManagementTab>('overview');
     const language: ManageModelText = useMemo(() => manageModelText, []);
 
-    useEffect(() => {
+    const refreshModel = async () => {
         const request: ShowModelRequest = { model_label: modelLabel, model_pk: modelPk };
         getModel(api, request, setModel, setLoadingModel, setErrorLoadingModel);
+    };
+
+    useEffect(() => {
+        refreshModel();
     }, []);
 
     if (loadingModel) {
@@ -48,11 +52,13 @@ export default function ManageModelScreen() {
 
                     {tab === 'overview' && <ModelSummary model={model} />}
 
-                    {tab === 'permissions' && <ModelEntityTables<GatekeeperPermission> model={model} entity="permission" />}
+                    {tab === 'permissions' && (
+                        <ModelEntityTables<GatekeeperPermission> model={model} entity="permission" refreshModel={refreshModel} />
+                    )}
 
-                    {tab === 'roles' && <ModelEntityTables<GatekeeperRole> model={model} entity="role" />}
+                    {tab === 'roles' && <ModelEntityTables<GatekeeperRole> model={model} entity="role" refreshModel={refreshModel} />}
 
-                    {tab === 'teams' && <ModelEntityTables<GatekeeperTeam> model={model} entity="team" />}
+                    {tab === 'teams' && <ModelEntityTables<GatekeeperTeam> model={model} entity="team" refreshModel={refreshModel} />}
                 </div>
             </ModelLayout>
         </GatekeeperLayout>

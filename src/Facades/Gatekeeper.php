@@ -36,8 +36,9 @@ use UnitEnum;
  * @method static bool modelHasAllPermissions(Model $model, array|Arrayable $permissions)
  * @method static ?Permission findPermissionByName(string|UnitEnum $permissionName)
  * @method static Collection getAllPermissions()
- * @method static Collection getEffectivePermissionsForModel(Model $model)
  * @method static Collection getDirectPermissionsForModel(Model $model)
+ * @method static Collection getEffectivePermissionsForModel(Model $model)
+ * @method static Collection getVerbosePermissionsForModel(Model $model)
  * @method static bool roleExists(string|UnitEnum $roleName)
  * @method static Role createRole(string|UnitEnum $roleName)
  * @method static Role updateRole(Role|string|UnitEnum $role, string|UnitEnum $roleName)
@@ -53,8 +54,8 @@ use UnitEnum;
  * @method static bool modelHasAllRoles(Model $model, array|Arrayable $roles)
  * @method static ?Role findRoleByName(string|UnitEnum $roleName)
  * @method static Collection getAllRoles()
- * @method static Collection getEffectiveRolesForModel(Model $model)
  * @method static Collection getDirectRolesForModel(Model $model)
+ * @method static Collection getEffectiveRolesForModel(Model $model)
  * @method static bool teamExists(string|UnitEnum $teamName)
  * @method static Team createTeam(string|UnitEnum $teamName)
  * @method static Team updateTeam(Team|string|UnitEnum $team, string|UnitEnum $teamName)
@@ -70,7 +71,6 @@ use UnitEnum;
  * @method static bool modelOnAllTeams(Model $model, array|Arrayable $teams)
  * @method static ?Team findTeamByName(string|UnitEnum $teamName)
  * @method static Collection getAllTeams()
- * @method static Collection getEffectiveTeamsForModel(Model $model)
  * @method static Collection getDirectTeamsForModel(Model $model)
  *
  * @see \Gillyware\Gatekeeper\Services\GatekeeperService

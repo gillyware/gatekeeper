@@ -85,6 +85,14 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function getDirectPermissions(): Collection
+    {
+        return Gatekeeper::getDirectPermissionsForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getEffectivePermissions(): Collection
     {
         return Gatekeeper::getEffectivePermissionsForModel($this->model);
@@ -93,9 +101,9 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getDirectPermissions(): Collection
+    public function getVerbosePermissions(): Collection
     {
-        return Gatekeeper::getDirectPermissionsForModel($this->model);
+        return Gatekeeper::getVerbosePermissionsForModel($this->model);
     }
 
     /**
@@ -157,17 +165,17 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getEffectiveRoles(): Collection
+    public function getDirectRoles(): Collection
     {
-        return Gatekeeper::getEffectiveRolesForModel($this->model);
+        return Gatekeeper::getDirectRolesForModel($this->model);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getDirectRoles(): Collection
+    public function getEffectiveRoles(): Collection
     {
-        return Gatekeeper::getDirectRolesForModel($this->model);
+        return Gatekeeper::getEffectiveRolesForModel($this->model);
     }
 
     /**
@@ -224,14 +232,6 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     public function onAllTeams(array|Arrayable $teams): bool
     {
         return Gatekeeper::modelOnAllTeams($this->model, $teams);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getEffectiveTeams(): Collection
-    {
-        return Gatekeeper::getEffectiveTeamsForModel($this->model);
     }
 
     /**

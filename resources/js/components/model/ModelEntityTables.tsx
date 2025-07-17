@@ -23,9 +23,10 @@ import { useEffect, useMemo, useState } from 'react';
 interface ModelEntitiesProps {
     model: ConfiguredModel;
     entity: GatekeeperEntity;
+    refreshModel: () => Promise<void>;
 }
 
-export default function ModelEntityTables<E extends GatekeeperEntity>({ model, entity }: ModelEntitiesProps) {
+export default function ModelEntityTables<E extends GatekeeperEntity>({ model, entity, refreshModel }: ModelEntitiesProps) {
     const api = useApi();
     const { config, user } = useGatekeeper();
 
@@ -110,8 +111,9 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
     }, [modelUnassignedEntitiesPageRequest]);
 
     const refreshPages = () => {
-        setModelEntityAssignmentsPageRequest((prev) => ({ ...prev }));
-        setModelUnassignedEntitiesPageRequest((prev) => ({ ...prev }));
+        Promise.all([setModelEntityAssignmentsPageRequest((prev) => ({ ...prev })), setModelUnassignedEntitiesPageRequest((prev) => ({ ...prev }))]);
+
+        refreshModel();
     };
 
     return (

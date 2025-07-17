@@ -9,6 +9,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeletePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\ReactivatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\RevokePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
+use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
@@ -397,6 +398,68 @@ class PermissionService extends AbstractBaseEntityService
     public function getDirectForModel(Model $model): Collection
     {
         return $this->permissionRepository->forModel($model);
+    }
+
+    /**
+     * Get all effective permissions for the given model with the permission source(s).
+     */
+    public function getVerboseForModel(Model $model): Collection
+    {
+        $sourcesMap = [];
+
+        $this->permissionRepository->activeForModel($model)
+            ->each(function (Permission $permission) use (&$sourcesMap) {
+                $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
+            });
+
+        if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
+            $this->roleRepository->activeForModel($model)
+                ->each(function (Role $role) use (&$sourcesMap) {
+                    $this->permissionRepository->activeForModel($role)
+                        ->each(function (Permission $permission) use (&$sourcesMap, $role) {
+                            $sourcesMap[$permission->name][] = [
+                                'type' => PermissionSourceType::ROLE,
+                                'role' => $role->name,
+                            ];
+                        });
+                });
+        }
+
+        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
+            $teams = $this->teamRepository->activeForModel($model)
+                ->each(function (Team $team) use (&$sourcesMap) {
+                    $this->permissionRepository->activeForModel($team)
+                        ->each(function (Permission $permission) use (&$sourcesMap, $team) {
+                            $sourcesMap[$permission->name][] = [
+                                'type' => PermissionSourceType::TEAM,
+                                'team' => $team->name,
+                            ];
+                        });
+
+                    $this->roleRepository->activeForModel($team)
+                        ->each(function (Role $role) use (&$sourcesMap, $team) {
+                            $this->permissionRepository->activeForModel($role)
+                                ->each(function (Permission $permission) use (&$sourcesMap, $role, $team) {
+                                    $sourcesMap[$permission->name][] = [
+                                        'type' => PermissionSourceType::TEAM_ROLE,
+                                        'team' => $team->name,
+                                        'role' => $role->name,
+                                    ];
+                                });
+                        });
+                });
+        }
+
+        $result = collect();
+
+        foreach ($sourcesMap as $permissionName => $sources) {
+            $result->push([
+                'name' => $permissionName,
+                'sources' => $sources,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

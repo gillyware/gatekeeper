@@ -125,6 +125,13 @@ interface GatekeeperServiceInterface
     public function getAllPermissions(): Collection;
 
     /**
+     * Get all permissions assigned directly to a model.
+     *
+     * @return Collection<Permission>
+     */
+    public function getDirectPermissionsForModel(Model $model): Collection;
+
+    /**
      * Get all permissions assigned directly or indirectly to a model.
      *
      * @return Collection<Permission>
@@ -132,11 +139,9 @@ interface GatekeeperServiceInterface
     public function getEffectivePermissionsForModel(Model $model): Collection;
 
     /**
-     * Get all permissions assigned directly to a model.
-     *
-     * @return Collection<Permission>
+     * Get all effective permissions for the given model with the permission source(s).
      */
-    public function getDirectPermissionsForModel(Model $model): Collection;
+    public function getVerbosePermissionsForModel(Model $model): Collection;
 
     /**
      * Check if a role exists.
@@ -224,18 +229,18 @@ interface GatekeeperServiceInterface
     public function getAllRoles(): Collection;
 
     /**
-     * Get all roles assigned directly or indirectly to a model.
-     *
-     * @return Collection<Role>
-     */
-    public function getEffectiveRolesForModel(Model $model): Collection;
-
-    /**
      * Get all roles assigned directly to a model.
      *
      * @return Collection<Role>
      */
     public function getDirectRolesForModel(Model $model): Collection;
+
+    /**
+     * Get all roles assigned directly or indirectly to a model.
+     *
+     * @return Collection<Role>
+     */
+    public function getEffectiveRolesForModel(Model $model): Collection;
 
     /**
      * Check if a team exists.
@@ -321,13 +326,6 @@ interface GatekeeperServiceInterface
      * @return Collection<Team>
      */
     public function getAllTeams(): Collection;
-
-    /**
-     * Get all teams assigned directly or indirectly to a model.
-     *
-     * @return Collection<Team>
-     */
-    public function getEffectiveTeamsForModel(Model $model): Collection;
 
     /**
      * Get all teams assigned directly to a model.

@@ -1,4 +1,5 @@
-import { GatekeeperEntity } from '@/types';
+import { type GatekeeperEntity } from '@/types';
+import { PermissionSource } from '@/types/api/model';
 
 export interface ManageModelText {
     failedToLoad: string;
@@ -11,6 +12,7 @@ export interface ModelSummaryText {
     modelLabel: string;
     entitySupportLabel: string;
     entitySupportText: ModelEntitySupportText;
+    effectivePermissionsText: ModelEffectivePermissionsText;
 }
 
 export interface ModelManagementTabsText {
@@ -41,6 +43,14 @@ export interface ModelEntitySupportText {
         isTeam: string;
         missingTrait: string;
     };
+}
+
+export interface ModelEffectivePermissionsText {
+    title: string;
+    titleTooltip: string;
+    toggleAllTooltip: (allOpen: boolean) => string;
+    searchPlaceholder: string;
+    sourceLabel: (source: PermissionSource) => string;
 }
 
 export type ModelEntityTablesText = {
@@ -94,6 +104,26 @@ export const manageModelText: ManageModelText = {
                 isRole: 'Teams cannot be assigned to roles',
                 isTeam: 'Teams cannot be assigned to other teams',
                 missingTrait: 'The model is not using the `HasTeams` trait',
+            },
+        },
+        effectivePermissionsText: {
+            title: 'Effective Permissions',
+            titleTooltip: 'All permissions this model currently has — whether assigned directly, via roles, or via teams',
+            toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
+            searchPlaceholder: 'Search permissions by name',
+            sourceLabel: (source: PermissionSource) => {
+                switch (source.type) {
+                    case 'direct':
+                        return 'Direct';
+                    case 'role':
+                        return `Role: ${source.role}`;
+                    case 'team':
+                        return `Team: ${source.team}`;
+                    case 'team-role':
+                        return `Team: ${source.team} via Role: ${source.role}`;
+                    default:
+                        return 'Unknown';
+                }
             },
         },
     },
