@@ -11,6 +11,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Role\RevokeRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\UpdateRoleAuditLogDto;
 use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
@@ -91,6 +92,10 @@ class RoleService extends AbstractBaseEntityService
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
 
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
+
         if ($this->exists($newRoleName) && $role->name !== $newRoleName) {
             throw new RoleAlreadyExistsException($newRoleName);
         }
@@ -117,6 +122,10 @@ class RoleService extends AbstractBaseEntityService
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
+
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
 
         if (! $role->is_active) {
             return $role;
@@ -145,6 +154,10 @@ class RoleService extends AbstractBaseEntityService
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
 
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
+
         if ($role->is_active) {
             return $role;
         }
@@ -170,6 +183,10 @@ class RoleService extends AbstractBaseEntityService
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findByName($roleName);
+
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
 
         if (! $role) {
             return true;
@@ -205,6 +222,10 @@ class RoleService extends AbstractBaseEntityService
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findOrFailByName($roleName);
+
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
 
         // If the model already has this role directly assigned, return true.
         if ($this->modelHasDirectly($model, $role)) {
@@ -248,6 +269,10 @@ class RoleService extends AbstractBaseEntityService
 
         $roleName = $this->resolveEntityName($role);
         $role = $this->roleRepository->findOrFailByName($roleName);
+
+        if (! $role) {
+            throw new RoleNotFoundException($roleName);
+        }
 
         $revoked = $this->modelHasRoleRepository->deleteForModelAndEntity($model, $role);
 

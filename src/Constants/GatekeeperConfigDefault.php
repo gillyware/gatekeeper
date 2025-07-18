@@ -41,7 +41,7 @@ class GatekeeperConfigDefault
 
     public const TABLES_MODEL_HAS_TEAMS = 'model_has_teams';
 
-    public const TABLES_AUDIT_LOGS = 'gatekeeper_audit_logs';
+    public const TABLES_AUDIT_LOG = 'gatekeeper_audit_log';
 
     /**
      * ******************************************************************

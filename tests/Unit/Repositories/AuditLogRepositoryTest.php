@@ -25,7 +25,7 @@ class AuditLogRepositoryTest extends TestCase
         $repository = new AuditLogRepository;
         $auditLog = $repository->create($dto);
 
-        $this->assertDatabaseHas(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS), [
+        $this->assertDatabaseHas(Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG), [
             'id' => $auditLog->id,
             'action' => Action::PERMISSION_DEACTIVATE,
             'action_by_model_type' => $user->getMorphClass(),

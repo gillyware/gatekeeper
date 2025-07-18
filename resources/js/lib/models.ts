@@ -172,25 +172,25 @@ export function getEntitySupportForModel(config: GatekeeperConfig, model: Config
 
     if (!rolesSupported) {
         result.role.supported = false;
-        result.role.reason = !config.roles_enabled
-            ? language.role.featureDisabled
-            : model.is_role
-              ? language.role.isRole
-              : model.is_permission
-                ? language.role.isPermission
+        result.role.reason = model.is_role
+            ? language.role.isRole
+            : model.is_permission
+              ? language.role.isPermission
+              : !config.roles_enabled
+                ? language.role.featureDisabled
                 : language.role.missingTrait;
     }
 
     if (!teamsSupported) {
         result.team.supported = false;
-        result.team.reason = !config.teams_enabled
-            ? language.team.featureDisabled
-            : model.is_team
-              ? language.team.isTeam
-              : model.is_role
-                ? language.team.isRole
-                : model.is_permission
-                  ? language.team.isPermission
+        result.team.reason = model.is_team
+            ? language.team.isTeam
+            : model.is_role
+              ? language.team.isRole
+              : model.is_permission
+                ? language.team.isPermission
+                : !config.teams_enabled
+                  ? language.team.featureDisabled
                   : language.team.missingTrait;
     }
 

@@ -17,7 +17,7 @@ interface ModelUnassignedEntitiesTableProps<E extends GatekeeperEntity> {
     pageRequest: GetModelEntitiesPageRequest;
     setSearchTerm: (value: SetStateAction<string>) => void;
     setPageRequest: (value: SetStateAction<GetModelEntitiesPageRequest>) => void;
-    refreshPages: () => void;
+    refreshPages: () => Promise<void>;
     assignEntityToModel: (entityName: string) => Promise<void>;
     loadingModelUnassignedEntities: boolean;
     processingEntityAssignment: boolean;

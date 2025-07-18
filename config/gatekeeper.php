@@ -1,7 +1,5 @@
 <?php
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-
 return [
 
     /*
@@ -15,7 +13,7 @@ return [
     |
     */
 
-    'path' => env('GATEKEEPER_PATH', GatekeeperConfigDefault::PATH),
+    'path' => env('GATEKEEPER_PATH', 'gatekeeper'),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,7 +24,7 @@ return [
     |
     */
 
-    'timezone' => env('GATEKEEPER_TIMEZONE', GatekeeperConfigDefault::TIMEZONE),
+    'timezone' => env('GATEKEEPER_TIMEZONE', config('app.timezone', 'UTC')),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,13 +37,13 @@ return [
 
     'features' => [
         'audit' => [
-            'enabled' => GatekeeperConfigDefault::FEATURES_AUDIT_ENABLED,
+            'enabled' => true,
         ],
         'roles' => [
-            'enabled' => GatekeeperConfigDefault::FEATURES_ROLES_ENABLED,
+            'enabled' => true,
         ],
         'teams' => [
-            'enabled' => GatekeeperConfigDefault::FEATURES_TEAMS_ENABLED,
+            'enabled' => false,
         ],
     ],
 
@@ -60,13 +58,13 @@ return [
     */
 
     'tables' => [
-        'permissions' => GatekeeperConfigDefault::TABLES_PERMISSIONS,
-        'roles' => GatekeeperConfigDefault::TABLES_ROLES,
-        'teams' => GatekeeperConfigDefault::TABLES_TEAMS,
-        'model_has_permissions' => GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS,
-        'model_has_roles' => GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES,
-        'model_has_teams' => GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS,
-        'audit_logs' => GatekeeperConfigDefault::TABLES_AUDIT_LOGS,
+        'permissions' => 'permissions',
+        'roles' => 'roles',
+        'teams' => 'teams',
+        'model_has_permissions' => 'model_has_permissions',
+        'model_has_roles' => 'model_has_roles',
+        'model_has_teams' => 'model_has_teams',
+        'audit_log' => 'gatekeeper_audit_log',
     ],
 
     /*
@@ -75,14 +73,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure the cache prefix and TTL (in seconds) used for caching
-    | entities (permissions, roles, teams) and entity assignemnts.
+    | entities (permissions, roles, teams) and entity assignments.
     |
     */
 
     'cache' => [
-        'enabled' => env('GATEKEEPER_CACHE_ENABLED', GatekeeperConfigDefault::CACHE_ENABLED),
-        'prefix' => env('GATEKEEPER_CACHE_PREFIX', GatekeeperConfigDefault::CACHE_PREFIX),
-        'ttl' => env('GATEKEEPER_CACHE_TTL', GatekeeperConfigDefault::CACHE_TTL),
+        'enabled' => env('GATEKEEPER_CACHE_ENABLED', true),
+        'prefix' => env('GATEKEEPER_CACHE_PREFIX', 'gatekeeper'),
+        'ttl' => env('GATEKEEPER_CACHE_TTL', 2 * 60 * 60),
     ],
 
     /*
