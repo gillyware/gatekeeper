@@ -12,8 +12,7 @@
 Gatekeeper provides a dashboard and code-driven configuration to manage access control for your Laravel application. Gatekeeper allows you to easily manage permissions, roles, and teams while tracking all changes to entities and their assignments in an audit log.
 
 <p align="center">
-    <img width="720" height="400" alt="Gatekeeper Dashboard" src="https://github.com/user-attachments/assets/80794616-2ac4-4999-81c0-58db1604862b" />
-
+    <img width="720" height="400" alt="Gatekeeper Dashboard" src="https://github.com/user-attachments/assets/cb641cee-c5b3-458a-b30b-8c620b42de37" />
 </p>
 
 ## Official Documentation
