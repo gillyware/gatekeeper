@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Team;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
 use UnitEnum;
 
 trait HasTeams
@@ -65,5 +66,15 @@ trait HasTeams
     public function onAllTeams(array|Arrayable $teams): bool
     {
         return Gatekeeper::for($this)->onAllTeams($teams);
+    }
+
+    /**
+     * Get all teams assigned to a model.
+     *
+     * @return Collection<Team>
+     */
+    public function getTeams(): Collection
+    {
+        return Gatekeeper::for($this)->getTeams();
     }
 }

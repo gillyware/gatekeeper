@@ -407,10 +407,12 @@ class PermissionService extends AbstractBaseEntityService
     {
         $sourcesMap = [];
 
-        $this->permissionRepository->activeForModel($model)
-            ->each(function (Permission $permission) use (&$sourcesMap) {
-                $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
-            });
+        if ($this->modelInteractsWithPermissions($model)) {
+            $this->permissionRepository->activeForModel($model)
+                ->each(function (Permission $permission) use (&$sourcesMap) {
+                    $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
+                });
+        }
 
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
             $this->roleRepository->activeForModel($model)
@@ -436,17 +438,19 @@ class PermissionService extends AbstractBaseEntityService
                             ];
                         });
 
-                    $this->roleRepository->activeForModel($team)
-                        ->each(function (Role $role) use (&$sourcesMap, $team) {
-                            $this->permissionRepository->activeForModel($role)
-                                ->each(function (Permission $permission) use (&$sourcesMap, $role, $team) {
-                                    $sourcesMap[$permission->name][] = [
-                                        'type' => PermissionSourceType::TEAM_ROLE,
-                                        'team' => $team->name,
-                                        'role' => $role->name,
-                                    ];
-                                });
-                        });
+                    if ($this->rolesFeatureEnabled()) {
+                        $this->roleRepository->activeForModel($team)
+                            ->each(function (Role $role) use (&$sourcesMap, $team) {
+                                $this->permissionRepository->activeForModel($role)
+                                    ->each(function (Permission $permission) use (&$sourcesMap, $role, $team) {
+                                        $sourcesMap[$permission->name][] = [
+                                            'type' => PermissionSourceType::TEAM_ROLE,
+                                            'team' => $team->name,
+                                            'role' => $role->name,
+                                        ];
+                                    });
+                            });
+                    }
                 });
         }
 

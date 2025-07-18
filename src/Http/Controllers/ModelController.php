@@ -58,7 +58,7 @@ class ModelController extends AbstractBaseController
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
             $directPermissionsCount = Gatekeeper::for($model)->getDirectPermissions()->count();
             $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
-            $directTeamsCount = Gatekeeper::for($model)->getDirectTeams()->count();
+            $directTeamsCount = Gatekeeper::for($model)->getTeams()->count();
 
             return Response::json([
                 'model_label' => $modelData['label'],

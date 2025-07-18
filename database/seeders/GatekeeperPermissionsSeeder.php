@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Database\Seeders;
 
 use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
-use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Database\Seeder;
 
 class GatekeeperPermissionsSeeder extends Seeder
@@ -16,7 +16,7 @@ class GatekeeperPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Gatekeeper::systemActor()->createPermission($permission);
         }
     }
 }

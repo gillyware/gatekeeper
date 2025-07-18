@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Role;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
 use UnitEnum;
 
 trait HasRoles
@@ -65,5 +66,33 @@ trait HasRoles
     public function hasAllRoles(array|Arrayable $roles): bool
     {
         return Gatekeeper::for($this)->hasAllRoles($roles);
+    }
+
+    /**
+     * Get all roles assigned directly to a model.
+     *
+     * @return Collection<Role>
+     */
+    public function getDirectRoles(): Collection
+    {
+        return Gatekeeper::for($this)->getDirectRoles();
+    }
+
+    /**
+     * Get all roles assigned directly or indirectly to a model.
+     *
+     * @return Collection<Role>
+     */
+    public function getEffectiveRoles(): Collection
+    {
+        return Gatekeeper::for($this)->getEffectiveRoles();
+    }
+
+    /**
+     * Get all effective roles for the given model with the role source(s).
+     */
+    public function getVerboseRoles(): Collection
+    {
+        return Gatekeeper::for($this)->getVerboseRoles();
     }
 }

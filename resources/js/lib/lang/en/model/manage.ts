@@ -52,6 +52,7 @@ export interface ModelEffectivePermissionsText {
     toggleAllTooltip: (allOpen: boolean) => string;
     searchPlaceholder: string;
     sourceLabel: (source: PermissionSource) => string;
+    empty: string;
 }
 
 export interface ModelEffectiveRolesText {
@@ -60,6 +61,7 @@ export interface ModelEffectiveRolesText {
     toggleAllTooltip: (allOpen: boolean) => string;
     searchPlaceholder: string;
     sourceLabel: (source: RoleSource) => string;
+    empty: string;
 }
 
 export type ModelEntityTablesText = {
@@ -134,6 +136,7 @@ export const manageModelText: ManageModelText = {
                         return 'Unknown';
                 }
             },
+            empty: 'This model has no effective permissions.',
         },
         effectiveRolesText: {
             title: 'Effective Roles',
@@ -150,6 +153,7 @@ export const manageModelText: ManageModelText = {
                         return 'Unknown';
                 }
             },
+            empty: 'This model has no effective roles.',
         },
     },
     modelEntityTablesText: {

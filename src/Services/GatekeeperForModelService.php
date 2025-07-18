@@ -245,8 +245,8 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getDirectTeams(): Collection
+    public function getTeams(): Collection
     {
-        return Gatekeeper::getDirectTeamsForModel($this->model);
+        return Gatekeeper::getTeamsForModel($this->model);
     }
 }

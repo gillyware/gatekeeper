@@ -333,9 +333,9 @@ interface GatekeeperServiceInterface
     public function getAllTeams(): Collection;
 
     /**
-     * Get all teams assigned directly to a model.
+     * Get all teams assigned to a model.
      *
      * @return Collection<Team>
      */
-    public function getDirectTeamsForModel(Model $model): Collection;
+    public function getTeamsForModel(Model $model): Collection;
 }
