@@ -67,13 +67,13 @@ class PermissionCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
+        $permissionNames = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
-        [$successes, $failures] = $names->partition(function (string $name) {
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) {
             try {
-                Gatekeeper::createPermission($name);
+                Gatekeeper::createPermission($permissionName);
 
                 return true;
             } catch (GatekeeperException $e) {
@@ -101,13 +101,11 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionName = $this->gatherOneExistingEntityName();
 
-        $permission = $this->permissionRepository->findOrFailByName($permissionName);
-
         $newPermissionName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
-        Gatekeeper::updatePermission($permission, $newPermissionName);
+        Gatekeeper::updatePermission($permissionName, $newPermissionName);
 
         info("Permission '$permissionName' updated successfully to '$newPermissionName'.");
     }
@@ -119,22 +117,29 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $permissions = $permissionNames->map(
-            fn (string $name) => $this->permissionRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $permissions->each(fn (Permission $permission) => Gatekeeper::deactivatePermission($permission));
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) {
+            try {
+                Gatekeeper::deactivatePermission($permissionName);
 
-        if ($permissions->count() === 1) {
-            info("Permission '{$permissionNames->first()}' deactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' deactivated successfully.");
         }
 
-        $permissionList = $permissionNames->implode(', ');
-        info("Permissions '$permissionList' deactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to deactivate permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -144,22 +149,29 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $permissions = $permissionNames->map(
-            fn (string $name) => $this->permissionRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $permissions->each(fn (Permission $permission) => Gatekeeper::reactivatePermission($permission));
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) {
+            try {
+                Gatekeeper::reactivatePermission($permissionName);
 
-        if ($permissions->count() === 1) {
-            info("Permission '{$permissionNames->first()}' reactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' reactivated successfully.");
         }
 
-        $permissionList = $permissionNames->implode(', ');
-        info("Permissions '$permissionList' reactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to reactivate permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -169,22 +181,29 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $permissions = $permissionNames->map(
-            fn (string $name) => $this->permissionRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $permissions->each(fn (Permission $permission) => Gatekeeper::deletePermission($permission));
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) {
+            try {
+                Gatekeeper::deletePermission($permissionName);
 
-        if ($permissions->count() === 1) {
-            info("Permission '{$permissionNames->first()}' deleted successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' deleted successfully.");
         }
 
-        $permissionList = $permissionNames->implode(', ');
-        info("Permissions '$permissionList' deleted successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to delete permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -194,24 +213,31 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $permissions = $permissionNames->map(
-            fn (string $name) => $this->permissionRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->assignAllPermissions($permissions);
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->assignPermission($permissionName);
 
-        if ($permissions->count() === 1) {
-            info("Permission '{$permissionNames->first()}' assigned to model successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' assigned successfully.");
         }
 
-        $permissionList = $permissionNames->implode(', ');
-        info("Permissions '$permissionList' assigned to model successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to assign permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -221,24 +247,31 @@ class PermissionCommand extends AbstractBaseEntityCommand
     {
         $permissionNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $permissions = $permissionNames->map(
-            fn (string $name) => $this->permissionRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->revokeAllPermissions($permissions);
+        [$successes, $failures] = $permissionNames->partition(function (string $permissionName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->revokePermission($permissionName);
 
-        if ($permissions->count() === 1) {
-            info("Permission '{$permissionNames->first()}' revoked from model successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Permission{$plural} '{$successes->implode(', ')}' revoked successfully.");
         }
 
-        $permissionList = $permissionNames->implode(', ');
-        info("Permissions '$permissionList' revoked from model successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to revoke permission{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**

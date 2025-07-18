@@ -166,39 +166,47 @@ function EffectivePermissions({ effectivePermissions, language }: EffectivePermi
                         <TooltipContent side="right">{language.effectivePermissionsText.titleTooltip}</TooltipContent>
                     </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button
-                                onClick={toggleAll}
-                                className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
-                            >
-                                <LayoutPanelTop className="h-4 w-4" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">{language.effectivePermissionsText.toggleAllTooltip(allOpen)}</TooltipContent>
-                    </Tooltip>
+                    {effectivePermissions.length > 0 && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={toggleAll}
+                                    className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
+                                >
+                                    <LayoutPanelTop className="h-4 w-4" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">{language.effectivePermissionsText.toggleAllTooltip(allOpen)}</TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
 
-                <Input
-                    type="text"
-                    name="permission-search"
-                    placeholder={language.effectivePermissionsText.searchPlaceholder}
-                    className="w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-
-                <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
-                    {filteredPermissions.map((permission) => (
-                        <PermissionItem
-                            key={permission.name}
-                            permission={permission}
-                            open={openStates[permission.name]}
-                            onToggle={() => toggleOne(permission.name)}
-                            language={language}
+                {effectivePermissions.length > 0 ? (
+                    <>
+                        <Input
+                            type="text"
+                            name="permission-search"
+                            placeholder={language.effectivePermissionsText.searchPlaceholder}
+                            className="w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    ))}
-                </div>
+
+                        <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
+                            {filteredPermissions.map((permission) => (
+                                <PermissionItem
+                                    key={permission.name}
+                                    permission={permission}
+                                    open={openStates[permission.name]}
+                                    onToggle={() => toggleOne(permission.name)}
+                                    language={language}
+                                />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <span>{language.effectivePermissionsText.empty}</span>
+                )}
             </CardContent>
         </Card>
     );
@@ -237,39 +245,47 @@ function EffectiveRoles({ effectiveRoles, language }: EffectiveRolesProps) {
                         <TooltipContent side="right">{language.effectiveRolesText.titleTooltip}</TooltipContent>
                     </Tooltip>
 
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button
-                                onClick={toggleAll}
-                                className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
-                            >
-                                <LayoutPanelTop className="h-4 w-4" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">{language.effectiveRolesText.toggleAllTooltip(allOpen)}</TooltipContent>
-                    </Tooltip>
+                    {effectiveRoles.length > 0 && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={toggleAll}
+                                    className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
+                                >
+                                    <LayoutPanelTop className="h-4 w-4" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">{language.effectiveRolesText.toggleAllTooltip(allOpen)}</TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
 
-                <Input
-                    type="text"
-                    name="permission-search"
-                    placeholder={language.effectiveRolesText.searchPlaceholder}
-                    className="w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-
-                <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
-                    {filteredRoles.map((role) => (
-                        <RoleItem
-                            key={role.name}
-                            role={role}
-                            open={openStates[role.name]}
-                            onToggle={() => toggleOne(role.name)}
-                            language={language}
+                {effectiveRoles.length > 0 ? (
+                    <>
+                        <Input
+                            type="text"
+                            name="role-search"
+                            placeholder={language.effectiveRolesText.searchPlaceholder}
+                            className="w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    ))}
-                </div>
+
+                        <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
+                            {filteredRoles.map((role) => (
+                                <RoleItem
+                                    key={role.name}
+                                    role={role}
+                                    open={openStates[role.name]}
+                                    onToggle={() => toggleOne(role.name)}
+                                    language={language}
+                                />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <span>{language.effectiveRolesText.empty}</span>
+                )}
             </CardContent>
         </Card>
     );

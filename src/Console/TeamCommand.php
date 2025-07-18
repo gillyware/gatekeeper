@@ -67,13 +67,13 @@ class TeamCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
+        $teamNames = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
-        [$successes, $failures] = $names->partition(function (string $name) {
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) {
             try {
-                Gatekeeper::createTeam($name);
+                Gatekeeper::createTeam($teamName);
 
                 return true;
             } catch (GatekeeperException $e) {
@@ -101,13 +101,11 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamName = $this->gatherOneExistingEntityName();
 
-        $team = $this->teamRepository->findOrFailByName($teamName);
-
         $newTeamName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
-        Gatekeeper::updateTeam($team, $newTeamName);
+        Gatekeeper::updateTeam($teamName, $newTeamName);
 
         info("Team '$teamName' updated successfully to '$newTeamName'.");
     }
@@ -119,22 +117,29 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $teams = $teamNames->map(
-            fn (string $name) => $this->teamRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $teams->each(fn (Team $team) => Gatekeeper::deactivateTeam($team));
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) {
+            try {
+                Gatekeeper::deactivateTeam($teamName);
 
-        if ($teams->count() === 1) {
-            info("Team '{$teamNames->first()}' deactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' deactivated successfully.");
         }
 
-        $teamList = $teamNames->implode(', ');
-        info("Teams '$teamList' deactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to deactivate team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -144,22 +149,29 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $teams = $teamNames->map(
-            fn (string $name) => $this->teamRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $teams->each(fn (Team $team) => Gatekeeper::reactivateTeam($team));
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) {
+            try {
+                Gatekeeper::reactivateTeam($teamName);
 
-        if ($teams->count() === 1) {
-            info("Team '{$teamNames->first()}' reactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' reactivated successfully.");
         }
 
-        $teamList = $teamNames->implode(', ');
-        info("Teams '$teamList' reactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to reactivate team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -169,22 +181,29 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $teams = $teamNames->map(
-            fn (string $name) => $this->teamRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $teams->each(fn (Team $team) => Gatekeeper::deleteTeam($team));
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) {
+            try {
+                Gatekeeper::deleteTeam($teamName);
 
-        if ($teams->count() === 1) {
-            info("Team '{$teamNames->first()}' deleted successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' deleted successfully.");
         }
 
-        $teamList = $teamNames->implode(', ');
-        info("Teams '$teamList' deleted successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to delete team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -194,24 +213,31 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $teams = $teamNames->map(
-            fn (string $name) => $this->teamRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->addToAllTeams($teams);
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->addToTeam($teamName);
 
-        if ($teams->count() === 1) {
-            info("Model added to team '{$teamNames->first()}' successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' assigned successfully.");
         }
 
-        $teamList = $teamNames->implode(', ');
-        info("Model added to teams '$teamList' successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to assign team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -221,24 +247,31 @@ class TeamCommand extends AbstractBaseEntityCommand
     {
         $teamNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $teams = $teamNames->map(
-            fn (string $name) => $this->teamRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->removeFromAllTeams($teams);
+        [$successes, $failures] = $teamNames->partition(function (string $teamName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->removeFromTeam($teamName);
 
-        if ($teams->count() === 1) {
-            info("Model removed from team '{$teamNames->first()}' successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Team{$plural} '{$successes->implode(', ')}' revoked successfully.");
         }
 
-        $teamList = $teamNames->implode(', ');
-        info("Model removed from teams '$teamList' successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to revoke team{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**

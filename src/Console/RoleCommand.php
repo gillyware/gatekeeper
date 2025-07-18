@@ -68,13 +68,13 @@ class RoleCommand extends AbstractBaseEntityCommand
      */
     private function handleCreate(): void
     {
-        $names = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
+        $roleNames = $this->gatherOneOrMoreNonExistingEntityNames("What is the name of the {$this->entity->value} you want to create?");
 
         $this->resolveActor();
 
-        [$successes, $failures] = $names->partition(function (string $name) {
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) {
             try {
-                Gatekeeper::createRole($name);
+                Gatekeeper::createRole($roleName);
 
                 return true;
             } catch (GatekeeperException $e) {
@@ -102,13 +102,11 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleName = $this->gatherOneExistingEntityName();
 
-        $role = $this->roleRepository->findOrFailByName($roleName);
-
         $newRoleName = $this->gatherOneNonExistingEntityName("What will be the new {$this->entity->value} name?");
 
         $this->resolveActor();
 
-        Gatekeeper::updateRole($role, $newRoleName);
+        Gatekeeper::updateRole($roleName, $newRoleName);
 
         info("Role '$roleName' updated successfully to '$newRoleName'.");
     }
@@ -120,22 +118,29 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $roles = $roleNames->map(
-            fn (string $name) => $this->roleRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $roles->each(fn (Role $role) => Gatekeeper::deactivateRole($role));
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) {
+            try {
+                Gatekeeper::deactivateRole($roleName);
 
-        if ($roles->count() === 1) {
-            info("Role '{$roleNames->first()}' deactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' deactivated successfully.");
         }
 
-        $roleList = $roleNames->implode(', ');
-        info("Roles '$roleList' deactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to deactivate role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -145,22 +150,29 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $roles = $roleNames->map(
-            fn (string $name) => $this->roleRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $roles->each(fn (Role $role) => Gatekeeper::reactivateRole($role));
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) {
+            try {
+                Gatekeeper::reactivateRole($roleName);
 
-        if ($roles->count() === 1) {
-            info("Role '{$roleNames->first()}' reactivated successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' reactivated successfully.");
         }
 
-        $roleList = $roleNames->implode(', ');
-        info("Roles '$roleList' reactivated successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to reactivate role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -170,22 +182,29 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $roles = $roleNames->map(
-            fn (string $name) => $this->roleRepository->findOrFailByName($name)
-        );
-
         $this->resolveActor();
 
-        $roles->each(fn (Role $role) => Gatekeeper::deleteRole($role));
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) {
+            try {
+                Gatekeeper::deleteRole($roleName);
 
-        if ($roles->count() === 1) {
-            info("Role '{$roleNames->first()}' deleted successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' deleted successfully.");
         }
 
-        $roleList = $roleNames->implode(', ');
-        info("Roles '$roleList' deleted successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to delete role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -195,24 +214,31 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $roles = $roleNames->map(
-            fn (string $name) => $this->roleRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->assignAllRoles($roles);
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->assignRole($roleName);
 
-        if ($roles->count() === 1) {
-            info("Role '{$roleNames->first()}' assigned to model successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' assigned successfully.");
         }
 
-        $roleList = $roleNames->implode(', ');
-        info("Roles '$roleList' assigned to model successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to assign role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**
@@ -222,24 +248,31 @@ class RoleCommand extends AbstractBaseEntityCommand
     {
         $roleNames = $this->gatherOneOrMoreExistingEntityNames();
 
-        $roles = $roleNames->map(
-            fn (string $name) => $this->roleRepository->findOrFailByName($name)
-        );
-
         $actee = $this->gatherActee();
 
         $this->resolveActor();
 
-        Gatekeeper::for($actee)->revokeAllRoles($roles);
+        [$successes, $failures] = $roleNames->partition(function (string $roleName) use ($actee) {
+            try {
+                Gatekeeper::for($actee)->revokeRole($roleName);
 
-        if ($roles->count() === 1) {
-            info("Role '{$roleNames->first()}' revoked from model successfully.");
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
 
-            return;
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Role{$plural} '{$successes->implode(', ')}' revoked successfully.");
         }
 
-        $roleList = $roleNames->implode(', ');
-        info("Roles '$roleList' revoked from model successfully.");
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to revoke role{$plural} '{$failures->implode(', ')}'.");
+        }
     }
 
     /**

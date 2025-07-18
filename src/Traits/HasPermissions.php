@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Traits;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
 use UnitEnum;
 
 trait HasPermissions
@@ -65,5 +66,33 @@ trait HasPermissions
     public function hasAllPermissions(array|Arrayable $permissions): bool
     {
         return Gatekeeper::for($this)->hasAllPermissions($permissions);
+    }
+
+    /**
+     * Get all permissions assigned directly to a model.
+     *
+     * @return Collection<Permission>
+     */
+    public function getDirectPermissions(): Collection
+    {
+        return Gatekeeper::for($this)->getDirectPermissions();
+    }
+
+    /**
+     * Get all permissions assigned directly or indirectly to a model.
+     *
+     * @return Collection<Permission>
+     */
+    public function getEffectivePermissions(): Collection
+    {
+        return Gatekeeper::for($this)->getEffectivePermissions();
+    }
+
+    /**
+     * Get all effective permissions for the given model with the permission source(s).
+     */
+    public function getVerbosePermissions(): Collection
+    {
+        return Gatekeeper::for($this)->getVerbosePermissions();
     }
 }

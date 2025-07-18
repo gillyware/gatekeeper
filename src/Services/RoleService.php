@@ -391,12 +391,19 @@ class RoleService extends AbstractBaseEntityService
      */
     public function getVerboseForModel(Model $model): Collection
     {
+        $result = collect();
         $sourcesMap = [];
 
-        $this->roleRepository->activeForModel($model)
-            ->each(function (Role $role) use (&$sourcesMap) {
-                $sourcesMap[$role->name][] = ['type' => RoleSourceType::DIRECT];
-            });
+        if (! $this->rolesFeatureEnabled()) {
+            return $result;
+        }
+
+        if ($this->modelInteractsWithRoles($model)) {
+            $this->roleRepository->activeForModel($model)
+                ->each(function (Role $role) use (&$sourcesMap) {
+                    $sourcesMap[$role->name][] = ['type' => RoleSourceType::DIRECT];
+                });
+        }
 
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
             $this->teamRepository->activeForModel($model)
@@ -410,8 +417,6 @@ class RoleService extends AbstractBaseEntityService
                         });
                 });
         }
-
-        $result = collect();
 
         foreach ($sourcesMap as $roleName => $sources) {
             $result->push([

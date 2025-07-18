@@ -186,9 +186,9 @@ interface GatekeeperForModelServiceInterface
     public function onAllTeams(array|Arrayable $teams): bool;
 
     /**
-     * Get all teams assigned directly to a model.
+     * Get all teams assigned to a model.
      *
      * @return Collection<Team>
      */
-    public function getDirectTeams(): Collection;
+    public function getTeams(): Collection;
 }

@@ -72,7 +72,7 @@ use UnitEnum;
  * @method static bool modelOnAllTeams(Model $model, array|Arrayable $teams)
  * @method static ?Team findTeamByName(string|UnitEnum $teamName)
  * @method static Collection getAllTeams()
- * @method static Collection getDirectTeamsForModel(Model $model)
+ * @method static Collection getTeamsForModel(Model $model)
  *
  * @see \Gillyware\Gatekeeper\Services\GatekeeperService
  */
