@@ -41,13 +41,16 @@ export default function EntitiesTable<E extends GatekeeperEntity>({ entity }: En
     const navigate = useNavigate();
     const { user } = useGatekeeper();
 
-    const initialPageRequest: EntityPageRequest = {
-        page: 1,
-        search_term: '',
-        prioritized_attribute: 'is_active',
-        name_order: 'asc',
-        is_active_order: 'desc',
-    };
+    const initialPageRequest: EntityPageRequest = useMemo(
+        () => ({
+            page: 1,
+            search_term: '',
+            prioritized_attribute: 'is_active',
+            name_order: 'asc',
+            is_active_order: 'desc',
+        }),
+        [entity],
+    );
 
     const [entities, setEntities] = useState<Pagination<GatekeeperEntityModelMap[E]> | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');

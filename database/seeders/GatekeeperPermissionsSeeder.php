@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Database\Seeders;
 
-use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Illuminate\Database\Seeder;
 
@@ -11,8 +11,8 @@ class GatekeeperPermissionsSeeder extends Seeder
     public function run()
     {
         $permissions = [
-            GatekeeperPermissionName::View->value,
-            GatekeeperPermissionName::Manage->value,
+            GatekeeperPermission::View->value,
+            GatekeeperPermission::Manage->value,
         ];
 
         foreach ($permissions as $permission) {

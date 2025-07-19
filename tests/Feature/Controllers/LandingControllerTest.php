@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
-use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +23,7 @@ class LandingControllerTest extends TestCase
 
     public function test_user_with_permission_can_access_the_gatekeeper_dashboard()
     {
-        $this->user->assignPermission(GatekeeperPermissionName::View);
+        $this->user->assignPermission(GatekeeperPermission::View);
 
         $this->get(route('gatekeeper.landing'))
             ->assertStatus(Response::HTTP_OK)

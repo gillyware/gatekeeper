@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
-use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
@@ -34,7 +34,7 @@ class RoleControllerTest extends TestCase
     {
         Role::factory()->count(15)->create();
         $this->cacheRepository->clear();
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
 
         $this->getJson(route('gatekeeper.api.roles.index', [
             'page' => 1,
@@ -52,7 +52,7 @@ class RoleControllerTest extends TestCase
     {
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
 
         $this->getJson(route('gatekeeper.api.roles.show', $role->id))
             ->assertStatus(Response::HTTP_OK)
@@ -61,7 +61,7 @@ class RoleControllerTest extends TestCase
 
     public function test_store_creates_role()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
 
         $response = $this->postJson(route('gatekeeper.api.roles.store'), ['name' => 'example.role']);
 
@@ -71,7 +71,7 @@ class RoleControllerTest extends TestCase
 
     public function test_store_fails_with_duplicate()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         Role::factory()->withName('duplicate.role')->create();
         $this->cacheRepository->clear();
 
@@ -81,7 +81,7 @@ class RoleControllerTest extends TestCase
 
     public function test_update_role()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $role = Role::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
@@ -92,7 +92,7 @@ class RoleControllerTest extends TestCase
 
     public function test_deactivate_role()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
 
@@ -103,7 +103,7 @@ class RoleControllerTest extends TestCase
 
     public function test_reactivate_role()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $role = Role::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
@@ -114,7 +114,7 @@ class RoleControllerTest extends TestCase
 
     public function test_delete_role()
     {
-        $this->user->assignAllPermissions([GatekeeperPermissionName::View, GatekeeperPermissionName::Manage]);
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $role = Role::factory()->create();
         $this->cacheRepository->clear();
 

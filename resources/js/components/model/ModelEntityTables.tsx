@@ -30,13 +30,16 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
     const api = useApi();
     const { config, user } = useGatekeeper();
 
-    const initialPageRequest: GetModelEntitiesPageRequest = {
-        entity: entity,
-        model_label: model.model_label,
-        model_pk: model.model_pk,
-        page: 1,
-        search_term: '',
-    };
+    const initialPageRequest: GetModelEntitiesPageRequest = useMemo<GetModelEntitiesPageRequest>(
+        () => ({
+            entity,
+            model_label: model.model_label,
+            model_pk: model.model_pk,
+            page: 1,
+            search_term: '',
+        }),
+        [entity, model.model_label, model.model_pk],
+    );
 
     const [modelEntityAssignments, setModelEntityAssignments] = useState<Pagination<GatekeeperModelEntityAssignmentMap[E]> | null>(null);
     const [modelEntityAssignmentsSearchTerm, setModelEntityAssignmentsSearchTerm] = useState<string>('');
@@ -64,6 +67,7 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
         setModelEntityAssignments(null);
         setModelEntityAssignmentsSearchTerm('');
         setModelEntityAssignmentsPageRequest(initialPageRequest);
+        setErrorAssigningEntity(null);
 
         getEntityAssignmentsForModel(
             api,
@@ -76,6 +80,7 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
         setModelUnassignedEntities(null);
         setModelUnassignedEntitiesSearchTerm('');
         setModelUnassignedEntitiesPageRequest(initialPageRequest);
+        setErrorRevokingEntity(null);
 
         getUnassignedEntitiesForModel(
             api,
@@ -84,10 +89,12 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
             setLoadingModelUnassignedEntities,
             setErrorLoadingModelUnassignedEntities,
         );
-    }, [entity]);
+    }, [entity, model.model_label, model.model_pk]);
 
     useEffect(() => {
         if (modelEntityAssignments !== null) {
+            setErrorRevokingEntity(null);
+
             getEntityAssignmentsForModel(
                 api,
                 modelEntityAssignmentsPageRequest,
@@ -100,6 +107,8 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
 
     useEffect(() => {
         if (modelUnassignedEntities !== null) {
+            setErrorAssigningEntity(null);
+
             getUnassignedEntitiesForModel(
                 api,
                 modelUnassignedEntitiesPageRequest,
@@ -136,7 +145,7 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
                         entity,
                         entity_name: entityName,
                     };
-                    revokeEntityFromModel(api, request, setProcessingEntityRevocation, setErrorRevokingEntity);
+                    return revokeEntityFromModel(api, request, setProcessingEntityRevocation, setErrorRevokingEntity);
                 }}
                 loadingModelEntityAssignments={loadingModelEntityAssignments}
                 processingEntityRevocation={processingEntityRevocation}
@@ -160,7 +169,7 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
                         entity,
                         entity_name: entityName,
                     };
-                    assignEntityToModel(api, request, setProcessingEntityAssignment, setErrorAssigningEntity);
+                    return assignEntityToModel(api, request, setProcessingEntityAssignment, setErrorAssigningEntity);
                 }}
                 loadingModelUnassignedEntities={loadingModelUnassignedEntities}
                 processingEntityAssignment={processingEntityAssignment}

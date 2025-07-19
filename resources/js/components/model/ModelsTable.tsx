@@ -36,10 +36,13 @@ export default function ModelsTable() {
     const api = useApi();
     const navigate = useNavigate();
 
-    const initialPageRequest: ModelPageRequest = {
-        model_label: config.models.length > 0 ? config.models[0].model_label : '',
-        search_term: '',
-    };
+    const initialPageRequest: ModelPageRequest = useMemo(
+        () => ({
+            model_label: config.models.length > 0 ? config.models[0].model_label : '',
+            search_term: '',
+        }),
+        [config],
+    );
 
     const [models, setModels] = useState<ConfiguredModelSearchResult[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');

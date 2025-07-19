@@ -9,9 +9,11 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeletePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\ReactivatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\RevokePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermissionFromSelfException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -24,6 +26,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 use function Illuminate\Support\enum_value;
@@ -268,6 +271,11 @@ class PermissionService extends AbstractBaseEntityService
 
         if (! $permission) {
             throw new PermissionNotFoundException($permissionName);
+        }
+
+        // Don't allow an authenticated user to revoke a Gatekeeper dashboard permission from themself.
+        if (Auth::user()?->is($model) && in_array($permissionName, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
+            throw new RevokingGatekeeperDashboardPermissionFromSelfException;
         }
 
         $revoked = $this->modelHasPermissionRepository->deleteForModelAndEntity($model, $permission);
