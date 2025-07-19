@@ -1,4 +1,4 @@
-<p align="center"><img width="400" src="https://github.com/user-attachments/assets/34ccb753-7ff7-42da-85f6-d35aed9a3adf" alt="Gatekeeper Logo" /></p>
+<p align="center"><img width="400" alt="Gatekeeper Logo" src="https://github.com/user-attachments/assets/fffe9f56-9e99-4997-b7eb-cdca72f8a67d" /></p>
 
 <p align="center">
 <a href="https://github.com/gillyware/gatekeeper/actions"><img src="https://github.com/gillyware/gatekeeper/workflows/tests/badge.svg" alt="Build Status"></a>
