@@ -28,7 +28,7 @@ class AuditLogControllerTest extends TestCase
         $this->user->assignPermission(GatekeeperPermissionName::Manage);
     }
 
-    public function test_returns_paginated_audit_logs()
+    public function test_returns_paginated_audit_log()
     {
         $this->user->assignPermission(GatekeeperPermissionName::View);
 
@@ -75,7 +75,7 @@ class AuditLogControllerTest extends TestCase
     {
         $this->user->assignPermission(GatekeeperPermissionName::View);
 
-        Schema::drop(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
+        Schema::drop(Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG));
 
         $response = $this->getJson(route('gatekeeper.api.audit-log.index', [
             'page' => 1,

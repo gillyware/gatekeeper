@@ -110,8 +110,11 @@ export default function ModelEntityTables<E extends GatekeeperEntity>({ model, e
         }
     }, [modelUnassignedEntitiesPageRequest]);
 
-    const refreshPages = () => {
-        Promise.all([setModelEntityAssignmentsPageRequest((prev) => ({ ...prev })), setModelUnassignedEntitiesPageRequest((prev) => ({ ...prev }))]);
+    const refreshPages = async () => {
+        await Promise.all([
+            setModelEntityAssignmentsPageRequest((prev) => ({ ...prev })),
+            setModelUnassignedEntitiesPageRequest((prev) => ({ ...prev })),
+        ]);
 
         refreshModel();
     };

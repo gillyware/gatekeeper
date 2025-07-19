@@ -10,6 +10,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Team\ReactivateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -84,6 +85,10 @@ class TeamService extends AbstractBaseEntityService
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
 
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
+
         if ($this->exists($newTeamName) && $team->name !== $newTeamName) {
             throw new TeamAlreadyExistsException($newTeamName);
         }
@@ -110,6 +115,10 @@ class TeamService extends AbstractBaseEntityService
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
+
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
 
         if (! $team->is_active) {
             return $team;
@@ -138,6 +147,10 @@ class TeamService extends AbstractBaseEntityService
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
 
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
+
         if ($team->is_active) {
             return $team;
         }
@@ -163,6 +176,10 @@ class TeamService extends AbstractBaseEntityService
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findByName($teamName);
+
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
 
         if (! $team) {
             return true;
@@ -199,6 +216,10 @@ class TeamService extends AbstractBaseEntityService
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
+
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
 
         // If the model already has this team directly assigned, return true.
         if ($this->modelHasDirectly($model, $team)) {
@@ -242,6 +263,10 @@ class TeamService extends AbstractBaseEntityService
 
         $teamName = $this->resolveEntityName($team);
         $team = $this->teamRepository->findOrFailByName($teamName);
+
+        if (! $team) {
+            throw new TeamNotFoundException($teamName);
+        }
 
         $removed = $this->modelHasTeamRepository->deleteForModelAndEntity($model, $team);
 

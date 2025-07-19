@@ -36,7 +36,7 @@ class AuditLog extends Model
      */
     public function getTable(): string
     {
-        return Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS);
+        return Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG);
     }
 
     public function actionBy(): MorphTo

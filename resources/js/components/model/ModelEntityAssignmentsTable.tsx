@@ -19,7 +19,7 @@ interface ModelEntityAssignmentsTableProps<E extends GatekeeperEntity> {
     pageRequest: GetModelEntitiesPageRequest;
     setSearchTerm: (value: SetStateAction<string>) => void;
     setPageRequest: (value: SetStateAction<GetModelEntitiesPageRequest>) => void;
-    refreshPages: () => void;
+    refreshPages: () => Promise<void>;
     revokeEntityFromModel: (entityName: string) => Promise<void>;
     loadingModelEntityAssignments: boolean;
     processingEntityRevocation: boolean;

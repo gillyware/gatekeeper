@@ -239,7 +239,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             throw new GatekeeperConsoleException("No columns are searchable for [$label] models");
         }
 
-        $searchableList = $searchable->pluck('label')->implode(',');
+        $searchableList = $searchable->pluck('label')->implode(', ');
 
         $primaryKey = search(
             label: "Search by {$searchableList}",

@@ -17,7 +17,7 @@ class AuditLogRepository implements AuditLogRepositoryInterface
      */
     public function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.audit_logs', GatekeeperConfigDefault::TABLES_AUDIT_LOGS));
+        return Schema::hasTable(Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG));
     }
 
     /**

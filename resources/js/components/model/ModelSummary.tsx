@@ -60,7 +60,7 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
 
             <EffectivePermissions effectivePermissions={model.access_sources.permissions} language={language} />
 
-            <EffectiveRoles effectiveRoles={model.access_sources.roles} language={language} />
+            {entitySupport.role.supported && <EffectiveRoles effectiveRoles={model.access_sources.roles} language={language} />}
         </div>
     );
 }

@@ -11,6 +11,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\RevokePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -94,6 +95,10 @@ class PermissionService extends AbstractBaseEntityService
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
+        if (! $permission) {
+            throw new PermissionNotFoundException($permissionName);
+        }
+
         if ($this->exists($newPermissionName) && $permission->name !== $newPermissionName) {
             throw new PermissionAlreadyExistsException($newPermissionName);
         }
@@ -121,6 +126,10 @@ class PermissionService extends AbstractBaseEntityService
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
 
+        if (! $permission) {
+            throw new PermissionNotFoundException($permissionName);
+        }
+
         if (! $permission->is_active) {
             return $permission;
         }
@@ -146,6 +155,10 @@ class PermissionService extends AbstractBaseEntityService
 
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findByName($permissionName);
+
+        if (! $permission) {
+            throw new PermissionNotFoundException($permissionName);
+        }
 
         if ($permission->is_active) {
             return $permission;
@@ -206,6 +219,10 @@ class PermissionService extends AbstractBaseEntityService
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findOrFailByName($permissionName);
 
+        if (! $permission) {
+            throw new PermissionNotFoundException($permissionName);
+        }
+
         // If the model already has this permission directly assigned, return true.
         if ($this->modelHasDirectly($model, $permission)) {
             return true;
@@ -248,6 +265,10 @@ class PermissionService extends AbstractBaseEntityService
 
         $permissionName = $this->resolveEntityName($permission);
         $permission = $this->permissionRepository->findOrFailByName($permissionName);
+
+        if (! $permission) {
+            throw new PermissionNotFoundException($permissionName);
+        }
 
         $revoked = $this->modelHasPermissionRepository->deleteForModelAndEntity($model, $permission);
 
