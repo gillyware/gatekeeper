@@ -20,7 +20,7 @@ interface ModelEntityAssignmentsTableProps<E extends GatekeeperEntity> {
     setSearchTerm: (value: SetStateAction<string>) => void;
     setPageRequest: (value: SetStateAction<GetModelEntitiesPageRequest>) => void;
     refreshPages: () => Promise<void>;
-    revokeEntityFromModel: (entityName: string) => Promise<void>;
+    revokeEntityFromModel: (entityName: string) => Promise<boolean>;
     loadingModelEntityAssignments: boolean;
     processingEntityRevocation: boolean;
     errorLoadingModelEntityAssignments: string | null;
@@ -67,7 +67,7 @@ export default function ModelEntityAssignmentsTable<E extends GatekeeperEntity>(
                     }}
                 />
 
-                {errorRevokingEntity && <div className="w-full px-4 py-6 text-center text-red-500">{errorRevokingEntity}</div>}
+                {errorRevokingEntity && <div className="w-full px-4 py-6 text-center text-sm text-red-500">{errorRevokingEntity}</div>}
 
                 <div className="overflow-auto rounded-lg border dark:border-gray-700">
                     <table className="w-full text-sm">
@@ -140,8 +140,10 @@ export default function ModelEntityAssignmentsTable<E extends GatekeeperEntity>(
                                                     size="sm"
                                                     disabled={processingEntityRevocation}
                                                     onClick={async () => {
-                                                        await revokeEntityFromModel(assignment[entity].name);
-                                                        refreshPages();
+                                                        const revoked = await revokeEntityFromModel(assignment[entity].name);
+                                                        if (revoked) {
+                                                            refreshPages();
+                                                        }
                                                     }}
                                                 >
                                                     {language.revoke}

@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
-use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
@@ -25,12 +25,12 @@ class AuditLogControllerTest extends TestCase
         $this->user = User::factory()->create();
         $this->be($this->user);
 
-        $this->user->assignPermission(GatekeeperPermissionName::Manage);
+        $this->user->assignPermission(GatekeeperPermission::Manage);
     }
 
     public function test_returns_paginated_audit_log()
     {
-        $this->user->assignPermission(GatekeeperPermissionName::View);
+        $this->user->assignPermission(GatekeeperPermission::View);
 
         collect()->times(15)->each(function () {
             Gatekeeper::createPermission(fake()->unique()->word());
@@ -57,7 +57,7 @@ class AuditLogControllerTest extends TestCase
 
     public function test_returns_empty_data_when_no_logs()
     {
-        $this->user->assignPermission(GatekeeperPermissionName::View);
+        $this->user->assignPermission(GatekeeperPermission::View);
 
         AuditLog::truncate();
 
@@ -73,7 +73,7 @@ class AuditLogControllerTest extends TestCase
 
     public function test_fails_when_table_does_not_exist()
     {
-        $this->user->assignPermission(GatekeeperPermissionName::View);
+        $this->user->assignPermission(GatekeeperPermission::View);
 
         Schema::drop(Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG));
 

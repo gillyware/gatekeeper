@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Dashboard;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Enums\GatekeeperPermissionName;
+use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Facades\Gatekeeper as GatekeeperFacade;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Contracts\Support\Htmlable;
@@ -68,8 +68,8 @@ class Gatekeeper
                 'name' => (string) $user?->name,
                 'email' => (string) $user?->email,
                 'permissions' => [
-                    'can_view' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermissionName::View),
-                    'can_manage' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermissionName::Manage),
+                    'can_view' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::View),
+                    'can_manage' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::Manage),
                 ],
             ],
         ];

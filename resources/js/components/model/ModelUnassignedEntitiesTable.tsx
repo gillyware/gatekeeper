@@ -18,7 +18,7 @@ interface ModelUnassignedEntitiesTableProps<E extends GatekeeperEntity> {
     setSearchTerm: (value: SetStateAction<string>) => void;
     setPageRequest: (value: SetStateAction<GetModelEntitiesPageRequest>) => void;
     refreshPages: () => Promise<void>;
-    assignEntityToModel: (entityName: string) => Promise<void>;
+    assignEntityToModel: (entityName: string) => Promise<boolean>;
     loadingModelUnassignedEntities: boolean;
     processingEntityAssignment: boolean;
     errorLoadingModelUnassignedEntities: string | null;
@@ -66,7 +66,7 @@ export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>
                     }}
                 />
 
-                {errorAssigningEntity && <div className="w-full px-4 py-6 text-center text-red-500">{errorAssigningEntity}</div>}
+                {errorAssigningEntity && <div className="w-full px-4 py-6 text-center text-sm text-red-500">{errorAssigningEntity}</div>}
 
                 <div className="overflow-auto rounded-lg border dark:border-gray-700">
                     <table className="w-full text-sm">
@@ -131,8 +131,10 @@ export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>
                                                     size="sm"
                                                     disabled={processingEntityAssignment}
                                                     onClick={async () => {
-                                                        await assignEntityToModel(entityModel.name);
-                                                        refreshPages();
+                                                        const assigned = await assignEntityToModel(entityModel.name);
+                                                        if (assigned) {
+                                                            refreshPages();
+                                                        }
                                                     }}
                                                 >
                                                     {language.assign}

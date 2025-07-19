@@ -117,7 +117,7 @@ export async function assignEntityToModel(
     data: AssignEntityToModelRequest,
     setLoading: (loading: boolean) => void,
     setError: (error: string | null) => void,
-) {
+): Promise<boolean> {
     setLoading(true);
     setError(null);
 
@@ -126,10 +126,11 @@ export async function assignEntityToModel(
     if (response.status >= 400) {
         setError(response.errors?.general || `Failed to assign ${data.entity} '${data.entity_name}'.`);
         setLoading(false);
-        return;
+        return false;
     }
 
     setLoading(false);
+    return true;
 }
 
 export async function revokeEntityFromModel(
@@ -137,7 +138,7 @@ export async function revokeEntityFromModel(
     data: RevokeEntityFromModelRequest,
     setLoading: (loading: boolean) => void,
     setError: (error: string | null) => void,
-) {
+): Promise<boolean> {
     setLoading(true);
     setError(null);
 
@@ -146,10 +147,11 @@ export async function revokeEntityFromModel(
     if (response.status >= 400) {
         setError(response.errors?.general || `Failed to revoke ${data.entity} '${data.entity_name}'.`);
         setLoading(false);
-        return;
+        return false;
     }
 
     setLoading(false);
+    return true;
 }
 
 export function getEntitySupportForModel(config: GatekeeperConfig, model: ConfiguredModelMetadata): ModelEntitySupport {
