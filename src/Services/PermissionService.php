@@ -12,7 +12,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
 use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermissionFromSelfException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
@@ -28,8 +27,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
-
-use function Illuminate\Support\enum_value;
 
 /**
  * @extends AbstractBaseEntityService<Permission>
@@ -57,7 +54,9 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function exists(string|UnitEnum $permissionName): bool
     {
-        return $this->permissionRepository->exists($this->resolveEntityName($permissionName));
+        $permissionName = $this->resolveEntityName($permissionName);
+
+        return $this->permissionRepository->exists($permissionName);
     }
 
     /**
@@ -65,22 +64,21 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function create(string|UnitEnum $permissionName): Permission
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $permissionName = enum_value($permissionName);
+        $permissionName = $this->resolveEntityName($permissionName);
 
         if ($this->exists($permissionName)) {
             throw new PermissionAlreadyExistsException($permissionName);
         }
 
-        $permission = $this->permissionRepository->create($permissionName);
+        $createdPermission = $this->permissionRepository->create($permissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreatePermissionAuditLogDto($permission));
+            $this->auditLogRepository->create(new CreatePermissionAuditLogDto($createdPermission));
         }
 
-        return $permission;
+        return $createdPermission;
     }
 
     /**
@@ -90,30 +88,24 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function update($permission, string|UnitEnum $newPermissionName): Permission
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $newPermissionName = enum_value($newPermissionName);
+        $newPermissionName = $this->resolveEntityName($newPermissionName);
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findByName($permissionName);
+        $currentPermission = $this->resolveEntity($permission, orFail: true);
 
-        if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
-        }
-
-        if ($this->exists($newPermissionName) && $permission->name !== $newPermissionName) {
+        if ($this->exists($newPermissionName) && $currentPermission->name !== $newPermissionName) {
             throw new PermissionAlreadyExistsException($newPermissionName);
         }
 
-        $oldPermissionName = $permission->name;
-        $permission = $this->permissionRepository->update($permission, $newPermissionName);
+        $oldPermissionName = $currentPermission->name;
+        $updatedPermission = $this->permissionRepository->update($currentPermission, $newPermissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdatePermissionAuditLogDto($permission, $oldPermissionName));
+            $this->auditLogRepository->create(new UpdatePermissionAuditLogDto($updatedPermission, $oldPermissionName));
         }
 
-        return $permission;
+        return $updatedPermission;
     }
 
     /**
@@ -123,27 +115,21 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function deactivate($permission): Permission
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findByName($permissionName);
+        $currentPermission = $this->resolveEntity($permission, orFail: true);
 
-        if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
+        if (! $currentPermission->is_active) {
+            return $currentPermission;
         }
 
-        if (! $permission->is_active) {
-            return $permission;
-        }
-
-        $permission = $this->permissionRepository->deactivate($permission);
+        $deactivatedPermission = $this->permissionRepository->deactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivatePermissionAuditLogDto($permission));
+            $this->auditLogRepository->create(new DeactivatePermissionAuditLogDto($deactivatedPermission));
         }
 
-        return $permission;
+        return $deactivatedPermission;
     }
 
     /**
@@ -153,27 +139,21 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function reactivate($permission): Permission
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findByName($permissionName);
+        $currentPermission = $this->resolveEntity($permission, orFail: true);
 
-        if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
+        if ($currentPermission->is_active) {
+            return $currentPermission;
         }
 
-        if ($permission->is_active) {
-            return $permission;
-        }
-
-        $permission = $this->permissionRepository->reactivate($permission);
+        $reactivatedPermission = $this->permissionRepository->reactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivatePermissionAuditLogDto($permission));
+            $this->auditLogRepository->create(new ReactivatePermissionAuditLogDto($reactivatedPermission));
         }
 
-        return $permission;
+        return $reactivatedPermission;
     }
 
     /**
@@ -183,11 +163,9 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function delete($permission): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findByName($permissionName);
+        $permission = $this->resolveEntity($permission);
 
         if (! $permission) {
             return true;
@@ -214,17 +192,11 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function assignToModel(Model $model, $permission): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforcePermissionInteraction($model);
         $this->enforceModelIsNotPermission($model, 'Permissions cannot be assigned to other permissions');
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findOrFailByName($permissionName);
-
-        if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
-        }
+        $permission = $this->resolveEntity($permission, orFail: true);
 
         // If the model already has this permission directly assigned, return true.
         if ($this->modelHasDirectly($model, $permission)) {
@@ -249,8 +221,8 @@ class PermissionService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($permissions)->each(function (string $permissionName) use ($model, &$result) {
-            $result = $result && $this->assignToModel($model, $permissionName);
+        $this->resolveEntities($permissions, orFail: true)->each(function (Permission $permission) use ($model, &$result) {
+            $result = $result && $this->assignToModel($model, $permission);
         });
 
         return $result;
@@ -263,18 +235,12 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function revokeFromModel(Model $model, $permission): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findOrFailByName($permissionName);
-
-        if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
-        }
+        $permission = $this->resolveEntity($permission, orFail: true);
 
         // Don't allow an authenticated user to revoke a Gatekeeper dashboard permission from themself.
-        if (Auth::user()?->is($model) && in_array($permissionName, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
+        if (Auth::user()?->is($model) && in_array($permission->name, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
             throw new RevokingGatekeeperDashboardPermissionFromSelfException;
         }
 
@@ -296,8 +262,8 @@ class PermissionService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($permissions)->each(function (string $permissionName) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $permissionName);
+        $this->resolveEntities($permissions, orFail: true)->each(function (Permission $permission) use ($model, &$result) {
+            $result = $result && $this->revokeFromModel($model, $permission);
         });
 
         return $result;
@@ -315,8 +281,7 @@ class PermissionService extends AbstractBaseEntityService
             return false;
         }
 
-        $permissionName = $this->resolveEntityName($permission);
-        $permission = $this->permissionRepository->findByName($permissionName);
+        $permission = $this->resolveEntity($permission);
 
         // The permission cannot be accessed if it does not exist or is inactive.
         if (! $permission || ! $permission->is_active) {
@@ -363,9 +328,9 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function modelHasDirectly(Model $model, $permission): bool
     {
-        $permissionName = $this->resolveEntityName($permission);
+        $permission = $this->resolveEntity($permission);
 
-        return $this->permissionRepository->activeForModel($model)->some(fn (Permission $p) => $permissionName === $p->name);
+        return $permission && $this->permissionRepository->activeForModel($model)->some(fn (Permission $p) => $permission->name === $p->name);
     }
 
     /**
@@ -375,8 +340,8 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function modelHasAny(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->entityNames($permissions)->some(
-            fn (string $permissionName) => $this->modelHas($model, $permissionName)
+        return $this->resolveEntities($permissions)->filter()->some(
+            fn (Permission $permission) => $this->modelHas($model, $permission)
         );
     }
 
@@ -387,8 +352,8 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function modelHasAll(Model $model, array|Arrayable $permissions): bool
     {
-        return $this->entityNames($permissions)->every(
-            fn (string $permissionName) => $this->modelHas($model, $permissionName)
+        return $this->resolveEntities($permissions)->every(
+            fn (?Permission $permission) => $permission && $this->modelHas($model, $permission)
         );
     }
 
@@ -397,7 +362,7 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function findByName(string|UnitEnum $permissionName): ?Permission
     {
-        return $this->permissionRepository->findByName($this->resolveEntityName($permissionName));
+        return $this->resolveEntity($permissionName);
     }
 
     /**
@@ -501,5 +466,23 @@ class PermissionService extends AbstractBaseEntityService
     public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
     {
         return $this->permissionRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+    }
+
+    /**
+     * Get the permission model from the permission or permission name.
+     *
+     * @param  Permission|string|UnitEnum  $permission
+     */
+    protected function resolveEntity($permission, bool $orFail = false): ?Permission
+    {
+        if ($permission instanceof Permission) {
+            return $permission;
+        }
+
+        $permissionName = $this->resolveEntityName($permission);
+
+        return $orFail
+            ? $this->permissionRepository->findOrFailByName($permissionName)
+            : $this->permissionRepository->findByName($permissionName);
     }
 }

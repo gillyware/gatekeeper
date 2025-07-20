@@ -11,7 +11,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Role\RevokeRoleAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Role\UpdateRoleAuditLogDto;
 use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
@@ -49,7 +48,9 @@ class RoleService extends AbstractBaseEntityService
      */
     public function exists(string|UnitEnum $roleName): bool
     {
-        return $this->roleRepository->exists($this->resolveEntityName($roleName));
+        $roleName = $this->resolveEntityName($roleName);
+
+        return $this->roleRepository->exists($roleName);
     }
 
     /**
@@ -57,7 +58,6 @@ class RoleService extends AbstractBaseEntityService
      */
     public function create(string|UnitEnum $roleName): Role
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
 
@@ -67,13 +67,13 @@ class RoleService extends AbstractBaseEntityService
             throw new RoleAlreadyExistsException($roleName);
         }
 
-        $role = $this->roleRepository->create($roleName);
+        $createdRole = $this->roleRepository->create($roleName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreateRoleAuditLogDto($role));
+            $this->auditLogRepository->create(new CreateRoleAuditLogDto($createdRole));
         }
 
-        return $role;
+        return $createdRole;
     }
 
     /**
@@ -83,31 +83,25 @@ class RoleService extends AbstractBaseEntityService
      */
     public function update($role, string|UnitEnum $newRoleName): Role
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
 
         $newRoleName = $this->resolveEntityName($newRoleName);
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findByName($roleName);
+        $currentRole = $this->resolveEntity($role, orFail: true);
 
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
-        }
-
-        if ($this->exists($newRoleName) && $role->name !== $newRoleName) {
+        if ($this->exists($newRoleName) && $currentRole->name !== $newRoleName) {
             throw new RoleAlreadyExistsException($newRoleName);
         }
 
-        $oldRoleName = $role->name;
-        $role = $this->roleRepository->update($role, $newRoleName);
+        $oldRoleName = $currentRole->name;
+        $updatedRole = $this->roleRepository->update($currentRole, $newRoleName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdateRoleAuditLogDto($role, $oldRoleName));
+            $this->auditLogRepository->create(new UpdateRoleAuditLogDto($updatedRole, $oldRoleName));
         }
 
-        return $role;
+        return $updatedRole;
     }
 
     /**
@@ -117,27 +111,21 @@ class RoleService extends AbstractBaseEntityService
      */
     public function deactivate($role): Role
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findByName($roleName);
+        $currentRole = $this->resolveEntity($role, orFail: true);
 
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
+        if (! $currentRole->is_active) {
+            return $currentRole;
         }
 
-        if (! $role->is_active) {
-            return $role;
-        }
-
-        $role = $this->roleRepository->deactivate($role);
+        $deactivatedRole = $this->roleRepository->deactivate($currentRole);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivateRoleAuditLogDto($role));
+            $this->auditLogRepository->create(new DeactivateRoleAuditLogDto($deactivatedRole));
         }
 
-        return $role;
+        return $deactivatedRole;
     }
 
     /**
@@ -147,28 +135,22 @@ class RoleService extends AbstractBaseEntityService
      */
     public function reactivate($role): Role
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findByName($roleName);
+        $currentRole = $this->resolveEntity($role, orFail: true);
 
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
+        if ($currentRole->is_active) {
+            return $currentRole;
         }
 
-        if ($role->is_active) {
-            return $role;
-        }
-
-        $role = $this->roleRepository->reactivate($role);
+        $reactivatedRole = $this->roleRepository->reactivate($currentRole);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivateRoleAuditLogDto($role));
+            $this->auditLogRepository->create(new ReactivateRoleAuditLogDto($reactivatedRole));
         }
 
-        return $role;
+        return $reactivatedRole;
     }
 
     /**
@@ -178,15 +160,9 @@ class RoleService extends AbstractBaseEntityService
      */
     public function delete($role): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findByName($roleName);
-
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
-        }
+        $role = $this->resolveEntity($role);
 
         if (! $role) {
             return true;
@@ -213,19 +189,13 @@ class RoleService extends AbstractBaseEntityService
      */
     public function assignToModel(Model $model, $role): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
         $this->enforceRoleInteraction($model);
         $this->enforceModelIsNotRole($model, 'Roles cannot be assigned to other roles');
         $this->enforceModelIsNotPermission($model, 'Roles cannot be assigned to permissions');
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findOrFailByName($roleName);
-
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
-        }
+        $role = $this->resolveEntity($role, orFail: true);
 
         // If the model already has this role directly assigned, return true.
         if ($this->modelHasDirectly($model, $role)) {
@@ -250,8 +220,8 @@ class RoleService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($roles)->each(function (string $roleName) use ($model, &$result) {
-            $result = $result && $this->assignToModel($model, $roleName);
+        $this->resolveEntities($roles, orFail: true)->each(function (Role $role) use ($model, &$result) {
+            $result = $result && $this->assignToModel($model, $role);
         });
 
         return $result;
@@ -264,15 +234,9 @@ class RoleService extends AbstractBaseEntityService
      */
     public function revokeFromModel(Model $model, $role): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findOrFailByName($roleName);
-
-        if (! $role) {
-            throw new RoleNotFoundException($roleName);
-        }
+        $role = $this->resolveEntity($role, orFail: true);
 
         $revoked = $this->modelHasRoleRepository->deleteForModelAndEntity($model, $role);
 
@@ -292,8 +256,8 @@ class RoleService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($roles)->each(function (string $roleName) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $roleName);
+        $this->resolveEntities($roles, orFail: true)->each(function (Role $role) use ($model, &$result) {
+            $result = $result && $this->revokeFromModel($model, $role);
         });
 
         return $result;
@@ -311,8 +275,7 @@ class RoleService extends AbstractBaseEntityService
             return false;
         }
 
-        $roleName = $this->resolveEntityName($role);
-        $role = $this->roleRepository->findByName($roleName);
+        $role = $this->resolveEntity($role);
 
         // The role cannot be accessed if it does not exist or is inactive.
         if (! $role || ! $role->is_active) {
@@ -345,9 +308,9 @@ class RoleService extends AbstractBaseEntityService
      */
     public function modelHasDirectly(Model $model, $role): bool
     {
-        $roleName = $this->resolveEntityName($role);
+        $role = $this->resolveEntity($role);
 
-        return $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $roleName === $r->name);
+        return $role && $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $role->name === $r->name);
     }
 
     /**
@@ -357,8 +320,8 @@ class RoleService extends AbstractBaseEntityService
      */
     public function modelHasAny(Model $model, array|Arrayable $roles): bool
     {
-        return $this->entityNames($roles)->some(
-            fn (string $roleName) => $this->modelHas($model, $roleName)
+        return $this->resolveEntities($roles)->filter()->some(
+            fn (Role $role) => $this->modelHas($model, $role)
         );
     }
 
@@ -369,8 +332,8 @@ class RoleService extends AbstractBaseEntityService
      */
     public function modelHasAll(Model $model, array|Arrayable $roles): bool
     {
-        return $this->entityNames($roles)->every(
-            fn (string $roleName) => $this->modelHas($model, $roleName)
+        return $this->resolveEntities($roles)->every(
+            fn (?Role $role) => $role && $this->modelHas($model, $role)
         );
     }
 
@@ -379,7 +342,7 @@ class RoleService extends AbstractBaseEntityService
      */
     public function findByName(string|UnitEnum $roleName): ?Role
     {
-        return $this->roleRepository->findByName($this->resolveEntityName($roleName));
+        return $this->resolveEntity($roleName);
     }
 
     /**
@@ -459,5 +422,23 @@ class RoleService extends AbstractBaseEntityService
     public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
     {
         return $this->roleRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+    }
+
+    /**
+     * Get the role model from the role or role name.
+     *
+     * @param  Role|string|UnitEnum  $role
+     */
+    protected function resolveEntity($role, bool $orFail = false): ?Role
+    {
+        if ($role instanceof Role) {
+            return $role;
+        }
+
+        $roleName = $this->resolveEntityName($role);
+
+        return $orFail
+            ? $this->roleRepository->findOrFailByName($roleName)
+            : $this->roleRepository->findByName($roleName);
     }
 }
