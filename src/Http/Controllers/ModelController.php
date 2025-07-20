@@ -14,8 +14,8 @@ use Gillyware\Gatekeeper\Http\Requests\Model\ShowModelRequest;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Services\ModelService;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ModelController extends AbstractBaseController
 {
@@ -29,7 +29,7 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of labels matching the label and search term.
      */
-    public function index(ModelPageRequest $request): JsonResponse
+    public function index(ModelPageRequest $request): HttpFoundationResponse
     {
         try {
             return Response::json($this->modelService->getModels(
@@ -44,7 +44,7 @@ class ModelController extends AbstractBaseController
     /**
      * Get a model and its access.
      */
-    public function show(ShowModelRequest $request): JsonResponse
+    public function show(ShowModelRequest $request): HttpFoundationResponse
     {
         try {
             $label = $request->validated('modelLabel');
@@ -92,7 +92,7 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of assigned entities for a model and entity.
      */
-    public function searchAssignedEntitiesForModel(ModelEntitiesPageRequest $request): JsonResponse
+    public function searchAssignedEntitiesForModel(ModelEntitiesPageRequest $request): HttpFoundationResponse
     {
         try {
             $modelLabel = $request->validated('modelLabel');
@@ -116,7 +116,7 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of unassigned entities for a model and entity.
      */
-    public function searchUnassignedEntitiesForModel(ModelEntitiesPageRequest $request): JsonResponse
+    public function searchUnassignedEntitiesForModel(ModelEntitiesPageRequest $request): HttpFoundationResponse
     {
         try {
             $modelLabel = $request->validated('modelLabel');
@@ -140,7 +140,7 @@ class ModelController extends AbstractBaseController
     /**
      * Assign an entity to a model.
      */
-    public function assign(ModelEntityRequest $request): JsonResponse
+    public function assign(ModelEntityRequest $request): HttpFoundationResponse
     {
         try {
             $label = $request->validated('modelLabel');
@@ -170,7 +170,7 @@ class ModelController extends AbstractBaseController
     /**
      * Revoke an entity from a model.
      */
-    public function revoke(ModelEntityRequest $request): JsonResponse
+    public function revoke(ModelEntityRequest $request): HttpFoundationResponse
     {
         try {
             $label = $request->validated('modelLabel');

@@ -4,8 +4,8 @@ namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Http\Requests\Audit\AuditLogPageRequest;
 use Gillyware\Gatekeeper\Services\AuditLogService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class AuditLogController extends AbstractBaseController
 {
@@ -14,7 +14,7 @@ class AuditLogController extends AbstractBaseController
     /**
      * Get a page of audit logs.
      */
-    public function index(AuditLogPageRequest $request): JsonResponse
+    public function index(AuditLogPageRequest $request): HttpFoundationResponse
     {
         $pageNumber = $request->validated('page');
         $createdAtOrder = $request->validated('created_at_order');

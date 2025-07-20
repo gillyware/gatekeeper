@@ -8,7 +8,6 @@ use Gillyware\Gatekeeper\Http\Requests\Entities\Team\TeamPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\UpdateTeamRequest;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Services\TeamService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -19,7 +18,7 @@ class TeamController extends AbstractBaseController
     /**
      * Get a page of teams.
      */
-    public function index(TeamPageRequest $request): JsonResponse
+    public function index(TeamPageRequest $request): HttpFoundationResponse
     {
         $pageNumber = $request->validated('page');
         $searchTerm = (string) $request->validated('search_term');
@@ -39,7 +38,7 @@ class TeamController extends AbstractBaseController
     /**
      * Get a team.
      */
-    public function show(Team $team): JsonResponse
+    public function show(Team $team): HttpFoundationResponse
     {
         return Response::json($team);
     }
@@ -47,7 +46,7 @@ class TeamController extends AbstractBaseController
     /**
      * Create a new team.
      */
-    public function store(StoreTeamRequest $request): JsonResponse
+    public function store(StoreTeamRequest $request): HttpFoundationResponse
     {
         try {
             $teamName = $request->validated('name');
@@ -62,7 +61,7 @@ class TeamController extends AbstractBaseController
     /**
      * Update an existing team.
      */
-    public function update(UpdateTeamRequest $request, Team $team): JsonResponse
+    public function update(UpdateTeamRequest $request, Team $team): HttpFoundationResponse
     {
         try {
             $newTeamName = $request->validated('name');
@@ -77,7 +76,7 @@ class TeamController extends AbstractBaseController
     /**
      * Deactivate a team.
      */
-    public function deactivate(Team $team): JsonResponse
+    public function deactivate(Team $team): HttpFoundationResponse
     {
         try {
             $team = $this->teamService->deactivate($team);
@@ -91,7 +90,7 @@ class TeamController extends AbstractBaseController
     /**
      * Reactivate a team.
      */
-    public function reactivate(Team $team): JsonResponse
+    public function reactivate(Team $team): HttpFoundationResponse
     {
         try {
             $team = $this->teamService->reactivate($team);
@@ -105,7 +104,7 @@ class TeamController extends AbstractBaseController
     /**
      * Delete a team.
      */
-    public function delete(Team $team): JsonResponse
+    public function delete(Team $team): HttpFoundationResponse
     {
         try {
             $this->teamService->delete($team);
