@@ -24,14 +24,14 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
     use EnforcesForGatekeeper;
 
     /**
-     * Convert an array or Arrayable object of Gatekeeper entities or entity names to an array of entity names.
+     * Convert an array or Arrayable object of Gatekeeper entities or entity names to a collection of entities.
      */
-    protected function entityNames(array|Arrayable $entities): Collection
+    protected function resolveEntities(array|Arrayable $entities, bool $orFail = false): Collection
     {
         $entityArray = $entities instanceof Arrayable ? $entities->toArray() : $entities;
 
         return collect($entityArray)->map(
-            fn (AbstractBaseEntityModel|array|string|UnitEnum $entity) => $this->resolveEntityName($entity)
+            fn (AbstractBaseEntityModel|array|string|UnitEnum $entity) => $this->resolveEntity($entity, $orFail)
         );
     }
 
@@ -67,4 +67,12 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
 
         throw new InvalidArgumentException('Invalid entity type provided. Expected a Gatekeeper entity, array, or string.');
     }
+
+    /**
+     * Get the entity model from the entity or entity name.
+     *
+     * @param  TModel|string|UnitEnum  $entity
+     * @return ?TModel
+     */
+    abstract protected function resolveEntity($entity, bool $orFail = false);
 }

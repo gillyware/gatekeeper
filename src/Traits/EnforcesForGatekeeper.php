@@ -133,6 +133,8 @@ trait EnforcesForGatekeeper
      */
     protected function enforceAuditFeature(): void
     {
+        $this->resolveActingAs();
+
         if ($this->auditFeatureEnabled() && (! isset($this->actingAs) || ! $this->actingAs instanceof Model)) {
             throw new MissingActingAsModelException;
         }

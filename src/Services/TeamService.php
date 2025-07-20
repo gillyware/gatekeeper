@@ -10,7 +10,6 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Team\ReactivateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -42,7 +41,9 @@ class TeamService extends AbstractBaseEntityService
      */
     public function exists(string|UnitEnum $teamName): bool
     {
-        return $this->teamRepository->exists($this->resolveEntityName($teamName));
+        $teamName = $this->resolveEntityName($teamName);
+
+        return $this->teamRepository->exists($teamName);
     }
 
     /**
@@ -50,7 +51,6 @@ class TeamService extends AbstractBaseEntityService
      */
     public function create(string|UnitEnum $teamName): Team
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
 
@@ -60,13 +60,13 @@ class TeamService extends AbstractBaseEntityService
             throw new TeamAlreadyExistsException($teamName);
         }
 
-        $team = $this->teamRepository->create($teamName);
+        $createdTeam = $this->teamRepository->create($teamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreateTeamAuditLogDto($team));
+            $this->auditLogRepository->create(new CreateTeamAuditLogDto($createdTeam));
         }
 
-        return $team;
+        return $createdTeam;
     }
 
     /**
@@ -76,31 +76,25 @@ class TeamService extends AbstractBaseEntityService
      */
     public function update($team, string|UnitEnum $newTeamName): Team
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
 
         $newTeamName = $this->resolveEntityName($newTeamName);
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findOrFailByName($teamName);
+        $currentTeam = $this->resolveEntity($team, orFail: true);
 
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
-        }
-
-        if ($this->exists($newTeamName) && $team->name !== $newTeamName) {
+        if ($this->exists($newTeamName) && $currentTeam->name !== $newTeamName) {
             throw new TeamAlreadyExistsException($newTeamName);
         }
 
-        $oldTeamName = $team->name;
-        $team = $this->teamRepository->update($team, $newTeamName);
+        $oldTeamName = $currentTeam->name;
+        $updatedTeam = $this->teamRepository->update($currentTeam, $newTeamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdateTeamAuditLogDto($team, $oldTeamName));
+            $this->auditLogRepository->create(new UpdateTeamAuditLogDto($updatedTeam, $oldTeamName));
         }
 
-        return $team;
+        return $updatedTeam;
     }
 
     /**
@@ -110,27 +104,21 @@ class TeamService extends AbstractBaseEntityService
      */
     public function deactivate($team): Team
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findOrFailByName($teamName);
+        $currentTeam = $this->resolveEntity($team, orFail: true);
 
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
+        if (! $currentTeam->is_active) {
+            return $currentTeam;
         }
 
-        if (! $team->is_active) {
-            return $team;
-        }
-
-        $team = $this->teamRepository->deactivate($team);
+        $deactivatedTeam = $this->teamRepository->deactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivateTeamAuditLogDto($team));
+            $this->auditLogRepository->create(new DeactivateTeamAuditLogDto($deactivatedTeam));
         }
 
-        return $team;
+        return $deactivatedTeam;
     }
 
     /**
@@ -140,28 +128,22 @@ class TeamService extends AbstractBaseEntityService
      */
     public function reactivate($team): Team
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findOrFailByName($teamName);
+        $currentTeam = $this->resolveEntity($team, orFail: true);
 
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
+        if ($currentTeam->is_active) {
+            return $currentTeam;
         }
 
-        if ($team->is_active) {
-            return $team;
-        }
-
-        $team = $this->teamRepository->reactivate($team);
+        $reactivatedTeam = $this->teamRepository->reactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivateTeamAuditLogDto($team));
+            $this->auditLogRepository->create(new ReactivateTeamAuditLogDto($reactivatedTeam));
         }
 
-        return $team;
+        return $reactivatedTeam;
     }
 
     /**
@@ -171,15 +153,9 @@ class TeamService extends AbstractBaseEntityService
      */
     public function delete($team): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findByName($teamName);
-
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
-        }
+        $team = $this->resolveEntity($team);
 
         if (! $team) {
             return true;
@@ -206,7 +182,6 @@ class TeamService extends AbstractBaseEntityService
      */
     public function assignToModel(Model $model, $team): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
         $this->enforceTeamInteraction($model);
@@ -214,12 +189,7 @@ class TeamService extends AbstractBaseEntityService
         $this->enforceModelIsNotRole($model, 'Teams cannot be assigned to roles');
         $this->enforceModelIsNotPermission($model, 'Teams cannot be assigned to permissions');
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findOrFailByName($teamName);
-
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
-        }
+        $team = $this->resolveEntity($team, orFail: true);
 
         // If the model already has this team directly assigned, return true.
         if ($this->modelHasDirectly($model, $team)) {
@@ -244,8 +214,8 @@ class TeamService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($teams)->each(function (string $teamName) use ($model, &$result) {
-            $result = $result && $this->assignToModel($model, $teamName);
+        $this->resolveEntities($teams, orFail: true)->each(function (Team $team) use ($model, &$result) {
+            $result = $result && $this->assignToModel($model, $team);
         });
 
         return $result;
@@ -258,15 +228,9 @@ class TeamService extends AbstractBaseEntityService
      */
     public function revokeFromModel(Model $model, $team): bool
     {
-        $this->resolveActingAs();
         $this->enforceAuditFeature();
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findOrFailByName($teamName);
-
-        if (! $team) {
-            throw new TeamNotFoundException($teamName);
-        }
+        $team = $this->resolveEntity($team, orFail: true);
 
         $removed = $this->modelHasTeamRepository->deleteForModelAndEntity($model, $team);
 
@@ -286,8 +250,8 @@ class TeamService extends AbstractBaseEntityService
     {
         $result = true;
 
-        $this->entityNames($teams)->each(function (string $teamName) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $teamName);
+        $this->resolveEntities($teams, orFail: true)->each(function (Team $team) use ($model, &$result) {
+            $result = $result && $this->revokeFromModel($model, $team);
         });
 
         return $result;
@@ -305,8 +269,7 @@ class TeamService extends AbstractBaseEntityService
             return false;
         }
 
-        $teamName = $this->resolveEntityName($team);
-        $team = $this->teamRepository->findByName($teamName);
+        $team = $this->resolveEntity($team);
 
         // The team cannot be accessed if it does not exist or is inactive.
         if (! $team || ! $team->is_active) {
@@ -323,9 +286,9 @@ class TeamService extends AbstractBaseEntityService
      */
     public function modelHasDirectly(Model $model, $team): bool
     {
-        $teamName = $this->resolveEntityName($team);
+        $team = $this->resolveEntity($team);
 
-        return $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $teamName === $t->name);
+        return $team && $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $team->name === $t->name);
     }
 
     /**
@@ -335,8 +298,8 @@ class TeamService extends AbstractBaseEntityService
      */
     public function modelHasAny(Model $model, array|Arrayable $teams): bool
     {
-        return $this->entityNames($teams)->some(
-            fn (string $teamName) => $this->modelHas($model, $teamName)
+        return $this->resolveEntities($teams)->filter()->some(
+            fn (Team $team) => $this->modelHas($model, $team)
         );
     }
 
@@ -347,8 +310,8 @@ class TeamService extends AbstractBaseEntityService
      */
     public function modelHasAll(Model $model, array|Arrayable $teams): bool
     {
-        return $this->entityNames($teams)->every(
-            fn (string $teamName) => $this->modelHas($model, $teamName)
+        return $this->resolveEntities($teams)->every(
+            fn (?Team $team) => $team && $this->modelHas($model, $team)
         );
     }
 
@@ -357,7 +320,7 @@ class TeamService extends AbstractBaseEntityService
      */
     public function findByName(string|UnitEnum $teamName): ?Team
     {
-        return $this->teamRepository->findByName($this->resolveEntityName($teamName));
+        return $this->resolveEntity($teamName);
     }
 
     /**
@@ -389,10 +352,28 @@ class TeamService extends AbstractBaseEntityService
     }
 
     /**
-     * Get a page of permissions.
+     * Get a page of teams.
      */
     public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
     {
         return $this->teamRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+    }
+
+    /**
+     * Get the team model from the team or team name.
+     *
+     * @param  Team|string|UnitEnum  $team
+     */
+    protected function resolveEntity($team, bool $orFail = false): ?Team
+    {
+        if ($team instanceof Team) {
+            return $team;
+        }
+
+        $teamName = $this->resolveEntityName($team);
+
+        return $orFail
+            ? $this->teamRepository->findOrFailByName($teamName)
+            : $this->teamRepository->findByName($teamName);
     }
 }
