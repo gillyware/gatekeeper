@@ -20,7 +20,9 @@
     - [Get Teams for Model](#get-teams-for-model)
 - [Next Steps](#next-steps)
 
-Gatekeeper exposes a variety of team-related methods via its facade. This section documents each of them with accompanying code examples.
+A team is a collection of models used to provide organizational or contextual grouping (e.g., department, project, tenant). You can assign models directly to teams. A team itself may have direct permissions and roles, and every model on that team inherits both the team’s direct permissions and the permissions from the team’s roles.
+
+Gatekeeper exposes a variety of team-related methods through its facade and `HasTeams` trait. This section documents each of them with accompanying code examples.
 
 <a name="team-entities"></a>
 ## Team Entities

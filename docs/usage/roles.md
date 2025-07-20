@@ -22,7 +22,9 @@
     - [Get Verbose Roles for Model](#get-verbose-roles-for-model)
 - [Next Steps](#next-steps)
 
-Gatekeeper exposes a variety of role-related methods via its facade. This section documents each of them with accompanying code examples.
+A role is a named grouping of permissions. You can assign roles directly to any (configured) model and to any team. A model’s effective roles include those from roles assigned to it directly and from roles attached to its teams.
+
+Gatekeeper exposes a variety of role-related methods through its facade and `HasRoles` trait. This section documents each of them with accompanying code examples.
 
 <a name="role-entities"></a>
 ## Role Entities

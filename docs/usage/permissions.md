@@ -22,7 +22,9 @@
     - [Get Verbose Permissions for Model](#get-verbose-permissions-for-model)
 - [Next Steps](#next-steps)
 
-Gatekeeper exposes a variety of permission-related methods via its facade. This section documents each of them with accompanying code examples.
+A permission is the smallest grantable entity. You can assign permissions directly to any (configured) model, any role, and any team. A model’s effective permissions are the union of its direct permissions and those inherited through its roles, its teams, and the roles attached to those teams.
+
+Gatekeeper exposes a variety of permission-related methods through its facade and `HasPermissions` trait. This section documents each of them with accompanying code examples.
 
 <a name="permission-entities"></a>
 ## Permission Entities
