@@ -62,7 +62,7 @@ export default function LandingScreen() {
                     <p className="text-muted-foreground">{landing.description}</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:max-w-4xl lg:grid-cols-3">
                     {tiles.map((tile: Tile) => (
                         <Link key={tile.to} to={tile.to} className="h-full">
                             <Card className="flex h-full min-h-[140px] flex-col transition-shadow hover:shadow-md">
