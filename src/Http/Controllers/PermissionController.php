@@ -8,7 +8,6 @@ use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\StorePermissionReques
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\UpdatePermissionRequest;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\PermissionService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -19,7 +18,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Get a page of permissions.
      */
-    public function index(PermissionPageRequest $request): JsonResponse
+    public function index(PermissionPageRequest $request): HttpFoundationResponse
     {
         $pageNumber = $request->validated('page');
         $searchTerm = (string) $request->validated('search_term');
@@ -39,7 +38,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Get a permission.
      */
-    public function show(Permission $permission): JsonResponse
+    public function show(Permission $permission): HttpFoundationResponse
     {
         return Response::json($permission);
     }
@@ -47,7 +46,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Create a new permission.
      */
-    public function store(StorePermissionRequest $request): JsonResponse
+    public function store(StorePermissionRequest $request): HttpFoundationResponse
     {
         try {
             $permissionName = $request->validated('name');
@@ -62,7 +61,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Update an existing permission.
      */
-    public function update(UpdatePermissionRequest $request, Permission $permission): JsonResponse
+    public function update(UpdatePermissionRequest $request, Permission $permission): HttpFoundationResponse
     {
         try {
             $newPermissionName = $request->validated('name');
@@ -77,7 +76,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Deactivate a permission.
      */
-    public function deactivate(Permission $permission): JsonResponse
+    public function deactivate(Permission $permission): HttpFoundationResponse
     {
         try {
             $permission = $this->permissionService->deactivate($permission);
@@ -91,7 +90,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Reactivate a permission.
      */
-    public function reactivate(Permission $permission): JsonResponse
+    public function reactivate(Permission $permission): HttpFoundationResponse
     {
         try {
             $permission = $this->permissionService->reactivate($permission);
@@ -105,7 +104,7 @@ class PermissionController extends AbstractBaseController
     /**
      * Delete a permission.
      */
-    public function delete(Permission $permission): JsonResponse
+    public function delete(Permission $permission): HttpFoundationResponse
     {
         try {
             $this->permissionService->delete($permission);

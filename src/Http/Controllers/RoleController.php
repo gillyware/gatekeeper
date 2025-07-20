@@ -8,7 +8,6 @@ use Gillyware\Gatekeeper\Http\Requests\Entities\Role\StoreRoleRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\UpdateRoleRequest;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Services\RoleService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -19,7 +18,7 @@ class RoleController extends AbstractBaseController
     /**
      * Get a page of roles.
      */
-    public function index(RolePageRequest $request): JsonResponse
+    public function index(RolePageRequest $request): HttpFoundationResponse
     {
         $pageNumber = $request->validated('page');
         $searchTerm = (string) $request->validated('search_term');
@@ -39,7 +38,7 @@ class RoleController extends AbstractBaseController
     /**
      * Get a role.
      */
-    public function show(Role $role): JsonResponse
+    public function show(Role $role): HttpFoundationResponse
     {
         return Response::json($role);
     }
@@ -47,7 +46,7 @@ class RoleController extends AbstractBaseController
     /**
      * Create a new role.
      */
-    public function store(StoreRoleRequest $request): JsonResponse
+    public function store(StoreRoleRequest $request): HttpFoundationResponse
     {
         try {
             $roleName = $request->validated('name');
@@ -62,7 +61,7 @@ class RoleController extends AbstractBaseController
     /**
      * Update an existing role.
      */
-    public function update(UpdateRoleRequest $request, Role $role): JsonResponse
+    public function update(UpdateRoleRequest $request, Role $role): HttpFoundationResponse
     {
         try {
             $newRoleName = $request->validated('name');
@@ -77,7 +76,7 @@ class RoleController extends AbstractBaseController
     /**
      * Deactivate a role.
      */
-    public function deactivate(Role $role): JsonResponse
+    public function deactivate(Role $role): HttpFoundationResponse
     {
         try {
             $role = $this->roleService->deactivate($role);
@@ -91,7 +90,7 @@ class RoleController extends AbstractBaseController
     /**
      * Reactivate a role.
      */
-    public function reactivate(Role $role): JsonResponse
+    public function reactivate(Role $role): HttpFoundationResponse
     {
         try {
             $role = $this->roleService->reactivate($role);
@@ -105,7 +104,7 @@ class RoleController extends AbstractBaseController
     /**
      * Delete a role.
      */
-    public function delete(Role $role): JsonResponse
+    public function delete(Role $role): HttpFoundationResponse
     {
         try {
             $this->roleService->delete($role);
