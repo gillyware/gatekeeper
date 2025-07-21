@@ -80,7 +80,7 @@ class RoleRepository implements EntityRepositoryInterface
             $this->cacheService->invalidateCacheForAllRoles();
         }
 
-        return $role;
+        return $role->fresh();
     }
 
     /**

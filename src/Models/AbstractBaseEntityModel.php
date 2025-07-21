@@ -2,12 +2,19 @@
 
 namespace Gillyware\Gatekeeper\Models;
 
+use Gillyware\Postal\Contracts\PacketableInterface;
+use Gillyware\Postal\Packet;
+use Gillyware\Postal\Traits\Packetable;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @template TFactory as Factory
+ * @template TPacket as Packet
+ *
  * @property int $id // PK
  * @property string $name
  * @property bool $is_active
@@ -15,9 +22,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  */
-abstract class AbstractBaseEntityModel extends Model
+abstract class AbstractBaseEntityModel extends Model implements PacketableInterface
 {
+    /** @use HasFactory<TFactory> */
     use HasFactory;
+
+    /** @use Packetable<TPacket> */
+    use Packetable;
+
     use SoftDeletes;
 
     /**

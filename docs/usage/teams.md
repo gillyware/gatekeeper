@@ -61,7 +61,7 @@ If the team already exists, a `TeamAlreadyExistsException` will be thrown.
 
 The `createTeam` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Team`
+**Returns:** `\Gillyware\Gatekeeper\Packets\TeamPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -82,13 +82,13 @@ $team = Gatekeeper::createTeam(Team::Management);
 
 You may update the name of an existing team.
 
-The `updateTeam` method accepts a `Team` model instance, a string, or a string-backed enum as the first argument (the existing team), and a string or string-backed enum as the second argument (the new name).
+The `updateTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum as the first argument (the existing team), and a string or string-backed enum as the second argument (the new name).
 
 If the team does not exist, a `TeamNotFoundException` will be thrown.
 
 If a team with the new name already exists, a `TeamAlreadyExistsException` will be thrown.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Team`
+**Returns:** `\Gillyware\Gatekeeper\Packets\TeamPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -112,13 +112,13 @@ You may temporarily deactivate a team if you want it to stop granting access wit
 
 Deactivated teams remain in the database but are ignored by team checks until reactivated. The roles and permissions attached to teams will also be ignored until the team is reactivated.
 
-The `deactivateTeam` method accepts a `Team` model instance, a string, or a string-backed enum.
+The `deactivateTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
 If the team does not exist, a `TeamNotFoundException` will be thrown.
 
 If the team is already inactive, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Team`
+**Returns:** `\Gillyware\Gatekeeper\Packets\TeamPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -139,13 +139,13 @@ $deactivatedTeam = Gatekeeper::deactivateTeam(Team::Finance);
 
 You may reactivate an inactive team to resume granting access to models.
 
-The `reactivateTeam` method accepts a `Team` model instance, a string, or a string-backed enum.
+The `reactivateTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
 If the team does not exist, a `TeamNotFoundException` will be thrown.
 
 If the team is already active, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Team`
+**Returns:** `\Gillyware\Gatekeeper\Packets\TeamPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -169,7 +169,7 @@ You may delete a team to remove it from your application.
 > [!WARNING]
 > Deleting a team will remove it from your application and unassign it from all models.
 
-The `deleteTeam` method accepts a `Team` model instance, a string, or a string-backed enum.
+The `deleteTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
 If the team does not exist, a `TeamNotFoundException` will be thrown.
 
@@ -198,7 +198,7 @@ You may retrieve a team by its name. If the team does not exist, `null` will be 
 
 The `findTeamByName` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Team|null`
+**Returns:** `\Gillyware\Gatekeeper\Packets\TeamPacket|null`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -221,7 +221,7 @@ You may retrieve a collection of all teams defined in your application, regardle
 
 The `getAllTeams` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Team>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\TeamPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -248,7 +248,7 @@ You may add a model to a team using one of the following approaches:
 
 The `$team` argument can be a:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -287,7 +287,7 @@ You may add a model to multiple teams using one of the following approaches:
 
 The `$teams` argument must be an array or Arrayable containing any combination of:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -335,7 +335,7 @@ You may remove a model from a team using one of the following approaches:
 
 The `$team` argument can be a:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -374,7 +374,7 @@ You may remove a model from multiple teams using one of the following approaches
 
 The `$teams` argument must be an array or Arrayable containing any combination of:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -424,7 +424,7 @@ You may check if a model is on a team using one of the following approaches:
 
 The `$team` argument can be a:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -465,7 +465,7 @@ You may check if a model is on any of a set of teams using one of the following 
 
 The `$teams` argument must be an array or Arrayable containing any combination of:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -510,7 +510,7 @@ You may check if a model is on all of a set of teams using one of the following 
 
 The `$teams` argument must be an array or Arrayable containing any combination of:
 
-- `Team` model instance
+- `TeamPacket` instance
 - string (e.g. `'support'`)
 - string-backed enum value
 
@@ -553,7 +553,7 @@ You may get a model's direct teams using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getTeams()` chain
 - Calling `$model->getTeams()` directly (available via the `HasTeams` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Team>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\TeamPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;

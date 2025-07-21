@@ -10,6 +10,9 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Model;
 
+/**
+ * @use HasFactory<UserFactory>
+ */
 class User extends Model
 {
     use Authenticatable;

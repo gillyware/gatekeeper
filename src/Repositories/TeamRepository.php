@@ -81,7 +81,7 @@ class TeamRepository implements EntityRepositoryInterface
             $this->cacheService->invalidateCacheForAllTeams();
         }
 
-        return $team;
+        return $team->fresh();
     }
 
     /**

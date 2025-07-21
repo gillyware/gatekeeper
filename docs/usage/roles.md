@@ -63,7 +63,7 @@ If the role already exists, a `RoleAlreadyExistsException` will be thrown.
 
 The `createRole` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Role`
+**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -84,13 +84,13 @@ $role = Gatekeeper::createRole(Role::ProductManager);
 
 You may update the name of an existing role.
 
-The `updateRole` method accepts a `Role` model instance, a string, or a string-backed enum as the first argument (the existing role), and a string or string-backed enum as the second argument (the new name).
+The `updateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum as the first argument (the existing role), and a string or string-backed enum as the second argument (the new name).
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If a role with the new name already exists, a `RoleAlreadyExistsException` will be thrown.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Role`
+**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -114,13 +114,13 @@ You may temporarily deactivate a role if you want it to stop granting access wit
 
 Deactivated roles remain in the database but are ignored by role checks until reactivated. The permissions attached to roles will also be ignored until the role is reactivated.
 
-The `deactivateRole` method accepts a `Role` model instance, a string, or a string-backed enum.
+The `deactivateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If the role is already inactive, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Role`
+**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -141,13 +141,13 @@ $deactivatedRole = Gatekeeper::deactivateRole(Role::ProjectManager);
 
 You may reactivate an inactive role to resume granting access to models.
 
-The `reactivateRole` method accepts a `Role` model instance, a string, or a string-backed enum.
+The `reactivateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If the role is already active, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Role`
+**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -171,7 +171,7 @@ You may delete a role to remove it from your application.
 > [!WARNING]
 > Deleting a role will remove it from your application and unassign it from all models.
 
-The `deleteRole` method accepts a `Role` model instance, a string, or a string-backed enum.
+The `deleteRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
@@ -200,7 +200,7 @@ You may retrieve a role by its name. If the role does not exist, `null` will be 
 
 The `findRoleByName` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Role|null`
+**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket|null`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -223,7 +223,7 @@ You may retrieve a collection of all roles defined in your application, regardle
 
 The `getAllRoles` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Role>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -250,7 +250,7 @@ You may assign a role to a model using one of the following approaches:
 
 The `$role` argument can be a:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -289,7 +289,7 @@ You may assign multiple roles to a model using one of the following approaches:
 
 The `$roles` argument must be an array or Arrayable containing any combination of:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -337,7 +337,7 @@ You may revoke a role from a model using one of the following approaches:
 
 The `$role` argument can be a:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -376,7 +376,7 @@ You may revoke multiple roles from a model using one of the following approaches
 
 The `$roles` argument must be an array or Arrayable containing any combination of:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -426,7 +426,7 @@ You may check if a model has a role using one of the following approaches:
 
 The `$role` argument can be a:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -467,7 +467,7 @@ You may check if a model has any of a set of roles using one of the following ap
 
 The `$roles` argument must be an array or Arrayable containing any combination of:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -512,7 +512,7 @@ You may check if a model has all of a set of roles using one of the following ap
 
 The `$roles` argument must be an array or Arrayable containing any combination of:
 
-- `Role` model instance
+- `RolePacket` instance
 - string (e.g. `'users.manager'`)
 - string-backed enum value
 
@@ -555,7 +555,7 @@ You may get a model's direct roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectRoles()` chain
 - Calling `$model->getDirectRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Role>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -584,7 +584,7 @@ You may get a model's effective roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getEffectiveRoles()` chain
 - Calling `$model->getEffectiveRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Role>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;

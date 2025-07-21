@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use BackedEnum;
 use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
+use Gillyware\Gatekeeper\Packets\AbstractBaseEntityPacket;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -16,8 +17,9 @@ use function Illuminate\Support\enum_value;
 
 /**
  * @template TModel of AbstractBaseEntityModel
+ * @template TPacket of AbstractBaseEntityPacket
  *
- * @implements EntityServiceInterface<TModel>
+ * @implements EntityServiceInterface<TModel, TPacket>
  */
 abstract class AbstractBaseEntityService implements EntityServiceInterface
 {
@@ -31,17 +33,17 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
         $entityArray = $entities instanceof Arrayable ? $entities->toArray() : $entities;
 
         return collect($entityArray)->map(
-            fn (AbstractBaseEntityModel|array|string|UnitEnum $entity) => $this->resolveEntity($entity, $orFail)
+            fn (AbstractBaseEntityModel|AbstractBaseEntityPacket|array|string|UnitEnum $entity) => $this->resolveEntity($entity, $orFail)
         );
     }
 
     /**
      * Resolve the Gatekeeper entity name from an entity, array, or string.
      */
-    protected function resolveEntityName(AbstractBaseEntityModel|array|string|UnitEnum $entity): string
+    protected function resolveEntityName(AbstractBaseEntityModel|AbstractBaseEntityPacket|array|string|UnitEnum $entity): string
     {
-        // If the entity is an instance of AbstractBaseEntityModel, return its name.
-        if ($entity instanceof AbstractBaseEntityModel) {
+        // If the entity is an instance of AbstractBaseEntityModel or AbstractBaseEntityPacket, return its name.
+        if ($entity instanceof AbstractBaseEntityModel || $entity instanceof AbstractBaseEntityPacket) {
             return $entity->name;
         }
 
@@ -71,7 +73,7 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
     /**
      * Get the entity model from the entity or entity name.
      *
-     * @param  TModel|string|UnitEnum  $entity
+     * @param  TModel|TPacket|string|UnitEnum  $entity
      * @return ?TModel
      */
     abstract protected function resolveEntity($entity, bool $orFail = false);

@@ -6,6 +6,9 @@ use Gillyware\Gatekeeper\Contracts\GatekeeperServiceInterface;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\TeamPacket;
 use Gillyware\Gatekeeper\Support\SystemActor;
 use Gillyware\Gatekeeper\Traits\ActsForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
@@ -85,7 +88,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function createPermission(string|UnitEnum $permissionName): Permission
+    public function createPermission(string|UnitEnum $permissionName): PermissionPacket
     {
         return $this->permissionService->create($permissionName);
     }
@@ -93,7 +96,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function updatePermission(Permission|string|UnitEnum $permission, string|UnitEnum $permissionName): Permission
+    public function updatePermission(Permission|PermissionPacket|string|UnitEnum $permission, string|UnitEnum $permissionName): PermissionPacket
     {
         return $this->permissionService->update($permission, $permissionName);
     }
@@ -101,7 +104,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deactivatePermission(Permission|string|UnitEnum $permission): Permission
+    public function deactivatePermission(Permission|PermissionPacket|string|UnitEnum $permission): PermissionPacket
     {
         return $this->permissionService->deactivate($permission);
     }
@@ -109,7 +112,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function reactivatePermission(Permission|string|UnitEnum $permission): Permission
+    public function reactivatePermission(Permission|PermissionPacket|string|UnitEnum $permission): PermissionPacket
     {
         return $this->permissionService->reactivate($permission);
     }
@@ -117,7 +120,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deletePermission(Permission|string|UnitEnum $permission): bool
+    public function deletePermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return $this->permissionService->delete($permission);
     }
@@ -125,7 +128,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignPermissionToModel(Model $model, Permission|string|UnitEnum $permission): bool
+    public function assignPermissionToModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return $this->permissionService->assignToModel($model, $permission);
     }
@@ -141,7 +144,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokePermissionFromModel(Model $model, Permission|string|UnitEnum $permission): bool
+    public function revokePermissionFromModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return $this->permissionService->revokeFromModel($model, $permission);
     }
@@ -157,7 +160,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function modelHasPermission(Model $model, Permission|string|UnitEnum $permission): bool
+    public function modelHasPermission(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return $this->permissionService->modelHas($model, $permission);
     }
@@ -181,7 +184,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function findPermissionByName(string|UnitEnum $permissionName): ?Permission
+    public function findPermissionByName(string|UnitEnum $permissionName): ?PermissionPacket
     {
         return $this->permissionService->findByName($permissionName);
     }
@@ -229,7 +232,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function createRole(string|UnitEnum $roleName): Role
+    public function createRole(string|UnitEnum $roleName): RolePacket
     {
         return $this->roleService->create($roleName);
     }
@@ -237,7 +240,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function updateRole(Role|string|UnitEnum $role, string|UnitEnum $roleName): Role
+    public function updateRole(Role|RolePacket|string|UnitEnum $role, string|UnitEnum $roleName): RolePacket
     {
         return $this->roleService->update($role, $roleName);
     }
@@ -245,7 +248,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deactivateRole(Role|string|UnitEnum $role): Role
+    public function deactivateRole(Role|RolePacket|string|UnitEnum $role): RolePacket
     {
         return $this->roleService->deactivate($role);
     }
@@ -253,7 +256,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function reactivateRole(Role|string|UnitEnum $role): Role
+    public function reactivateRole(Role|RolePacket|string|UnitEnum $role): RolePacket
     {
         return $this->roleService->reactivate($role);
     }
@@ -261,7 +264,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deleteRole(Role|string|UnitEnum $role): bool
+    public function deleteRole(Role|RolePacket|string|UnitEnum $role): bool
     {
         return $this->roleService->delete($role);
     }
@@ -269,7 +272,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignRoleToModel(Model $model, Role|string|UnitEnum $role): bool
+    public function assignRoleToModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool
     {
         return $this->roleService->assignToModel($model, $role);
     }
@@ -285,7 +288,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokeRoleFromModel(Model $model, Role|string|UnitEnum $role): bool
+    public function revokeRoleFromModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool
     {
         return $this->roleService->revokeFromModel($model, $role);
     }
@@ -301,7 +304,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function modelHasRole(Model $model, Role|string|UnitEnum $role): bool
+    public function modelHasRole(Model $model, Role|RolePacket|string|UnitEnum $role): bool
     {
         return $this->roleService->modelHas($model, $role);
     }
@@ -325,7 +328,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function findRoleByName(string|UnitEnum $roleName): ?Role
+    public function findRoleByName(string|UnitEnum $roleName): ?RolePacket
     {
         return $this->roleService->findByName($roleName);
     }
@@ -373,7 +376,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function createTeam(string|UnitEnum $teamName): Team
+    public function createTeam(string|UnitEnum $teamName): TeamPacket
     {
         return $this->teamService->create($teamName);
     }
@@ -381,7 +384,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function updateTeam(Team|string|UnitEnum $team, string|UnitEnum $teamName): Team
+    public function updateTeam(Team|TeamPacket|string|UnitEnum $team, string|UnitEnum $teamName): TeamPacket
     {
         return $this->teamService->update($team, $teamName);
     }
@@ -389,7 +392,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deactivateTeam(Team|string|UnitEnum $team): Team
+    public function deactivateTeam(Team|TeamPacket|string|UnitEnum $team): TeamPacket
     {
         return $this->teamService->deactivate($team);
     }
@@ -397,7 +400,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function reactivateTeam(Team|string|UnitEnum $team): Team
+    public function reactivateTeam(Team|TeamPacket|string|UnitEnum $team): TeamPacket
     {
         return $this->teamService->reactivate($team);
     }
@@ -405,7 +408,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function deleteTeam(Team|string|UnitEnum $team): bool
+    public function deleteTeam(Team|TeamPacket|string|UnitEnum $team): bool
     {
         return $this->teamService->delete($team);
     }
@@ -413,7 +416,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function addModelToTeam(Model $model, Team|string|UnitEnum $team): bool
+    public function addModelToTeam(Model $model, Team|TeamPacket|string|UnitEnum $team): bool
     {
         return $this->teamService->assignToModel($model, $team);
     }
@@ -429,7 +432,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function removeModelFromTeam(Model $model, Team|string|UnitEnum $team): bool
+    public function removeModelFromTeam(Model $model, Team|TeamPacket|string|UnitEnum $team): bool
     {
         return $this->teamService->revokeFromModel($model, $team);
     }
@@ -445,7 +448,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function modelOnTeam(Model $model, Team|string|UnitEnum $team): bool
+    public function modelOnTeam(Model $model, Team|TeamPacket|string|UnitEnum $team): bool
     {
         return $this->teamService->modelHas($model, $team);
     }
@@ -469,7 +472,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function findTeamByName(string|UnitEnum $roleName): ?Team
+    public function findTeamByName(string|UnitEnum $roleName): ?TeamPacket
     {
         return $this->teamService->findByName($roleName);
     }

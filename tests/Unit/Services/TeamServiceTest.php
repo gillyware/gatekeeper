@@ -11,6 +11,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\TeamPacket;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -42,7 +43,7 @@ class TeamServiceTest extends TestCase
 
         $team = $this->service->create($name);
 
-        $this->assertInstanceOf(Team::class, $team);
+        $this->assertInstanceOf(TeamPacket::class, $team);
         $this->assertEquals($name, $team->name);
     }
 
@@ -79,7 +80,7 @@ class TeamServiceTest extends TestCase
         $this->assertEquals(Action::TEAM_CREATE, $createTeamLog->action);
         $this->assertEquals($name, $createTeamLog->metadata['name']);
         $this->assertTrue($this->user->is($createTeamLog->actionBy));
-        $this->assertTrue($team->is($createTeamLog->actionTo));
+        $this->assertEquals($team->getId(), $createTeamLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_team_creation_when_auditing_disabled()
@@ -100,8 +101,8 @@ class TeamServiceTest extends TestCase
 
         $updatedTeam = $this->service->update($team, $newName);
 
-        $this->assertInstanceOf(Team::class, $updatedTeam);
-        $this->assertEquals($newName, $updatedTeam->name);
+        $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
+        $this->assertEquals($newName, $updatedTeam->getName());
     }
 
     public function test_update_team_fails_if_teams_feature_disabled()
@@ -153,8 +154,8 @@ class TeamServiceTest extends TestCase
 
         $deactivatedTeam = $this->service->deactivate($team);
 
-        $this->assertInstanceOf(Team::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->is_active);
+        $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
+        $this->assertFalse($deactivatedTeam->isActive());
     }
 
     public function test_deactivate_team_is_idempotent()
@@ -176,8 +177,8 @@ class TeamServiceTest extends TestCase
 
         $deactivatedTeam = $this->service->deactivate($team);
 
-        $this->assertInstanceOf(Team::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->is_active);
+        $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
+        $this->assertFalse($deactivatedTeam->isActive());
     }
 
     public function test_audit_log_inserted_on_team_deactivation_when_auditing_enabled()
@@ -215,8 +216,8 @@ class TeamServiceTest extends TestCase
 
         $reactivatedTeam = $this->service->reactivate($team);
 
-        $this->assertInstanceOf(Team::class, $reactivatedTeam);
-        $this->assertTrue($reactivatedTeam->is_active);
+        $this->assertInstanceOf(TeamPacket::class, $reactivatedTeam);
+        $this->assertTrue($reactivatedTeam->isActive());
     }
 
     public function test_reactivate_team_is_idempotent()
@@ -309,8 +310,7 @@ class TeamServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
-        $name = fake()->unique()->word();
-        $team = Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
         $this->service->delete($team);
 
@@ -319,7 +319,7 @@ class TeamServiceTest extends TestCase
 
         $deleteTeamLog = $auditLogs->first();
         $this->assertEquals(Action::TEAM_DELETE, $deleteTeamLog->action);
-        $this->assertEquals($name, $deleteTeamLog->metadata['name']);
+        $this->assertEquals($team->name, $deleteTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $deleteTeamLog->actionBy->id);
         $this->assertEquals($team->id, $deleteTeamLog->action_to_model_id);
     }
@@ -328,8 +328,7 @@ class TeamServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
-        $name = fake()->unique()->word();
-        $team = Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
         $this->service->delete($team);
 
@@ -339,10 +338,9 @@ class TeamServiceTest extends TestCase
     public function test_add_model_to_team()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        $team = Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $result = $this->service->assignToModel($user, $name);
+        $result = $this->service->assignToModel($user, $team->name);
 
         $this->assertTrue($result);
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
@@ -356,12 +354,11 @@ class TeamServiceTest extends TestCase
     public function test_assign_team_is_idempotent()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($user->onTeam($name));
+        $this->assertTrue($this->service->assignToModel($user, $team));
+        $this->assertTrue($this->service->assignToModel($user, $team));
+        $this->assertTrue($user->onTeam($team));
 
         $this->assertCount(1, AuditLog::all());
         $this->assertCount(1, ModelHasTeam::all());
@@ -372,17 +369,16 @@ class TeamServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $team);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
         $assignTeamLog = $auditLogs->first();
         $this->assertEquals(Action::TEAM_ADD, $assignTeamLog->action);
-        $this->assertEquals($name, $assignTeamLog->metadata['name']);
+        $this->assertEquals($team->name, $assignTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
         $this->assertEquals($user->id, $assignTeamLog->action_to_model_id);
     }
@@ -392,10 +388,9 @@ class TeamServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $team);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -403,11 +398,10 @@ class TeamServiceTest extends TestCase
     public function test_add_model_to_team_is_idempotent()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $result = $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $team);
+        $result = $this->service->assignToModel($user, $team);
 
         $this->assertTrue($result);
     }
@@ -439,11 +433,10 @@ class TeamServiceTest extends TestCase
     public function test_remove_model_from_team()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        $team = Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $result = $this->service->revokeFromModel($user, $name);
+        $this->service->assignToModel($user, $team);
+        $result = $this->service->revokeFromModel($user, $team);
 
         $this->assertTrue($result);
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
@@ -457,18 +450,17 @@ class TeamServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $this->service->revokeFromModel($user, $name);
+        $this->service->assignToModel($user, $team);
+        $this->service->revokeFromModel($user, $team);
 
         $auditLogs = AuditLog::query()->where('action', Action::TEAM_REMOVE)->get();
         $this->assertCount(1, $auditLogs);
 
         $assignTeamLog = $auditLogs->first();
         $this->assertEquals(Action::TEAM_REMOVE, $assignTeamLog->action);
-        $this->assertEquals($name, $assignTeamLog->metadata['name']);
+        $this->assertEquals($team->name, $assignTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
         $this->assertEquals($user->id, $assignTeamLog->actionTo->id);
     }
@@ -478,11 +470,10 @@ class TeamServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->create();
+        $team = Team::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $this->service->revokeFromModel($user, $name);
+        $this->service->assignToModel($user, $team);
+        $this->service->revokeFromModel($user, $team);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -490,11 +481,10 @@ class TeamServiceTest extends TestCase
     public function test_remove_model_from_multiple_teams()
     {
         $user = User::factory()->create();
-        $names = [fake()->unique()->word(), fake()->unique()->word()];
-        $teams = collect($names)->map(fn ($name) => Team::factory()->withName($name)->create());
+        $teams = Team::factory()->count(2)->create();
 
-        $this->service->assignAllToModel($user, $names);
-        $result = $this->service->revokeAllFromModel($user, $names);
+        $this->service->assignAllToModel($user, $teams);
+        $result = $this->service->revokeAllFromModel($user, $teams);
 
         $this->assertTrue($result);
         $teams->each(function ($team) use ($user) {
@@ -534,48 +524,41 @@ class TeamServiceTest extends TestCase
     public function test_model_on_team_returns_false_if_team_inactive()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Team::factory()->withName($name)->inactive()->create();
+        $team = Team::factory()->inactive()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $team);
 
-        $this->assertFalse($this->service->modelHas($user, $name));
+        $this->assertFalse($this->service->modelHas($user, $team));
     }
 
     public function test_model_on_any_team()
     {
         $user = User::factory()->create();
-        $names = [fake()->unique()->word(), fake()->unique()->word()];
-        Team::factory()->withName($names[0])->create();
-        Team::factory()->withName($names[1])->create();
+        $teams = Team::factory()->count(2)->create();
 
-        $this->service->assignToModel($user, $names[1]);
+        $this->service->assignToModel($user, $teams->first());
 
-        $this->assertTrue($this->service->modelHasAny($user, $names));
+        $this->assertTrue($this->service->modelHasAny($user, $teams));
     }
 
     public function test_model_on_all_teams()
     {
         $user = User::factory()->create();
-        $names = [fake()->unique()->word(), fake()->unique()->word()];
-        Team::factory()->withName($names[0])->create();
-        Team::factory()->withName($names[1])->create();
+        $teams = Team::factory()->count(2)->create();
 
-        $this->service->assignAllToModel($user, $names);
+        $this->service->assignAllToModel($user, $teams);
 
-        $this->assertTrue($this->service->modelHasAll($user, $names));
+        $this->assertTrue($this->service->modelHasAll($user, $teams));
     }
 
     public function test_model_on_all_teams_fails_if_one_missing()
     {
         $user = User::factory()->create();
-        $names = [fake()->unique()->word(), fake()->unique()->word()];
-        Team::factory()->withName($names[0])->create();
-        Team::factory()->withName($names[1])->create();
+        $teams = Team::factory()->count(2)->create();
 
-        $this->service->assignToModel($user, $names[0]);
+        $this->service->assignToModel($user, $teams->first());
 
-        $this->assertFalse($this->service->modelHasAll($user, $names));
+        $this->assertFalse($this->service->modelHasAll($user, $teams));
     }
 
     public function test_add_model_to_team_throws_if_feature_disabled()
@@ -610,8 +593,8 @@ class TeamServiceTest extends TestCase
 
         $found = $this->service->findByName($team->name);
 
-        $this->assertInstanceOf(Team::class, $found);
-        $this->assertTrue($team->is($found));
+        $this->assertInstanceOf(TeamPacket::class, $found);
+        $this->assertSame($team->id, $found->getId());
     }
 
     public function test_find_by_name_returns_null_if_not_found()
@@ -629,6 +612,7 @@ class TeamServiceTest extends TestCase
 
         $this->assertCount(3, $teams);
         $this->assertInstanceOf(Collection::class, $teams);
+        $this->assertContainsOnlyInstancesOf(TeamPacket::class, $teams);
     }
 
     public function test_get_direct_teams_for_model()

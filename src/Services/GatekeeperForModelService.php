@@ -7,6 +7,9 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\TeamPacket;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -29,7 +32,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignPermission(Permission|string|UnitEnum $permission): bool
+    public function assignPermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return Gatekeeper::assignPermissionToModel($this->model, $permission);
     }
@@ -45,7 +48,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokePermission(Permission|string|UnitEnum $permission): bool
+    public function revokePermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return Gatekeeper::revokePermissionFromModel($this->model, $permission);
     }
@@ -61,7 +64,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function hasPermission(Permission|string|UnitEnum $permission): bool
+    public function hasPermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
         return Gatekeeper::modelHasPermission($this->model, $permission);
     }
@@ -109,7 +112,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignRole(Role|string|UnitEnum $role): bool
+    public function assignRole(Role|RolePacket|string|UnitEnum $role): bool
     {
         return Gatekeeper::assignRoleToModel($this->model, $role);
     }
@@ -125,7 +128,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokeRole(Role|string|UnitEnum $role): bool
+    public function revokeRole(Role|RolePacket|string|UnitEnum $role): bool
     {
         return Gatekeeper::revokeRoleFromModel($this->model, $role);
     }
@@ -141,7 +144,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function hasRole(Role|string|UnitEnum $role): bool
+    public function hasRole(Role|RolePacket|string|UnitEnum $role): bool
     {
         return Gatekeeper::modelHasRole($this->model, $role);
     }
@@ -189,7 +192,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function addToTeam(Team|string|UnitEnum $team): bool
+    public function addToTeam(Team|TeamPacket|string|UnitEnum $team): bool
     {
         return Gatekeeper::addModelToTeam($this->model, $team);
     }
@@ -205,7 +208,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function removeFromTeam(Team|string|UnitEnum $team): bool
+    public function removeFromTeam(Team|TeamPacket|string|UnitEnum $team): bool
     {
         return Gatekeeper::removeModelFromTeam($this->model, $team);
     }
@@ -221,7 +224,7 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function onTeam(Team|string|UnitEnum $team): bool
+    public function onTeam(Team|TeamPacket|string|UnitEnum $team): bool
     {
         return Gatekeeper::modelOnTeam($this->model, $team);
     }

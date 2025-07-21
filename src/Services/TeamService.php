@@ -11,6 +11,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\TeamPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
@@ -20,6 +21,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use UnitEnum;
 
+/**
+ * @extends AbstractBaseEntityService<Team, TeamPacket>
+ */
 class TeamService extends AbstractBaseEntityService
 {
     public function __construct(
@@ -49,7 +53,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Create a new team.
      */
-    public function create(string|UnitEnum $teamName): Team
+    public function create(string|UnitEnum $teamName): TeamPacket
     {
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
@@ -66,15 +70,15 @@ class TeamService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new CreateTeamAuditLogDto($createdTeam));
         }
 
-        return $createdTeam;
+        return $createdTeam->toPacket();
     }
 
     /**
      * Update an existing team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
-    public function update($team, string|UnitEnum $newTeamName): Team
+    public function update($team, string|UnitEnum $newTeamName): TeamPacket
     {
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
@@ -94,22 +98,22 @@ class TeamService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new UpdateTeamAuditLogDto($updatedTeam, $oldTeamName));
         }
 
-        return $updatedTeam;
+        return $updatedTeam->toPacket();
     }
 
     /**
      * Deactivate a team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
-    public function deactivate($team): Team
+    public function deactivate($team): TeamPacket
     {
         $this->enforceAuditFeature();
 
         $currentTeam = $this->resolveEntity($team, orFail: true);
 
         if (! $currentTeam->is_active) {
-            return $currentTeam;
+            return $currentTeam->toPacket();
         }
 
         $deactivatedTeam = $this->teamRepository->deactivate($currentTeam);
@@ -118,15 +122,15 @@ class TeamService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new DeactivateTeamAuditLogDto($deactivatedTeam));
         }
 
-        return $deactivatedTeam;
+        return $deactivatedTeam->toPacket();
     }
 
     /**
      * Reactivate a team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
-    public function reactivate($team): Team
+    public function reactivate($team): TeamPacket
     {
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
@@ -134,7 +138,7 @@ class TeamService extends AbstractBaseEntityService
         $currentTeam = $this->resolveEntity($team, orFail: true);
 
         if ($currentTeam->is_active) {
-            return $currentTeam;
+            return $currentTeam->toPacket();
         }
 
         $reactivatedTeam = $this->teamRepository->reactivate($currentTeam);
@@ -143,13 +147,13 @@ class TeamService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new ReactivateTeamAuditLogDto($reactivatedTeam));
         }
 
-        return $reactivatedTeam;
+        return $reactivatedTeam->toPacket();
     }
 
     /**
      * Delete a team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     public function delete($team): bool
     {
@@ -178,7 +182,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Assign a team to a model.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     public function assignToModel(Model $model, $team): bool
     {
@@ -208,7 +212,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Assign multiple teams to a model.
      *
-     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function assignAllToModel(Model $model, array|Arrayable $teams): bool
     {
@@ -224,7 +228,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Revoke a team from a model.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     public function revokeFromModel(Model $model, $team): bool
     {
@@ -244,7 +248,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Revoke multiple teams from a model.
      *
-     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -260,7 +264,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Check if a model has the given team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     public function modelHas(Model $model, $team): bool
     {
@@ -282,7 +286,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Check if a model directly has the given team.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     public function modelHasDirectly(Model $model, $team): bool
     {
@@ -294,7 +298,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Check if a model has any of the given teams.
      *
-     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function modelHasAny(Model $model, array|Arrayable $teams): bool
     {
@@ -306,7 +310,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Check if a model has all of the given teams.
      *
-     * @param  array<Team|string|UnitEnum>|Arrayable<Team|string|UnitEnum>  $teams
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function modelHasAll(Model $model, array|Arrayable $teams): bool
     {
@@ -318,37 +322,42 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Find a team by its name.
      */
-    public function findByName(string|UnitEnum $teamName): ?Team
+    public function findByName(string|UnitEnum $teamName): ?TeamPacket
     {
-        return $this->resolveEntity($teamName);
+        return $this->resolveEntity($teamName)?->toPacket();
     }
 
     /**
      * Get all teams.
+     *
+     * @return Collection<TeamPacket>
      */
     public function getAll(): Collection
     {
-        return $this->teamRepository->all();
+        return $this->teamRepository->all()
+            ->map(fn (Team $team) => $team->toPacket());
     }
 
     /**
      * Get all teams assigned directly or indirectly to a model.
      *
-     * @return Collection<Team>
+     * @return Collection<TeamPacket>
      */
     public function getForModel(Model $model): Collection
     {
-        return $this->getDirectForModel($model);
+        return $this->getDirectForModel($model)
+            ->map(fn (Team $team) => $team->toPacket());
     }
 
     /**
      * Get all teams directly assigned to a model.
      *
-     * @return Collection<Team>
+     * @return Collection<TeamPacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->teamRepository->forModel($model);
+        return $this->teamRepository->forModel($model)
+            ->map(fn (Team $team) => $team->toPacket());
     }
 
     /**
@@ -362,7 +371,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Get the team model from the team or team name.
      *
-     * @param  Team|string|UnitEnum  $team
+     * @param  Team|TeamPacket|string|UnitEnum  $team
      */
     protected function resolveEntity($team, bool $orFail = false): ?Team
     {
