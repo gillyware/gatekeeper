@@ -67,7 +67,7 @@ class TeamRepository implements EntityRepositoryInterface
             throw new TeamNotFoundException($teamName);
         }
 
-        return $team->fresh();
+        return $team;
     }
 
     /**

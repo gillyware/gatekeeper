@@ -63,7 +63,7 @@ If the permission already exists, a `PermissionAlreadyExistsException` will be t
 
 The `createPermission` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Permission`
+**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -84,13 +84,13 @@ $permission = Gatekeeper::createPermission(Permission::UpdateUsers);
 
 You may update the name of an existing permission.
 
-The `updatePermission` method accepts a `Permission` model instance, a string, or a string-backed enum as the first argument (the existing permission), and a string or string-backed enum as the second argument (the new name).
+The `updatePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum as the first argument (the existing permission), and a string or string-backed enum as the second argument (the new name).
 
 If the permission does not exist, a `PermissionNotFoundException` will be thrown.
 
 If a permission with the new name already exists, a `PermissionAlreadyExistsException` will be thrown.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Permission`
+**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -114,13 +114,13 @@ You may temporarily deactivate a permission if you want it to stop granting acce
 
 Deactivated permissions remain in the database but are ignored by permission checks until reactivated.
 
-The `deactivatePermission` method accepts a `Permission` model instance, a string, or a string-backed enum.
+The `deactivatePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
 If the permission does not exist, a `PermissionNotFoundException` will be thrown.
 
 If the permission is already inactive, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Permission`
+**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -141,13 +141,13 @@ $deactivatedPermission = Gatekeeper::deactivatePermission(Permission::DeleteUser
 
 You may reactivate an inactive permission to resume granting access to models.
 
-The `reactivatePermission` method accepts a `Permission` model instance, a string, or a string-backed enum.
+The `reactivatePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
 If the permission does not exist, a `PermissionNotFoundException` will be thrown.
 
 If the permission is already active, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Permission`
+**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -171,7 +171,7 @@ You may delete a permission to remove it from your application.
 > [!WARNING]
 > Deleting a permission will remove it from your application and unassign it from all models.
 
-The `deletePermission` method accepts a `Permission` model instance, a string, or a string-backed enum.
+The `deletePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
 If the permission does not exist, a `PermissionNotFoundException` will be thrown.
 
@@ -200,7 +200,7 @@ You may retrieve a permission by its name. If the permission does not exist, `nu
 
 The `findPermissionByName` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Models\Permission|null`
+**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket|null`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -223,7 +223,7 @@ You may retrieve a collection of all permissions defined in your application, re
 
 The `getAllPermissions` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Permission>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -250,7 +250,7 @@ You may assign a permission to a model using one of the following approaches:
 
 The `$permission` argument can be a:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -289,7 +289,7 @@ You may assign multiple permissions to a model using one of the following approa
 
 The `$permissions` argument must be an array or Arrayable containing any combination of:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -337,7 +337,7 @@ You may revoke a permission from a model using one of the following approaches:
 
 The `$permission` argument can be a:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -376,7 +376,7 @@ You may revoke multiple permissions from a model using one of the following appr
 
 The `$permissions` argument must be an array or Arrayable containing any combination of:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -426,7 +426,7 @@ You may check if a model has a permission using one of the following approaches:
 
 The `$permission` argument can be a:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -467,7 +467,7 @@ You may check if a model has any of a set of permissions using one of the follow
 
 The `$permissions` argument must be an array or Arrayable containing any combination of:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -512,7 +512,7 @@ You may check if a model has all of a set of permissions using one of the follow
 
 The `$permissions` argument must be an array or Arrayable containing any combination of:
 
-- `Permission` model instance
+- `PermissionPacket` instance
 - string (e.g. `'users.view'`)
 - string-backed enum value
 
@@ -555,7 +555,7 @@ You may get a model's direct permissions using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectPermissions()` chain
 - Calling `$model->getDirectPermissions()` directly (available via the `HasPermissions` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Permission>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -584,7 +584,7 @@ You may get a model's effective permissions using one of the following approache
 - Using the fluent `Gatekeeper::for($model)->getEffectivePermissions()` chain
 - Calling `$model->getEffectivePermissions()` directly (available via the `HasPermissions` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Models\Permission>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
