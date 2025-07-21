@@ -77,7 +77,7 @@ class PermissionRepository implements EntityRepositoryInterface
             $this->cacheService->invalidateCacheForAllPermissions();
         }
 
-        return $permission;
+        return $permission->fresh();
     }
 
     /**

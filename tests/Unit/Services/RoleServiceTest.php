@@ -11,6 +11,7 @@ use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\RolePacket;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -38,10 +39,9 @@ class RoleServiceTest extends TestCase
 
     public function test_role_exists()
     {
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->assertTrue($this->service->exists($name));
+        $this->assertTrue($this->service->exists($role->name));
     }
 
     public function test_role_does_not_exist()
@@ -57,8 +57,8 @@ class RoleServiceTest extends TestCase
 
         $role = $this->service->create($name);
 
-        $this->assertInstanceOf(Role::class, $role);
-        $this->assertEquals($name, $role->name);
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertEquals($name, $role->getName());
     }
 
     public function test_create_fails_if_role_already_exists()
@@ -77,6 +77,7 @@ class RoleServiceTest extends TestCase
         $name = fake()->unique()->word();
 
         $this->expectException(RolesFeatureDisabledException::class);
+
         $this->service->create($name);
     }
 
@@ -85,7 +86,6 @@ class RoleServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $name = fake()->unique()->word();
-
         $role = $this->service->create($name);
 
         $auditLogs = AuditLog::all();
@@ -95,7 +95,7 @@ class RoleServiceTest extends TestCase
         $this->assertEquals(Action::ROLE_CREATE, $createRoleLog->action);
         $this->assertEquals($name, $createRoleLog->metadata['name']);
         $this->assertTrue($this->user->is($createRoleLog->actionBy));
-        $this->assertTrue($role->is($createRoleLog->actionTo));
+        $this->assertEquals($role->getId(), $createRoleLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_role_creation_when_auditing_disabled()
@@ -116,8 +116,8 @@ class RoleServiceTest extends TestCase
 
         $updatedRole = $this->service->update($role, $newName);
 
-        $this->assertInstanceOf(Role::class, $updatedRole);
-        $this->assertEquals($newName, $updatedRole->name);
+        $this->assertInstanceOf(RolePacket::class, $updatedRole);
+        $this->assertEquals($newName, $updatedRole->getName());
     }
 
     public function test_update_role_fails_if_roles_feature_disabled()
@@ -172,9 +172,8 @@ class RoleServiceTest extends TestCase
 
         $role = $this->service->deactivate($role);
 
-        $this->assertInstanceOf(Role::class, $role);
-        $this->assertFalse($role->is_active);
-        $this->assertFalse($role->fresh()->is_active);
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertFalse($role->isActive());
     }
 
     public function test_deactivate_role_succeeds_if_roles_feature_disabled()
@@ -184,7 +183,7 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
         $role = $this->service->deactivate($role);
 
-        $this->assertFalse($role->is_active);
+        $this->assertFalse($role->isActive());
     }
 
     public function test_deactivate_role_is_idempotent()
@@ -234,9 +233,8 @@ class RoleServiceTest extends TestCase
 
         $role = $this->service->reactivate($role);
 
-        $this->assertInstanceOf(Role::class, $role);
-        $this->assertTrue($role->is_active);
-        $this->assertTrue($role->fresh()->is_active);
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertTrue($role->isActive());
     }
 
     public function test_reactivate_role_fails_if_roles_feature_disabled()
@@ -248,7 +246,7 @@ class RoleServiceTest extends TestCase
         $this->expectException(RolesFeatureDisabledException::class);
         $this->service->reactivate($role);
 
-        $this->assertFalse($role->fresh()->active);
+        $this->assertFalse($role->fresh()->is_active);
     }
 
     public function test_reactivate_role_is_idempotent()
@@ -320,8 +318,7 @@ class RoleServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
-        $name = fake()->unique()->word();
-        $role = Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
         $this->service->delete($role);
 
@@ -330,7 +327,7 @@ class RoleServiceTest extends TestCase
 
         $deleteRoleLog = $auditLogs->first();
         $this->assertEquals(Action::ROLE_DELETE, $deleteRoleLog->action);
-        $this->assertEquals($name, $deleteRoleLog->metadata['name']);
+        $this->assertEquals($role->name, $deleteRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $deleteRoleLog->actionBy->id);
         $this->assertEquals($role->id, $deleteRoleLog->action_to_model_id);
     }
@@ -339,8 +336,7 @@ class RoleServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
-        $name = fake()->unique()->word();
-        $role = Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
         $this->service->delete($role);
 
@@ -350,22 +346,20 @@ class RoleServiceTest extends TestCase
     public function test_assign_role()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($user->hasRole($name));
+        $this->assertTrue($this->service->assignToModel($user, $role));
+        $this->assertTrue($user->hasRole($role));
     }
 
     public function test_assign_role_is_idempotent()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($user->hasRole($name));
+        $this->assertTrue($this->service->assignToModel($user, $role));
+        $this->assertTrue($this->service->assignToModel($user, $role));
+        $this->assertTrue($user->hasRole($role));
 
         $this->assertCount(1, AuditLog::all());
         $this->assertCount(1, ModelHasRole::all());
@@ -376,17 +370,16 @@ class RoleServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $role);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
         $assignRoleLog = $auditLogs->first();
         $this->assertEquals(Action::ROLE_ASSIGN, $assignRoleLog->action);
-        $this->assertEquals($name, $assignRoleLog->metadata['name']);
+        $this->assertEquals($role->name, $assignRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
         $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
     }
@@ -396,10 +389,9 @@ class RoleServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $role);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -407,11 +399,10 @@ class RoleServiceTest extends TestCase
     public function test_assign_duplicate_role_is_ignored()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->assertTrue($this->service->assignToModel($user, $name));
-        $this->assertTrue($this->service->assignToModel($user, $name));
+        $this->assertTrue($this->service->assignToModel($user, $role));
+        $this->assertTrue($this->service->assignToModel($user, $role));
     }
 
     public function test_assign_multiple_roles()
@@ -441,13 +432,12 @@ class RoleServiceTest extends TestCase
     public function test_revoke_role()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->service->assignToModel($user, $name);
+        $this->service->assignToModel($user, $role);
 
-        $this->assertTrue($this->service->revokeFromModel($user, $name));
-        $this->assertFalse($user->hasRole($name));
+        $this->assertTrue($this->service->revokeFromModel($user, $role));
+        $this->assertFalse($user->hasRole($role));
     }
 
     public function test_audit_log_inserted_on_role_revocation_when_auditing_enabled()
@@ -455,18 +445,17 @@ class RoleServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $this->service->revokeFromModel($user, $name);
+        $this->service->assignToModel($user, $role);
+        $this->service->revokeFromModel($user, $role);
 
         $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
         $this->assertCount(1, $auditLogs);
 
         $assignRoleLog = $auditLogs->first();
         $this->assertEquals(Action::ROLE_REVOKE, $assignRoleLog->action);
-        $this->assertEquals($name, $assignRoleLog->metadata['name']);
+        $this->assertEquals($role->name, $assignRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
         $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
     }
@@ -476,11 +465,10 @@ class RoleServiceTest extends TestCase
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
-        $this->service->assignToModel($user, $name);
-        $this->service->revokeFromModel($user, $name);
+        $this->service->assignToModel($user, $role);
+        $this->service->revokeFromModel($user, $role);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -516,8 +504,7 @@ class RoleServiceTest extends TestCase
     public function test_model_has_role_direct()
     {
         $user = User::factory()->create();
-        $name = fake()->unique()->word();
-        $role = Role::factory()->withName($name)->create();
+        $role = Role::factory()->create();
 
         $this->service->assignToModel($user, $role);
 
@@ -532,36 +519,34 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
         $team = Team::factory()->create();
 
-        $team->roles()->attach($role);
-        $user->teams()->attach($team);
+        $team->assignRole($role);
+        $user->addToTeam($team);
 
-        $this->assertTrue($this->service->modelHas($user, $role->name));
+        $this->assertTrue($this->service->modelHas($user, $role));
     }
 
     public function test_model_has_any_role()
     {
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
-        $names = $roles->pluck('name');
 
-        $this->service->assignToModel($user, $names[1]);
+        $this->service->assignToModel($user, $roles->first());
 
-        $this->assertTrue($this->service->modelHasAny($user, $names));
+        $this->assertTrue($this->service->modelHasAny($user, $roles));
     }
 
     public function test_model_has_all_roles()
     {
         $user = User::factory()->create();
         $roles = Role::factory()->count(2)->create();
-        $names = $roles->pluck('name');
 
-        $this->service->assignAllToModel($user, $names);
+        $this->service->assignAllToModel($user, $roles);
 
-        $this->assertTrue($this->service->modelHasAll($user, $names));
+        $this->assertTrue($this->service->modelHasAll($user, $roles));
 
-        $this->service->revokeFromModel($user, $names[0]);
+        $this->service->revokeFromModel($user, $roles->last());
 
-        $this->assertFalse($this->service->modelHasAll($user, $names));
+        $this->assertFalse($this->service->modelHasAll($user, $roles));
     }
 
     public function test_model_has_returns_false_if_role_inactive()
@@ -569,9 +554,9 @@ class RoleServiceTest extends TestCase
         $user = User::factory()->create();
         $role = Role::factory()->inactive()->create();
 
-        $this->service->assignToModel($user, $role->name);
+        $this->service->assignToModel($user, $role);
 
-        $this->assertFalse($this->service->modelHas($user, $role->name));
+        $this->assertFalse($this->service->modelHas($user, $role));
     }
 
     public function test_model_has_returns_false_if_team_inactive()
@@ -582,10 +567,10 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
         $team = Team::factory()->inactive()->create();
 
-        $team->roles()->attach($role);
-        $user->teams()->attach($team);
+        $team->assignRole($role);
+        $user->addToTeam($team);
 
-        $this->assertFalse($this->service->modelHas($user, $role->name));
+        $this->assertFalse($this->service->modelHas($user, $role));
     }
 
     public function test_throws_if_model_does_not_use_trait()
@@ -616,8 +601,8 @@ class RoleServiceTest extends TestCase
 
         $found = $this->service->findByName($role->name);
 
-        $this->assertInstanceOf(Role::class, $found);
-        $this->assertTrue($role->is($found));
+        $this->assertInstanceOf(RolePacket::class, $found);
+        $this->assertEquals($role->id, $found->getId());
     }
 
     public function test_find_by_name_returns_null_if_not_found()
@@ -635,6 +620,7 @@ class RoleServiceTest extends TestCase
 
         $this->assertCount(3, $roles);
         $this->assertInstanceOf(Collection::class, $roles);
+        $this->assertContainsOnlyInstancesOf(RolePacket::class, $roles);
     }
 
     public function test_get_direct_roles_for_model()
@@ -664,10 +650,10 @@ class RoleServiceTest extends TestCase
         $teamRole = Role::factory()->create();
 
         $team = Team::factory()->create();
-        $team->roles()->attach($teamRole);
-        $user->teams()->attach($team);
+        $team->assignRole($teamRole);
+        $user->addToTeam($team);
 
-        $this->service->assignToModel($user, $directRole);
+        $user->assignRole($directRole);
 
         $effective = $this->service->getForModel($user);
 

@@ -5,6 +5,9 @@ namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\TeamPacket;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -31,8 +34,8 @@ class GatekeeperServiceTest extends TestCase
 
         $permission = $this->service->createPermission($permissionName);
 
-        $this->assertInstanceOf(Permission::class, $permission);
-        $this->assertEquals($permissionName, $permission->name);
+        $this->assertInstanceOf(PermissionPacket::class, $permission);
+        $this->assertEquals($permissionName, $permission->getName());
     }
 
     public function test_update_permission_delegates_to_permission_service()
@@ -42,8 +45,8 @@ class GatekeeperServiceTest extends TestCase
 
         $updatedPermission = $this->service->updatePermission($permission, $newName);
 
-        $this->assertInstanceOf(Permission::class, $updatedPermission);
-        $this->assertEquals($newName, $updatedPermission->name);
+        $this->assertInstanceOf(PermissionPacket::class, $updatedPermission);
+        $this->assertEquals($newName, $updatedPermission->getName());
     }
 
     public function test_deactivate_permission_delegates_to_permission_service()
@@ -52,7 +55,7 @@ class GatekeeperServiceTest extends TestCase
 
         $permission = $this->service->deactivatePermission($permission);
 
-        $this->assertFalse($permission->fresh()->is_active);
+        $this->assertFalse($permission->isActive());
     }
 
     public function test_reactivate_permission_delegates_to_permission_service()
@@ -61,7 +64,7 @@ class GatekeeperServiceTest extends TestCase
 
         $permission = $this->service->reactivatePermission($permission);
 
-        $this->assertTrue($permission->fresh()->is_active);
+        $this->assertTrue($permission->isActive());
     }
 
     public function test_delete_permission_delegates_to_permission_service()
@@ -82,8 +85,8 @@ class GatekeeperServiceTest extends TestCase
 
         $role = $this->service->createRole($roleName);
 
-        $this->assertInstanceOf(Role::class, $role);
-        $this->assertEquals($roleName, $role->name);
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertEquals($roleName, $role->getName());
     }
 
     public function test_update_role_delegates_to_role_service()
@@ -95,8 +98,8 @@ class GatekeeperServiceTest extends TestCase
 
         $updatedRole = $this->service->updateRole($role, $newName);
 
-        $this->assertInstanceOf(Role::class, $updatedRole);
-        $this->assertEquals($newName, $updatedRole->name);
+        $this->assertInstanceOf(RolePacket::class, $updatedRole);
+        $this->assertEquals($newName, $updatedRole->getName());
     }
 
     public function test_deactivate_role_delegates_to_role_service()
@@ -107,7 +110,7 @@ class GatekeeperServiceTest extends TestCase
 
         $role = $this->service->deactivateRole($role);
 
-        $this->assertFalse($role->fresh()->is_active);
+        $this->assertFalse($role->isActive());
     }
 
     public function test_reactivate_role_delegates_to_role_service()
@@ -118,7 +121,7 @@ class GatekeeperServiceTest extends TestCase
 
         $role = $this->service->reactivateRole($role);
 
-        $this->assertTrue($role->fresh()->is_active);
+        $this->assertTrue($role->isActive());
     }
 
     public function test_delete_role_delegates_to_role_service()
@@ -141,8 +144,8 @@ class GatekeeperServiceTest extends TestCase
 
         $team = $this->service->createTeam($teamName);
 
-        $this->assertInstanceOf(Team::class, $team);
-        $this->assertEquals($teamName, $team->name);
+        $this->assertInstanceOf(TeamPacket::class, $team);
+        $this->assertEquals($teamName, $team->getName());
     }
 
     public function test_update_team_delegates_to_team_service()
@@ -154,8 +157,8 @@ class GatekeeperServiceTest extends TestCase
 
         $updatedTeam = $this->service->updateTeam($team, $newName);
 
-        $this->assertInstanceOf(Team::class, $updatedTeam);
-        $this->assertEquals($newName, $updatedTeam->name);
+        $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
+        $this->assertEquals($newName, $updatedTeam->getName());
     }
 
     public function test_deactivate_team_delegates_to_team_service()
@@ -166,7 +169,7 @@ class GatekeeperServiceTest extends TestCase
 
         $team = $this->service->deactivateTeam($team);
 
-        $this->assertFalse($team->fresh()->is_active);
+        $this->assertFalse($team->isActive());
     }
 
     public function test_reactivate_team_delegates_to_team_service()
@@ -177,7 +180,7 @@ class GatekeeperServiceTest extends TestCase
 
         $team = $this->service->reactivateTeam($team);
 
-        $this->assertTrue($team->fresh()->is_active);
+        $this->assertTrue($team->isActive());
     }
 
     public function test_delete_team_delegates_to_team_service()

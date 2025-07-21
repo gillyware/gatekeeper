@@ -16,6 +16,7 @@ use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermis
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\PermissionPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
@@ -29,7 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 /**
- * @extends AbstractBaseEntityService<Permission>
+ * @extends AbstractBaseEntityService<Permission, PermissionPacket>
  */
 class PermissionService extends AbstractBaseEntityService
 {
@@ -62,7 +63,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Create a new permission.
      */
-    public function create(string|UnitEnum $permissionName): Permission
+    public function create(string|UnitEnum $permissionName): PermissionPacket
     {
         $this->enforceAuditFeature();
 
@@ -78,15 +79,15 @@ class PermissionService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new CreatePermissionAuditLogDto($createdPermission));
         }
 
-        return $createdPermission;
+        return $createdPermission->toPacket();
     }
 
     /**
      * Update an existing permission.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
-    public function update($permission, string|UnitEnum $newPermissionName): Permission
+    public function update($permission, string|UnitEnum $newPermissionName): PermissionPacket
     {
         $this->enforceAuditFeature();
 
@@ -105,22 +106,22 @@ class PermissionService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new UpdatePermissionAuditLogDto($updatedPermission, $oldPermissionName));
         }
 
-        return $updatedPermission;
+        return $updatedPermission->toPacket();
     }
 
     /**
      * Deactivate a permission.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
-    public function deactivate($permission): Permission
+    public function deactivate($permission): PermissionPacket
     {
         $this->enforceAuditFeature();
 
         $currentPermission = $this->resolveEntity($permission, orFail: true);
 
         if (! $currentPermission->is_active) {
-            return $currentPermission;
+            return $currentPermission->toPacket();
         }
 
         $deactivatedPermission = $this->permissionRepository->deactivate($currentPermission);
@@ -129,22 +130,22 @@ class PermissionService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new DeactivatePermissionAuditLogDto($deactivatedPermission));
         }
 
-        return $deactivatedPermission;
+        return $deactivatedPermission->toPacket();
     }
 
     /**
      * Reactivate a permission.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
-    public function reactivate($permission): Permission
+    public function reactivate($permission): PermissionPacket
     {
         $this->enforceAuditFeature();
 
         $currentPermission = $this->resolveEntity($permission, orFail: true);
 
         if ($currentPermission->is_active) {
-            return $currentPermission;
+            return $currentPermission->toPacket();
         }
 
         $reactivatedPermission = $this->permissionRepository->reactivate($currentPermission);
@@ -153,13 +154,13 @@ class PermissionService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new ReactivatePermissionAuditLogDto($reactivatedPermission));
         }
 
-        return $reactivatedPermission;
+        return $reactivatedPermission->toPacket();
     }
 
     /**
      * Delete a permission.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     public function delete($permission): bool
     {
@@ -188,7 +189,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Assign a permission to a model.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     public function assignToModel(Model $model, $permission): bool
     {
@@ -215,7 +216,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Assign multiple permissions to a model.
      *
-     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function assignAllToModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -231,7 +232,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Revoke a permission from a model.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     public function revokeFromModel(Model $model, $permission): bool
     {
@@ -256,7 +257,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Revoke multiple permissions from a model.
      *
-     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -272,7 +273,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Check if a model has the given permission.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     public function modelHas(Model $model, $permission): bool
     {
@@ -324,7 +325,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Check if a model directly has the given permission (not granted through roles or teams).
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     public function modelHasDirectly(Model $model, $permission): bool
     {
@@ -336,7 +337,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Check if a model has any of the given permissions.
      *
-     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function modelHasAny(Model $model, array|Arrayable $permissions): bool
     {
@@ -348,7 +349,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Check if a model has all of the given permissions.
      *
-     * @param  array<Permission|string|UnitEnum>|Arrayable<Permission|string|UnitEnum>  $permissions
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function modelHasAll(Model $model, array|Arrayable $permissions): bool
     {
@@ -360,38 +361,43 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Find a permission by its name.
      */
-    public function findByName(string|UnitEnum $permissionName): ?Permission
+    public function findByName(string|UnitEnum $permissionName): ?PermissionPacket
     {
-        return $this->resolveEntity($permissionName);
+        return $this->resolveEntity($permissionName)?->toPacket();
     }
 
     /**
      * Get all permissions.
+     *
+     * @return Collection<PermissionPacket>
      */
     public function getAll(): Collection
     {
-        return $this->permissionRepository->all();
+        return $this->permissionRepository->all()
+            ->map(fn (Permission $permission) => $permission->toPacket());
     }
 
     /**
      * Get all permissions assigned directly or indirectly to a model.
      *
-     * @return Collection<Permission>
+     * @return Collection<PermissionPacket>
      */
     public function getForModel(Model $model): Collection
     {
         return $this->permissionRepository->all()
-            ->filter(fn (Permission $permission) => $this->modelHas($model, $permission));
+            ->filter(fn (Permission $permission) => $this->modelHas($model, $permission))
+            ->map(fn (Permission $permission) => $permission->toPacket());
     }
 
     /**
      * Get all permissions directly assigned to a model.
      *
-     * @return Collection<Permission>
+     * @return Collection<PermissionPacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->permissionRepository->forModel($model);
+        return $this->permissionRepository->forModel($model)
+            ->map(fn (Permission $permission) => $permission->toPacket());
     }
 
     /**
@@ -471,7 +477,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get the permission model from the permission or permission name.
      *
-     * @param  Permission|string|UnitEnum  $permission
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
     protected function resolveEntity($permission, bool $orFail = false): ?Permission
     {

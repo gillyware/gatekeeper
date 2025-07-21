@@ -67,7 +67,7 @@ class TeamRepository implements EntityRepositoryInterface
             throw new TeamNotFoundException($teamName);
         }
 
-        return $team;
+        return $team->fresh();
     }
 
     /**
@@ -81,7 +81,7 @@ class TeamRepository implements EntityRepositoryInterface
             $this->cacheService->invalidateCacheForAllTeams();
         }
 
-        return $team;
+        return $team->fresh();
     }
 
     /**

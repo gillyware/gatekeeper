@@ -13,6 +13,7 @@ use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\RolePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
@@ -24,7 +25,7 @@ use Illuminate\Support\Collection;
 use UnitEnum;
 
 /**
- * @extends AbstractBaseEntityService<Role>
+ * @extends AbstractBaseEntityService<Role, RolePacket>
  */
 class RoleService extends AbstractBaseEntityService
 {
@@ -56,7 +57,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Create a new role.
      */
-    public function create(string|UnitEnum $roleName): Role
+    public function create(string|UnitEnum $roleName): RolePacket
     {
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
@@ -73,15 +74,15 @@ class RoleService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new CreateRoleAuditLogDto($createdRole));
         }
 
-        return $createdRole;
+        return $createdRole->toPacket();
     }
 
     /**
      * Update an existing role.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
-    public function update($role, string|UnitEnum $newRoleName): Role
+    public function update($role, string|UnitEnum $newRoleName): RolePacket
     {
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
@@ -101,22 +102,22 @@ class RoleService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new UpdateRoleAuditLogDto($updatedRole, $oldRoleName));
         }
 
-        return $updatedRole;
+        return $updatedRole->toPacket();
     }
 
     /**
      * Deactivate a role.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
-    public function deactivate($role): Role
+    public function deactivate($role): RolePacket
     {
         $this->enforceAuditFeature();
 
         $currentRole = $this->resolveEntity($role, orFail: true);
 
         if (! $currentRole->is_active) {
-            return $currentRole;
+            return $currentRole->toPacket();
         }
 
         $deactivatedRole = $this->roleRepository->deactivate($currentRole);
@@ -125,15 +126,15 @@ class RoleService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new DeactivateRoleAuditLogDto($deactivatedRole));
         }
 
-        return $deactivatedRole;
+        return $deactivatedRole->toPacket();
     }
 
     /**
      * Reactivate a role.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
-    public function reactivate($role): Role
+    public function reactivate($role): RolePacket
     {
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
@@ -141,7 +142,7 @@ class RoleService extends AbstractBaseEntityService
         $currentRole = $this->resolveEntity($role, orFail: true);
 
         if ($currentRole->is_active) {
-            return $currentRole;
+            return $currentRole->toPacket();
         }
 
         $reactivatedRole = $this->roleRepository->reactivate($currentRole);
@@ -150,13 +151,13 @@ class RoleService extends AbstractBaseEntityService
             $this->auditLogRepository->create(new ReactivateRoleAuditLogDto($reactivatedRole));
         }
 
-        return $reactivatedRole;
+        return $reactivatedRole->toPacket();
     }
 
     /**
      * Delete a role.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     public function delete($role): bool
     {
@@ -185,7 +186,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Assign a role to a model.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     public function assignToModel(Model $model, $role): bool
     {
@@ -214,7 +215,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Assign multiple roles to a model.
      *
-     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function assignAllToModel(Model $model, array|Arrayable $roles): bool
     {
@@ -230,7 +231,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Revoke a role from a model.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     public function revokeFromModel(Model $model, $role): bool
     {
@@ -250,7 +251,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Revoke multiple roles from a model.
      *
-     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function revokeAllFromModel(Model $model, array|Arrayable $roles): bool
     {
@@ -266,7 +267,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Check if a model has the given role.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     public function modelHas(Model $model, $role): bool
     {
@@ -304,7 +305,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Check if a model directly has the given role (not granted through teams).
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     public function modelHasDirectly(Model $model, $role): bool
     {
@@ -316,7 +317,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Check if a model has any of the given roles.
      *
-     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function modelHasAny(Model $model, array|Arrayable $roles): bool
     {
@@ -328,7 +329,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Check if a model has all of the given roles.
      *
-     * @param  array<Role|string|UnitEnum>|Arrayable<Role|string|UnitEnum>  $roles
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function modelHasAll(Model $model, array|Arrayable $roles): bool
     {
@@ -340,38 +341,43 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Find a role by its name.
      */
-    public function findByName(string|UnitEnum $roleName): ?Role
+    public function findByName(string|UnitEnum $roleName): ?RolePacket
     {
-        return $this->resolveEntity($roleName);
+        return $this->resolveEntity($roleName)?->toPacket();
     }
 
     /**
      * Get all roles.
+     *
+     * @return Collection<RolePacket>
      */
     public function getAll(): Collection
     {
-        return $this->roleRepository->all();
+        return $this->roleRepository->all()
+            ->map(fn (Role $role) => $role->toPacket());
     }
 
     /**
      * Get all roles assigned directly or indirectly to a model.
      *
-     * @return Collection<Role>
+     * @return Collection<RolePacket>
      */
     public function getForModel(Model $model): Collection
     {
         return $this->roleRepository->all()
-            ->filter(fn (Role $role) => $this->modelHas($model, $role));
+            ->filter(fn (Role $role) => $this->modelHas($model, $role))
+            ->map(fn (Role $role) => $role->toPacket());
     }
 
     /**
      * Get all roles directly assigned to a model.
      *
-     * @return Collection<Role>
+     * @return Collection<RolePacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->roleRepository->forModel($model);
+        return $this->roleRepository->forModel($model)
+            ->map(fn (Role $role) => $role->toPacket());
     }
 
     /**
@@ -427,7 +433,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Get the role model from the role or role name.
      *
-     * @param  Role|string|UnitEnum  $role
+     * @param  Role|RolePacket|string|UnitEnum  $role
      */
     protected function resolveEntity($role, bool $orFail = false): ?Role
     {
