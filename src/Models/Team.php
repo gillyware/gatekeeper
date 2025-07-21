@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Models;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Factories\TeamFactory;
-use Gillyware\Gatekeeper\Packets\TeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Gillyware\Gatekeeper\Traits\HasRoles;
 use Illuminate\Support\Facades\Config;

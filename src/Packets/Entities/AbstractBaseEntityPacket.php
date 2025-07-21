@@ -1,6 +1,6 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Packets;
+namespace Gillyware\Gatekeeper\Packets\Entities;
 
 use Gillyware\Postal\Attributes\Field;
 use Gillyware\Postal\Attributes\Rule;
@@ -20,21 +20,6 @@ class AbstractBaseEntityPacket extends Packet
         #[Field('is_active'), Rule('required|boolean')]
         public readonly bool $isActive,
     ) {}
-
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
 
     public function toArray(): array
     {

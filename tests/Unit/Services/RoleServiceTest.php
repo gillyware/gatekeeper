@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -58,7 +58,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->create($name);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertEquals($name, $role->getName());
+        $this->assertEquals($name, $role->name);
     }
 
     public function test_create_fails_if_role_already_exists()
@@ -95,7 +95,7 @@ class RoleServiceTest extends TestCase
         $this->assertEquals(Action::ROLE_CREATE, $createRoleLog->action);
         $this->assertEquals($name, $createRoleLog->metadata['name']);
         $this->assertTrue($this->user->is($createRoleLog->actionBy));
-        $this->assertEquals($role->getId(), $createRoleLog->actionTo->id);
+        $this->assertEquals($role->id, $createRoleLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_role_creation_when_auditing_disabled()
@@ -117,7 +117,7 @@ class RoleServiceTest extends TestCase
         $updatedRole = $this->service->update($role, $newName);
 
         $this->assertInstanceOf(RolePacket::class, $updatedRole);
-        $this->assertEquals($newName, $updatedRole->getName());
+        $this->assertEquals($newName, $updatedRole->name);
     }
 
     public function test_update_role_fails_if_roles_feature_disabled()
@@ -173,7 +173,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->deactivate($role);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertFalse($role->isActive());
+        $this->assertFalse($role->isActive);
     }
 
     public function test_deactivate_role_succeeds_if_roles_feature_disabled()
@@ -183,7 +183,7 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
         $role = $this->service->deactivate($role);
 
-        $this->assertFalse($role->isActive());
+        $this->assertFalse($role->isActive);
     }
 
     public function test_deactivate_role_is_idempotent()
@@ -234,7 +234,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->reactivate($role);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertTrue($role->isActive());
+        $this->assertTrue($role->isActive);
     }
 
     public function test_reactivate_role_fails_if_roles_feature_disabled()
@@ -602,7 +602,7 @@ class RoleServiceTest extends TestCase
         $found = $this->service->findByName($role->name);
 
         $this->assertInstanceOf(RolePacket::class, $found);
-        $this->assertEquals($role->id, $found->getId());
+        $this->assertEquals($role->id, $found->id);
     }
 
     public function test_find_by_name_returns_null_if_not_found()

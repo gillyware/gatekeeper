@@ -16,7 +16,7 @@ use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermis
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;

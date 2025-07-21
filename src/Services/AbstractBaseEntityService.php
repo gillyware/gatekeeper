@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use BackedEnum;
 use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
-use Gillyware\Gatekeeper\Packets\AbstractBaseEntityPacket;
+use Gillyware\Gatekeeper\Packets\Entities\AbstractBaseEntityPacket;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;

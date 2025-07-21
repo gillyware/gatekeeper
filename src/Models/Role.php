@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Models;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Database\Factories\RoleFactory;
-use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Traits\HasPermissions;
 use Illuminate\Support\Facades\Config;
 

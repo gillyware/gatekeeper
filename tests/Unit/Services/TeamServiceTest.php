@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\TeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -80,7 +80,7 @@ class TeamServiceTest extends TestCase
         $this->assertEquals(Action::TEAM_CREATE, $createTeamLog->action);
         $this->assertEquals($name, $createTeamLog->metadata['name']);
         $this->assertTrue($this->user->is($createTeamLog->actionBy));
-        $this->assertEquals($team->getId(), $createTeamLog->actionTo->id);
+        $this->assertEquals($team->id, $createTeamLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_team_creation_when_auditing_disabled()
@@ -102,7 +102,7 @@ class TeamServiceTest extends TestCase
         $updatedTeam = $this->service->update($team, $newName);
 
         $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
-        $this->assertEquals($newName, $updatedTeam->getName());
+        $this->assertEquals($newName, $updatedTeam->name);
     }
 
     public function test_update_team_fails_if_teams_feature_disabled()
@@ -155,7 +155,7 @@ class TeamServiceTest extends TestCase
         $deactivatedTeam = $this->service->deactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->isActive());
+        $this->assertFalse($deactivatedTeam->isActive);
     }
 
     public function test_deactivate_team_is_idempotent()
@@ -178,7 +178,7 @@ class TeamServiceTest extends TestCase
         $deactivatedTeam = $this->service->deactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->isActive());
+        $this->assertFalse($deactivatedTeam->isActive);
     }
 
     public function test_audit_log_inserted_on_team_deactivation_when_auditing_enabled()
@@ -217,7 +217,7 @@ class TeamServiceTest extends TestCase
         $reactivatedTeam = $this->service->reactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $reactivatedTeam);
-        $this->assertTrue($reactivatedTeam->isActive());
+        $this->assertTrue($reactivatedTeam->isActive);
     }
 
     public function test_reactivate_team_is_idempotent()
@@ -594,7 +594,7 @@ class TeamServiceTest extends TestCase
         $found = $this->service->findByName($team->name);
 
         $this->assertInstanceOf(TeamPacket::class, $found);
-        $this->assertSame($team->id, $found->getId());
+        $this->assertSame($team->id, $found->id);
     }
 
     public function test_find_by_name_returns_null_if_not_found()

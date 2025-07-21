@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
 use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\TeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
