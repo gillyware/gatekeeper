@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use BackedEnum;
 use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
-use Gillyware\Gatekeeper\Packets\AbstractBaseEntityPacket;
+use Gillyware\Gatekeeper\Packets\Entities\AbstractBaseEntityPacket;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -49,7 +49,7 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
 
         // If the entity is an enum, return the enum value.
         if ($entity instanceof BackedEnum || $entity instanceof UnitEnum) {
-            return enum_value($entity);
+            return (string) enum_value($entity);
         }
 
         // If the entity is a JSON string, decode it.

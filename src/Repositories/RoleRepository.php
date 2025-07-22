@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -237,20 +238,20 @@ class RoleRepository implements EntityRepositoryInterface
     /**
      * Get a page of roles.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator
     {
-        $query = Role::query()->whereLike('name', "%{$searchTerm}%");
+        $query = Role::query()->whereLike('name', "%{$packet->searchTerm}%");
 
-        if ($importantAttribute === 'is_active') {
+        if ($packet->prioritizedAttribute === 'is_active') {
             $query = $query
-                ->orderBy('is_active', $isActiveOrder)
-                ->orderBy('name', $nameOrder);
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('name', $packet->nameOrder);
         } else {
             $query = $query
-                ->orderBy('name', $nameOrder)
-                ->orderBy('is_active', $isActiveOrder);
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('is_active', $packet->isActiveOrder);
         }
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 }

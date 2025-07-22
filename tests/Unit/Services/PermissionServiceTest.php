@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -12,7 +12,7 @@ use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -61,7 +61,7 @@ class PermissionServiceTest extends TestCase
         $permission = $this->service->create($name);
 
         $this->assertInstanceOf(PermissionPacket::class, $permission);
-        $this->assertEquals($name, $permission->getName());
+        $this->assertEquals($name, $permission->name);
     }
 
     public function test_create_fails_if_permission_already_exists()
@@ -84,11 +84,12 @@ class PermissionServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Permission> $createPermissionLog */
         $createPermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_CREATE, $createPermissionLog->action);
+        $this->assertEquals(AuditLogAction::CreatePermission->value, $createPermissionLog->action);
         $this->assertEquals($name, $createPermissionLog->metadata['name']);
         $this->assertTrue($this->user->is($createPermissionLog->actionBy));
-        $this->assertEquals($permission->getId(), $createPermissionLog->actionTo->id);
+        $this->assertEquals($permission->id, $createPermissionLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_permission_creation_when_auditing_disabled()
@@ -112,7 +113,7 @@ class PermissionServiceTest extends TestCase
         $updatedPermission = $this->service->update($permission, $newName);
 
         $this->assertInstanceOf(PermissionPacket::class, $updatedPermission);
-        $this->assertEquals($newName, $updatedPermission->getName());
+        $this->assertEquals($newName, $updatedPermission->name);
     }
 
     public function test_audit_log_inserted_on_permission_update_when_auditing_enabled()
@@ -129,12 +130,13 @@ class PermissionServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Permission> $updatePermissionLog */
         $updatePermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_UPDATE, $updatePermissionLog->action);
+        $this->assertEquals(AuditLogAction::UpdatePermission->value, $updatePermissionLog->action);
         $this->assertEquals($name, $updatePermissionLog->metadata['old_name']);
         $this->assertEquals($newName, $updatePermissionLog->metadata['name']);
         $this->assertTrue($this->user->is($updatePermissionLog->actionBy));
-        $this->assertEquals($permission->getId(), $updatePermissionLog->actionTo->id);
+        $this->assertEquals($permission->id, $updatePermissionLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_permission_update_when_auditing_disabled()
@@ -159,7 +161,7 @@ class PermissionServiceTest extends TestCase
         $permission = $this->service->deactivate($permission);
 
         $this->assertInstanceOf(PermissionPacket::class, $permission);
-        $this->assertFalse($permission->isActive());
+        $this->assertFalse($permission->isActive);
     }
 
     public function test_deactivate_permission_is_idempotent()
@@ -186,11 +188,12 @@ class PermissionServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Permission> $deactivatePermissionLog */
         $deactivatePermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_DEACTIVATE, $deactivatePermissionLog->action);
+        $this->assertEquals(AuditLogAction::DeactivatePermission->value, $deactivatePermissionLog->action);
         $this->assertEquals($name, $deactivatePermissionLog->metadata['name']);
         $this->assertTrue($this->user->is($deactivatePermissionLog->actionBy));
-        $this->assertEquals($permission->getId(), $deactivatePermissionLog->actionTo->id);
+        $this->assertEquals($permission->id, $deactivatePermissionLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_permission_deactivation_when_auditing_disabled()
@@ -213,7 +216,7 @@ class PermissionServiceTest extends TestCase
         $permission = $this->service->reactivate($permission);
 
         $this->assertInstanceOf(PermissionPacket::class, $permission);
-        $this->assertTrue($permission->isActive());
+        $this->assertTrue($permission->isActive);
     }
 
     public function test_reactivate_permission_is_idempotent()
@@ -240,11 +243,12 @@ class PermissionServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Permission> $reactivatePermissionLog */
         $reactivatePermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_REACTIVATE, $reactivatePermissionLog->action);
+        $this->assertEquals(AuditLogAction::ReactivatePermission->value, $reactivatePermissionLog->action);
         $this->assertEquals($name, $reactivatePermissionLog->metadata['name']);
         $this->assertTrue($this->user->is($reactivatePermissionLog->actionBy));
-        $this->assertEquals($permission->getId(), $reactivatePermissionLog->actionTo->id);
+        $this->assertEquals($permission->id, $reactivatePermissionLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_permission_reactivation_when_auditing_disabled()
@@ -296,7 +300,7 @@ class PermissionServiceTest extends TestCase
         $this->assertCount(1, $auditLogs);
 
         $deletePermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_DELETE, $deletePermissionLog->action);
+        $this->assertEquals(AuditLogAction::DeletePermission->value, $deletePermissionLog->action);
         $this->assertEquals($name, $deletePermissionLog->metadata['name']);
         $this->assertEquals($permission->id, $deletePermissionLog->action_to_model_id);
         $this->assertTrue($this->user->is($deletePermissionLog->actionBy));
@@ -350,8 +354,9 @@ class PermissionServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, User> $assignPermissionLog */
         $assignPermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_ASSIGN, $assignPermissionLog->action);
+        $this->assertEquals(AuditLogAction::AssignPermission->value, $assignPermissionLog->action);
         $this->assertEquals($permission->name, $assignPermissionLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignPermissionLog->actionBy->id);
         $this->assertEquals($user->id, $assignPermissionLog->actionTo->id);
@@ -417,14 +422,15 @@ class PermissionServiceTest extends TestCase
         $this->service->assignToModel($user, $permission);
         $this->service->revokeFromModel($user, $permission);
 
-        $auditLogs = AuditLog::query()->where('action', Action::PERMISSION_REVOKE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokePermission->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        $assignPermissionLog = $auditLogs->first();
-        $this->assertEquals(Action::PERMISSION_REVOKE, $assignPermissionLog->action);
-        $this->assertEquals($permission->name, $assignPermissionLog->metadata['name']);
-        $this->assertEquals($this->user->id, $assignPermissionLog->actionBy->id);
-        $this->assertEquals($user->id, $assignPermissionLog->actionTo->id);
+        /** @var AuditLog<User, User> $revokeRoleLog */
+        $revokeRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RevokePermission->value, $revokeRoleLog->action);
+        $this->assertEquals($permission->name, $revokeRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $revokeRoleLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_permission_revocation_when_auditing_disabled()
@@ -461,7 +467,7 @@ class PermissionServiceTest extends TestCase
         $this->service->assignAllToModel($user, $permissions);
         $this->service->revokeAllFromModel($user, $permissions);
 
-        $auditLogs = AuditLog::query()->where('action', Action::PERMISSION_REVOKE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokePermission->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -574,7 +580,7 @@ class PermissionServiceTest extends TestCase
         $found = $this->service->findByName($permission->name);
 
         $this->assertInstanceOf(PermissionPacket::class, $found);
-        $this->assertEquals($permission->id, $found->getId());
+        $this->assertEquals($permission->id, $found->id);
     }
 
     public function test_find_by_name_returns_null_if_not_found()

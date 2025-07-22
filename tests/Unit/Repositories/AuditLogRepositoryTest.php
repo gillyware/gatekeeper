@@ -2,11 +2,11 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeactivatePermissionAuditLogDto as PermissionDeactivatePermissionAuditLogDto;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeactivatePermissionAuditLogPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -20,14 +20,14 @@ class AuditLogRepositoryTest extends TestCase
         $permission = Permission::factory()->create();
 
         Gatekeeper::actingAs($user);
-        $dto = new PermissionDeactivatePermissionAuditLogDto($permission);
+        $packet = DeactivatePermissionAuditLogPacket::make($permission);
 
         $repository = new AuditLogRepository;
-        $auditLog = $repository->create($dto);
+        $auditLog = $repository->create($packet);
 
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.audit_log', GatekeeperConfigDefault::TABLES_AUDIT_LOG), [
             'id' => $auditLog->id,
-            'action' => Action::PERMISSION_DEACTIVATE,
+            'action' => AuditLogAction::DeactivatePermission->value,
             'action_by_model_type' => $user->getMorphClass(),
             'action_by_model_id' => $user->getKey(),
             'action_to_model_type' => $permission->getMorphClass(),

@@ -2,18 +2,12 @@ interface EntityModel {
     id: number;
     name: string;
     is_active: boolean;
-    created_at: string | null;
-    updated_at: string | null;
-    deleted_at: string | null;
 }
 
 interface EntityAssignment {
     id: number;
     model_type: string;
     model_id: string | number;
-    created_at: string | null;
-    updated_at: string | null;
-    deleted_at: string | null;
 }
 
 export type Permission = EntityModel;
@@ -28,7 +22,7 @@ export type ModelPermissionAssignment = EntityAssignment & {
     assigned_at: string | null;
 };
 
-export type ModelRoleAssignmetn = EntityAssignment & {
+export type ModelRoleAssignment = EntityAssignment & {
     role_id: number;
     role: Role;
     assigned_at: string | null;

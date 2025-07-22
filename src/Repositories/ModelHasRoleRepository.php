@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
@@ -100,7 +101,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
     /**
      * Search model role assignments by role name.
      */
-    public function searchAssignmentsByEntityNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
         $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
@@ -109,27 +110,27 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             ->select("$modelRolesTable.*")
             ->join($rolesTable, "$rolesTable.id", '=', "$modelRolesTable.role_id")
             ->forModel($model)
-            ->whereIn('role_id', function ($sub) use ($rolesTable, $roleNameSearchTerm) {
+            ->whereIn('role_id', function ($sub) use ($rolesTable, $packet) {
                 $sub->select('id')
                     ->from($rolesTable)
-                    ->whereLike('name', "%{$roleNameSearchTerm}%");
+                    ->whereLike('name', "%{$packet->searchTerm}%");
             })
             ->orderByDesc("$rolesTable.is_active")
             ->orderBy("$rolesTable.name")
             ->with('role:id,name,is_active');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
      * Search unassigned roles by role name for model.
      */
-    public function searchUnassignedByEntityNameForModel(Model $model, string $roleNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
 
         $query = Role::query()
-            ->whereLike('name', "%{$roleNameSearchTerm}%")
+            ->whereLike('name', "%{$packet->searchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelRolesTable) {
                 $subquery->select('role_id')
                     ->from($modelRolesTable)
@@ -140,6 +141,6 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             ->orderByDesc('is_active')
             ->orderBy('name');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 }

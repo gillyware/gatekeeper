@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -40,13 +40,13 @@ class TeamCommand extends AbstractBaseEntityCommand
 
         try {
             match ($this->action) {
-                Action::TEAM_CREATE => $this->handleCreate(),
-                Action::TEAM_UPDATE => $this->handleUpdate(),
-                Action::TEAM_DEACTIVATE => $this->handleDeactivate(),
-                Action::TEAM_REACTIVATE => $this->handleReactivate(),
-                Action::TEAM_DELETE => $this->handleDelete(),
-                Action::TEAM_ADD => $this->handleAdd(),
-                Action::TEAM_REMOVE => $this->handleRemove(),
+                AuditLogAction::CreateTeam->value => $this->handleCreate(),
+                AuditLogAction::UpdateTeam->value => $this->handleUpdate(),
+                AuditLogAction::DeactivateTeam->value => $this->handleDeactivate(),
+                AuditLogAction::ReactivateTeam->value => $this->handleReactivate(),
+                AuditLogAction::DeleteTeam->value => $this->handleDelete(),
+                AuditLogAction::AddTeam->value => $this->handleAdd(),
+                AuditLogAction::RemoveTeam->value => $this->handleRemove(),
             };
 
             return self::SUCCESS;
@@ -280,13 +280,13 @@ class TeamCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::TEAM_CREATE => 'Create one or more new teams',
-            Action::TEAM_UPDATE => 'Update an existing team',
-            Action::TEAM_DEACTIVATE => 'Deactivate one or more active teams',
-            Action::TEAM_REACTIVATE => 'Reactivate one or more inactive teams',
-            Action::TEAM_DELETE => 'Delete one or more existing teams',
-            Action::TEAM_ADD => 'Add a model to one or more teams',
-            Action::TEAM_REMOVE => 'Remove a model from one or more teams',
+            AuditLogAction::CreateTeam->value => 'Create one or more new teams',
+            AuditLogAction::UpdateTeam->value => 'Update an existing team',
+            AuditLogAction::DeactivateTeam->value => 'Deactivate one or more active teams',
+            AuditLogAction::ReactivateTeam->value => 'Reactivate one or more inactive teams',
+            AuditLogAction::DeleteTeam->value => 'Delete one or more existing teams',
+            AuditLogAction::AddTeam->value => 'Add a model to one or more teams',
+            AuditLogAction::RemoveTeam->value => 'Remove a model from one or more teams',
         ];
     }
 
@@ -298,9 +298,9 @@ class TeamCommand extends AbstractBaseEntityCommand
         $all = $this->teamRepository->all();
 
         $filtered = match ($this->action) {
-            Action::TEAM_UPDATE, Action::TEAM_DELETE, Action::TEAM_ADD, Action::TEAM_REMOVE => $all,
-            Action::TEAM_DEACTIVATE => $all->filter(fn (Team $team) => $team->is_active),
-            Action::TEAM_REACTIVATE => $all->filter(fn (Team $team) => ! $team->is_active),
+            AuditLogAction::UpdateTeam->value, AuditLogAction::DeleteTeam->value, AuditLogAction::AddTeam->value, AuditLogAction::RemoveTeam->value => $all,
+            AuditLogAction::DeactivateTeam->value => $all->filter(fn (Team $team) => $team->is_active),
+            AuditLogAction::ReactivateTeam->value => $all->filter(fn (Team $team) => ! $team->is_active),
             default => $all,
         };
 

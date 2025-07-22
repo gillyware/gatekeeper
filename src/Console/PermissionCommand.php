@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -40,13 +40,13 @@ class PermissionCommand extends AbstractBaseEntityCommand
 
         try {
             match ($this->action) {
-                Action::PERMISSION_CREATE => $this->handleCreate(),
-                Action::PERMISSION_UPDATE => $this->handleUpdate(),
-                Action::PERMISSION_DEACTIVATE => $this->handleDeactivate(),
-                Action::PERMISSION_REACTIVATE => $this->handleReactivate(),
-                Action::PERMISSION_DELETE => $this->handleDelete(),
-                Action::PERMISSION_ASSIGN => $this->handleAssign(),
-                Action::PERMISSION_REVOKE => $this->handleRevoke(),
+                AuditLogAction::CreatePermission->value => $this->handleCreate(),
+                AuditLogAction::UpdatePermission->value => $this->handleUpdate(),
+                AuditLogAction::DeactivatePermission->value => $this->handleDeactivate(),
+                AuditLogAction::ReactivatePermission->value => $this->handleReactivate(),
+                AuditLogAction::DeletePermission->value => $this->handleDelete(),
+                AuditLogAction::AssignPermission->value => $this->handleAssign(),
+                AuditLogAction::RevokePermission->value => $this->handleRevoke(),
             };
 
             return self::SUCCESS;
@@ -280,13 +280,13 @@ class PermissionCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::PERMISSION_CREATE => 'Create one or more new permissions',
-            Action::PERMISSION_UPDATE => 'Update an existing permission',
-            Action::PERMISSION_DEACTIVATE => 'Deactivate one or more active permissions',
-            Action::PERMISSION_REACTIVATE => 'Reactivate one or more inactive permissions',
-            Action::PERMISSION_DELETE => 'Delete one or more existing permissions',
-            Action::PERMISSION_ASSIGN => 'Assign one or more permissions to a model',
-            Action::PERMISSION_REVOKE => 'Revoke one or more permissions from a model',
+            AuditLogAction::CreatePermission->value => 'Create one or more new permissions',
+            AuditLogAction::UpdatePermission->value => 'Update an existing permission',
+            AuditLogAction::DeactivatePermission->value => 'Deactivate one or more active permissions',
+            AuditLogAction::ReactivatePermission->value => 'Reactivate one or more inactive permissions',
+            AuditLogAction::DeletePermission->value => 'Delete one or more existing permissions',
+            AuditLogAction::AssignPermission->value => 'Assign one or more permissions to a model',
+            AuditLogAction::RevokePermission->value => 'Revoke one or more permissions from a model',
         ];
     }
 
@@ -298,9 +298,9 @@ class PermissionCommand extends AbstractBaseEntityCommand
         $all = $this->permissionRepository->all();
 
         $filtered = match ($this->action) {
-            Action::PERMISSION_UPDATE, Action::PERMISSION_DELETE, Action::PERMISSION_ASSIGN, Action::PERMISSION_REVOKE => $all,
-            Action::PERMISSION_DEACTIVATE => $all->filter(fn (Permission $permission) => $permission->is_active),
-            Action::PERMISSION_REACTIVATE => $all->filter(fn (Permission $permission) => ! $permission->is_active),
+            AuditLogAction::UpdatePermission->value, AuditLogAction::DeletePermission->value, AuditLogAction::AssignPermission->value, AuditLogAction::RevokePermission->value => $all,
+            AuditLogAction::DeactivatePermission->value => $all->filter(fn (Permission $permission) => $permission->is_active),
+            AuditLogAction::ReactivatePermission->value => $all->filter(fn (Permission $permission) => ! $permission->is_active),
             default => $all,
         };
 

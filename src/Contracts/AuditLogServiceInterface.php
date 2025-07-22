@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Contracts;
 
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface AuditLogServiceInterface
@@ -15,7 +16,7 @@ interface AuditLogServiceInterface
     /**
      * Get a page of audit logs.
      */
-    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator;
+    public function getPage(AuditLogPagePacket $packet): LengthAwarePaginator;
 
     /**
      * Get the message for the audit log based on the action type.

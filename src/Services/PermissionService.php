@@ -2,13 +2,6 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\AssignPermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\CreatePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeactivatePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\DeletePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\ReactivatePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\RevokePermissionAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Permission\UpdatePermissionAuditLogDto;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
@@ -16,7 +9,15 @@ use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermis
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\AssignPermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\CreatePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeactivatePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeletePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\ReactivatePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\RevokePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UpdatePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
@@ -76,7 +77,7 @@ class PermissionService extends AbstractBaseEntityService
         $createdPermission = $this->permissionRepository->create($permissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreatePermissionAuditLogDto($createdPermission));
+            $this->auditLogRepository->create(CreatePermissionAuditLogPacket::make($createdPermission));
         }
 
         return $createdPermission->toPacket();
@@ -103,7 +104,7 @@ class PermissionService extends AbstractBaseEntityService
         $updatedPermission = $this->permissionRepository->update($currentPermission, $newPermissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdatePermissionAuditLogDto($updatedPermission, $oldPermissionName));
+            $this->auditLogRepository->create(UpdatePermissionAuditLogPacket::make($updatedPermission, $oldPermissionName));
         }
 
         return $updatedPermission->toPacket();
@@ -127,7 +128,7 @@ class PermissionService extends AbstractBaseEntityService
         $deactivatedPermission = $this->permissionRepository->deactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivatePermissionAuditLogDto($deactivatedPermission));
+            $this->auditLogRepository->create(DeactivatePermissionAuditLogPacket::make($deactivatedPermission));
         }
 
         return $deactivatedPermission->toPacket();
@@ -151,7 +152,7 @@ class PermissionService extends AbstractBaseEntityService
         $reactivatedPermission = $this->permissionRepository->reactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivatePermissionAuditLogDto($reactivatedPermission));
+            $this->auditLogRepository->create(ReactivatePermissionAuditLogPacket::make($reactivatedPermission));
         }
 
         return $reactivatedPermission->toPacket();
@@ -180,7 +181,7 @@ class PermissionService extends AbstractBaseEntityService
         $deleted = $this->permissionRepository->delete($permission);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeletePermissionAuditLogDto($permission));
+            $this->auditLogRepository->create(DeletePermissionAuditLogPacket::make($permission));
         }
 
         return (bool) $deleted;
@@ -207,7 +208,7 @@ class PermissionService extends AbstractBaseEntityService
         $this->modelHasPermissionRepository->create($model, $permission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new AssignPermissionAuditLogDto($model, $permission));
+            $this->auditLogRepository->create(AssignPermissionAuditLogPacket::make($model, $permission));
         }
 
         return true;
@@ -241,14 +242,16 @@ class PermissionService extends AbstractBaseEntityService
         $permission = $this->resolveEntity($permission, orFail: true);
 
         // Don't allow an authenticated user to revoke a Gatekeeper dashboard permission from themself.
-        if (Auth::user()?->is($model) && in_array($permission->name, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
+        $user = Auth::user();
+
+        if ($user instanceof Model && $user->is($model) && in_array($permission->name, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
             throw new RevokingGatekeeperDashboardPermissionFromSelfException;
         }
 
         $revoked = $this->modelHasPermissionRepository->deleteForModelAndEntity($model, $permission);
 
         if ($revoked && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new RevokePermissionAuditLogDto($model, $permission));
+            $this->auditLogRepository->create(RevokePermissionAuditLogPacket::make($model, $permission));
         }
 
         return $revoked;
@@ -469,9 +472,10 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get a page of permissions.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator
     {
-        return $this->permissionRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+        return $this->permissionRepository->getPage($packet)
+            ->through(fn (Permission $permission) => $permission->toPacket());
     }
 
     /**

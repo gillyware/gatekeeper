@@ -2,13 +2,14 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Constants\Action;
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\AuditLogServiceInterface;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class AuditLogService implements AuditLogServiceInterface
 {
@@ -25,16 +26,10 @@ class AuditLogService implements AuditLogServiceInterface
     /**
      * Get a page of audit logs.
      */
-    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    public function getPage(AuditLogPagePacket $packet): LengthAwarePaginator
     {
-        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
-
-        return $this->auditLogRepository->getPage($pageNumber, $createdAtOrder)
-            ->through(fn (AuditLog $log) => [
-                'id' => $log->id,
-                'message' => $this->getMessageForAuditLog($log),
-                'created_at' => $log->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
-            ]);
+        return $this->auditLogRepository->getPage($packet)
+            ->through(fn (AuditLog $log) => $log->toPacket());
     }
 
     /**
@@ -42,114 +37,83 @@ class AuditLogService implements AuditLogServiceInterface
      */
     public function getMessageForAuditLog(AuditLog $log): string
     {
-        return match ($log->action) {
-            Action::PERMISSION_CREATE, Action::ROLE_CREATE, Action::TEAM_CREATE => $this->formatCreateMessage($log),
-            Action::PERMISSION_UPDATE, Action::ROLE_UPDATE, Action::TEAM_UPDATE => $this->formatUpdateMessage($log),
-            Action::PERMISSION_DEACTIVATE, Action::ROLE_DEACTIVATE, Action::TEAM_DEACTIVATE => $this->formatDeactivateMessage($log),
-            Action::PERMISSION_REACTIVATE, Action::ROLE_REACTIVATE, Action::TEAM_REACTIVATE => $this->formatReactivateMessage($log),
-            Action::PERMISSION_DELETE, Action::ROLE_DELETE, Action::TEAM_DELETE => $this->formatDeleteMessage($log),
+        $context = $this->buildContext($log);
 
-            Action::PERMISSION_ASSIGN, Action::ROLE_ASSIGN => $this->formatAssignMessage($log),
-            Action::PERMISSION_REVOKE, Action::ROLE_REVOKE => $this->formatRevokeMessage($log),
+        $templates = [
+            AuditLogAction::CreatePermission->value => '{actor} created a new {entity} named {name}',
+            AuditLogAction::CreateRole->value => '{actor} created a new {entity} named {name}',
+            AuditLogAction::CreateTeam->value => '{actor} created a new {entity} named {name}',
 
-            Action::TEAM_ADD => $this->formatAddToTeamMessage($log),
-            Action::TEAM_REMOVE => $this->formatRemoveFromTeamMessage($log),
+            AuditLogAction::UpdatePermission->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateRole->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateTeam->value => '{actor} updated {entity} name from {old_name} to {name}',
 
-            default => '',
-        };
+            AuditLogAction::DeactivatePermission->value => '{actor} deactivated {entity} named {name}',
+            AuditLogAction::DeactivateRole->value => '{actor} deactivated {entity} named {name}',
+            AuditLogAction::DeactivateTeam->value => '{actor} deactivated {entity} named {name}',
+
+            AuditLogAction::ReactivatePermission->value => '{actor} reactivated {entity} named {name}',
+            AuditLogAction::ReactivateRole->value => '{actor} reactivated {entity} named {name}',
+            AuditLogAction::ReactivateTeam->value => '{actor} reactivated {entity} named {name}',
+
+            AuditLogAction::DeletePermission->value => '{actor} deleted {entity} named {name}',
+            AuditLogAction::DeleteRole->value => '{actor} deleted {entity} named {name}',
+            AuditLogAction::DeleteTeam->value => '{actor} deleted {entity} named {name}',
+
+            AuditLogAction::AssignPermission->value => '{actor} assigned {entity} named {name} to {target}',
+            AuditLogAction::AssignRole->value => '{actor} assigned {entity} named {name} to {target}',
+            AuditLogAction::RevokePermission->value => '{actor} revoked {entity} named {name} from {target}',
+            AuditLogAction::RevokeRole->value => '{actor} revoked {entity} named {name} from {target}',
+
+            AuditLogAction::AddTeam->value => '{actor} added {target} to team {name}',
+            AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team {name}',
+        ];
+
+        $template = $templates[$log->action] ?? '';
+
+        return $this->renderTemplate($template, $context);
     }
 
-    private function formatCreateMessage(AuditLog $log): string
+    private function buildContext(AuditLog $log): array
     {
-        $actor = $this->getActor($log);
-        $entity = strtolower(class_basename($log->action_to_model_type));
-
-        return "<strong>{$actor}</strong> created a new <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong>";
+        return [
+            'actor' => $this->actor($log),
+            'target' => $this->target($log),
+            'entity' => strtolower(class_basename($log->action_to_model_type)),
+            'name' => Arr::get($log->metadata, 'name', ''),
+            'old_name' => Arr::get($log->metadata, 'old_name', ''),
+        ];
     }
 
-    private function formatUpdateMessage(AuditLog $log): string
+    private function renderTemplate(string $template, array $context): string
     {
-        $actor = $this->getActor($log);
-        $entity = strtolower(class_basename($log->action_to_model_type));
+        return preg_replace_callback('/\{(\w+)\}/', function ($m) use ($context) {
+            $key = $m[1];
+            $val = $context[$key] ?? '';
 
-        return "<strong>{$actor}</strong> updated <strong>{$entity}</strong> name from <strong>{$log->metadata['old_name']}</strong> to <strong>{$log->metadata['name']}</strong>";
+            return "<strong>{$val}</strong>";
+        }, $template);
     }
 
-    private function formatDeactivateMessage(AuditLog $log): string
+    private function actor(AuditLog $log): string
     {
-        $actor = $this->getActor($log);
-        $entity = strtolower(class_basename($log->action_to_model_type));
+        $type = $log->action_by_model_type;
+        $id = $log->action_by_model_id;
 
-        return "<strong>{$actor}</strong> deactivated <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong>";
+        if (! $type) {
+            return 'Unknown';
+        }
+
+        return Str::endsWith($type, 'SystemActor')
+            ? 'System'
+            : class_basename($type).'#'.$id;
     }
 
-    private function formatReactivateMessage(AuditLog $log): string
+    private function target(AuditLog $log): string
     {
-        $actor = $this->getActor($log);
-        $entity = strtolower(class_basename($log->action_to_model_type));
+        $type = $log->action_to_model_type;
+        $id = $log->action_to_model_id;
 
-        return "<strong>{$actor}</strong> reactivated <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong>";
-    }
-
-    private function formatDeleteMessage(AuditLog $log): string
-    {
-        $actor = $this->getActor($log);
-        $entity = strtolower(class_basename($log->action_to_model_type));
-
-        return "<strong>{$actor}</strong> deleted <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong>";
-    }
-
-    private function formatAssignMessage(AuditLog $log): string
-    {
-        $actor = $this->getActor($log);
-        $target = $this->getTarget($log);
-        $entity = explode('_', $log->action)[0];
-
-        return "<strong>{$actor}</strong> assigned <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong> to <strong>{$target}</strong>";
-    }
-
-    private function formatRevokeMessage(AuditLog $log): string
-    {
-        $actor = $this->getActor($log);
-        $target = $this->getTarget($log);
-        $entity = explode('_', $log->action)[0];
-
-        return "<strong>{$actor}</strong> revoked <strong>{$entity}</strong> with name <strong>{$log->metadata['name']}</strong> from <strong>{$target}</strong>";
-    }
-
-    private function formatAddToTeamMessage(AuditLog $log): string
-    {
-        $actor = $this->getActor($log);
-        $target = $this->getTarget($log);
-
-        return "<strong>{$actor}</strong> added <strong>{$target}</strong> to team <strong>{$log->metadata['name']}</strong>";
-    }
-
-    private function formatRemoveFromTeamMessage(AuditLog $log): string
-    {
-        $actor = $this->getActor($log);
-        $target = $this->getTarget($log);
-
-        return "<strong>{$actor}</strong> removed <strong>{$target}</strong> from team <strong>{$log->metadata['name']}</strong>";
-    }
-
-    private function getActor(AuditLog $log): string
-    {
-        $byType = $log->action_by_model_type;
-        $byId = $log->action_by_model_id;
-
-        return $byType
-          ? (str_ends_with($byType, 'SystemActor') ? 'System' : class_basename($byType).'#'.$byId)
-          : 'Unknown';
-    }
-
-    private function getTarget(AuditLog $log): string
-    {
-        $toType = $log->action_to_model_type;
-        $toId = $log->action_to_model_id;
-
-        return $toType
-          ? class_basename($toType).'#'.$toId
-          : 'Unknown';
+        return $type ? class_basename($type).'#'.$id : 'Unknown';
     }
 }

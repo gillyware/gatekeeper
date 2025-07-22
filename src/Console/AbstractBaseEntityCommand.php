@@ -5,6 +5,7 @@ namespace Gillyware\Gatekeeper\Console;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
+use Gillyware\Gatekeeper\Packets\Models\ModelPagePacket;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Services\ModelService;
 use Gillyware\Gatekeeper\Support\SystemActor;
@@ -226,14 +227,9 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
      */
     private function resolveModel(string $label): Model
     {
-        $class = $this->modelMetadataService->getClassFromLabel($label);
         $modelData = $this->modelMetadataService->getModelDataByLabel($label);
-        $searchable = collect($modelData['searchable'] ?? []);
-        $instance = new $class;
-
-        if (! $class) {
-            throw new GatekeeperConsoleException("Model class for label [$label] does not exist.");
-        }
+        $searchable = collect($modelData->searchable);
+        $instance = new $modelData->class;
 
         if (empty($searchable)) {
             throw new GatekeeperConsoleException("No columns are searchable for [$label] models");
@@ -243,16 +239,15 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 
         $primaryKey = search(
             label: "Search by {$searchableList}",
-            options: fn (string $value) => $this->modelService->getModels($label, trim($value))->mapWithKeys(function (array $model) {
-                $displayable = $model['displayable'] ?? [];
+            options: fn (string $value) => $this->modelService->getModels(ModelPagePacket::from(['model_label' => $label, 'search_term' => trim($value)]))->mapWithKeys(function (array $model) {
                 $result = [];
 
-                foreach ($displayable as $x) {
-                    $result[] = $this->formatDisplayField($x['label'], $model['display'][$x['column']], $x['cli_width'] ?? null);
+                foreach ($model['displayable'] as $displayableEntry) {
+                    $result[] = $this->formatDisplayField($displayableEntry['label'], $model['display'][$displayableEntry['column']], $displayableEntry['cli_width']);
                 }
 
                 if (empty($result)) {
-                    $result[] = $this->formatDisplayField($model['model_label'], $model['model_pk'], $x['cli_width'] ?? null);
+                    $result[] = $this->formatDisplayField($model['model_label'], $model['model_pk'], $displayableEntry['cli_width']);
                 }
 
                 return [(string) $model['model_pk'] => implode(' | ', $result)];
@@ -261,7 +256,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
             validate: [Rule::exists($instance->getTable(), $instance->getKeyName())],
         );
 
-        return $class::where($instance->getKeyName(), $primaryKey)->firstOrFail();
+        return $modelData->class::where($instance->getKeyName(), $primaryKey)->firstOrFail();
     }
 
     /**

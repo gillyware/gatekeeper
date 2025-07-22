@@ -5,6 +5,8 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityServiceInterface;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
+use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -20,9 +22,9 @@ class ModelHasPermissionService implements ModelHasEntityServiceInterface
     /**
      * Search model permission assignments by permission name.
      */
-    public function searchAssignmentsByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $paginator = $this->modelHasPermissionRepository->searchAssignmentsByEntityNameForModel($model, $permissionNameSearchTerm, $pageNumber);
+        $paginator = $this->modelHasPermissionRepository->searchAssignmentsByEntityNameForModel($model, $packet);
         $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         return $paginator->through(function (ModelHasPermission $modelHasPermission) use ($displayTimezone) {
@@ -35,8 +37,9 @@ class ModelHasPermissionService implements ModelHasEntityServiceInterface
     /**
      * Search unassigned permissions by permission name for model.
      */
-    public function searchUnassignedByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        return $this->modelHasPermissionRepository->searchUnassignedByEntityNameForModel($model, $permissionNameSearchTerm, $pageNumber);
+        return $this->modelHasPermissionRepository->searchUnassignedByEntityNameForModel($model, $packet)
+            ->through(fn (Permission $permission) => $permission->toPacket());
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
-use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Services\AuditLogService;
@@ -23,7 +23,7 @@ class AuditLogServiceTest extends TestCase
     public function test_create_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_CREATE,
+            'action' => AuditLogAction::CreatePermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 1,
             'action_to_model_type' => Permission::class,
@@ -39,7 +39,7 @@ class AuditLogServiceTest extends TestCase
     public function test_update_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_UPDATE,
+            'action' => AuditLogAction::UpdatePermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 2,
             'action_to_model_type' => Permission::class,
@@ -56,7 +56,7 @@ class AuditLogServiceTest extends TestCase
     public function test_deactivate_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_DEACTIVATE,
+            'action' => AuditLogAction::DeactivatePermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 3,
             'action_to_model_type' => Permission::class,
@@ -72,7 +72,7 @@ class AuditLogServiceTest extends TestCase
     public function test_reactivate_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_REACTIVATE,
+            'action' => AuditLogAction::ReactivatePermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 4,
             'action_to_model_type' => Permission::class,
@@ -88,7 +88,7 @@ class AuditLogServiceTest extends TestCase
     public function test_delete_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_DELETE,
+            'action' => AuditLogAction::DeletePermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 5,
             'action_to_model_type' => Permission::class,
@@ -104,7 +104,7 @@ class AuditLogServiceTest extends TestCase
     public function test_assign_message()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_ASSIGN,
+            'action' => AuditLogAction::AssignPermission->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 6,
             'action_to_model_type' => User::class,
@@ -121,7 +121,7 @@ class AuditLogServiceTest extends TestCase
     public function test_revoke_message()
     {
         $log = new AuditLog([
-            'action' => Action::ROLE_REVOKE,
+            'action' => AuditLogAction::RevokeRole->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 7,
             'action_to_model_type' => User::class,
@@ -138,7 +138,7 @@ class AuditLogServiceTest extends TestCase
     public function test_add_to_team_message()
     {
         $log = new AuditLog([
-            'action' => Action::TEAM_ADD,
+            'action' => AuditLogAction::AddTeam->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 8,
             'action_to_model_type' => User::class,
@@ -155,7 +155,7 @@ class AuditLogServiceTest extends TestCase
     public function test_remove_from_team_message()
     {
         $log = new AuditLog([
-            'action' => Action::TEAM_REMOVE,
+            'action' => AuditLogAction::RemoveTeam->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 9,
             'action_to_model_type' => User::class,
@@ -187,7 +187,7 @@ class AuditLogServiceTest extends TestCase
     public function test_system_actor_is_displayed_correctly()
     {
         $log = new AuditLog([
-            'action' => Action::PERMISSION_CREATE,
+            'action' => AuditLogAction::CreatePermission->value,
             'action_by_model_type' => SystemActor::class,
             'action_by_model_id' => null,
             'action_to_model_type' => Permission::class,

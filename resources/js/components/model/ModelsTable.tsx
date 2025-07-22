@@ -53,10 +53,10 @@ export default function ModelsTable() {
 
     const language: ModelTableText = modelIndexText.modelTableText;
 
-    const modelMetadata: ConfiguredModelMetadata | null = useMemo(
-        () => config.models.find((m) => m.model_label === pageRequest.model_label) || null,
-        [pageRequest],
-    );
+    const modelMetadata: ConfiguredModelMetadata | null = useMemo(() => {
+        console.log(config);
+        return config.models.find((m) => m.model_label === pageRequest.model_label) || null;
+    }, [pageRequest]);
     const numberOfColumns: number = useMemo(() => modelMetadata?.searchable.length || 0, [modelMetadata]);
     const searchPlaceholder = useMemo(() => language.searchInputPlaceholder((modelMetadata?.searchable || []).map((m) => m.label)), [modelMetadata]);
 

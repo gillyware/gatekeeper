@@ -4,8 +4,9 @@ namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\AuditLogRepositoryInterface;
-use Gillyware\Gatekeeper\Dtos\AuditLog\AbstractAuditLogDto;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Packets\AuditLog\AbstractBaseStoreAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -23,25 +24,18 @@ class AuditLogRepository implements AuditLogRepositoryInterface
     /**
      * Create a new audit log entry.
      */
-    public function create(AbstractAuditLogDto $dto): AuditLog
+    public function create(AbstractBaseStoreAuditLogPacket $packet): AuditLog
     {
-        return AuditLog::create([
-            'action' => $dto->getAction(),
-            'action_by_model_type' => $dto->actionByModel->getMorphClass(),
-            'action_by_model_id' => $dto->actionByModel->getKey(),
-            'action_to_model_type' => $dto->actionToModel?->getMorphClass(),
-            'action_to_model_id' => $dto->actionToModel?->getKey(),
-            'metadata' => $dto->metadata,
-        ]);
+        return AuditLog::create($packet->toArray());
     }
 
     /**
      * Get a page of audit logs.
      */
-    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    public function getPage(AuditLogPagePacket $packet): LengthAwarePaginator
     {
         return AuditLog::query()
-            ->orderBy('created_at', $createdAtOrder)
-            ->paginate(10, ['*'], 'page', $pageNumber);
+            ->orderBy('created_at', $packet->createdAtOrder)
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 }

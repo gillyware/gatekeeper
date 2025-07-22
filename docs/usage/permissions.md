@@ -63,7 +63,7 @@ If the permission already exists, a `PermissionAlreadyExistsException` will be t
 
 The `createPermission` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -90,7 +90,7 @@ If the permission does not exist, a `PermissionNotFoundException` will be thrown
 
 If a permission with the new name already exists, a `PermissionAlreadyExistsException` will be thrown.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -120,7 +120,7 @@ If the permission does not exist, a `PermissionNotFoundException` will be thrown
 
 If the permission is already inactive, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -147,7 +147,7 @@ If the permission does not exist, a `PermissionNotFoundException` will be thrown
 
 If the permission is already active, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -200,7 +200,7 @@ You may retrieve a permission by its name. If the permission does not exist, `nu
 
 The `findPermissionByName` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\PermissionPacket|null`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket|null`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -223,7 +223,7 @@ You may retrieve a collection of all permissions defined in your application, re
 
 The `getAllPermissions` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -555,7 +555,7 @@ You may get a model's direct permissions using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectPermissions()` chain
 - Calling `$model->getDirectPermissions()` directly (available via the `HasPermissions` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -584,7 +584,7 @@ You may get a model's effective permissions using one of the following approache
 - Using the fluent `Gatekeeper::for($model)->getEffectivePermissions()` chain
 - Calling `$model->getEffectivePermissions()` directly (available via the `HasPermissions` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\PermissionPacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;

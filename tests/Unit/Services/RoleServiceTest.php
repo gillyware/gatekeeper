@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
-use Gillyware\Gatekeeper\Constants\Action;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -58,7 +58,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->create($name);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertEquals($name, $role->getName());
+        $this->assertEquals($name, $role->name);
     }
 
     public function test_create_fails_if_role_already_exists()
@@ -91,11 +91,12 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Role> $createRoleLog */
         $createRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_CREATE, $createRoleLog->action);
+        $this->assertEquals(AuditLogAction::CreateRole->value, $createRoleLog->action);
         $this->assertEquals($name, $createRoleLog->metadata['name']);
         $this->assertTrue($this->user->is($createRoleLog->actionBy));
-        $this->assertEquals($role->getId(), $createRoleLog->actionTo->id);
+        $this->assertEquals($role->id, $createRoleLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_role_creation_when_auditing_disabled()
@@ -117,7 +118,7 @@ class RoleServiceTest extends TestCase
         $updatedRole = $this->service->update($role, $newName);
 
         $this->assertInstanceOf(RolePacket::class, $updatedRole);
-        $this->assertEquals($newName, $updatedRole->getName());
+        $this->assertEquals($newName, $updatedRole->name);
     }
 
     public function test_update_role_fails_if_roles_feature_disabled()
@@ -146,8 +147,9 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Role> $updateRoleLog */
         $updateRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_UPDATE, $updateRoleLog->action);
+        $this->assertEquals(AuditLogAction::UpdateRole->value, $updateRoleLog->action);
         $this->assertEquals($oldName, $updateRoleLog->metadata['old_name']);
         $this->assertEquals($newName, $updateRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $updateRoleLog->actionBy->id);
@@ -173,7 +175,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->deactivate($role);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertFalse($role->isActive());
+        $this->assertFalse($role->isActive);
     }
 
     public function test_deactivate_role_succeeds_if_roles_feature_disabled()
@@ -183,7 +185,7 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
         $role = $this->service->deactivate($role);
 
-        $this->assertFalse($role->isActive());
+        $this->assertFalse($role->isActive);
     }
 
     public function test_deactivate_role_is_idempotent()
@@ -209,8 +211,9 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Role> $deactivateRoleLog */
         $deactivateRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_DEACTIVATE, $deactivateRoleLog->action);
+        $this->assertEquals(AuditLogAction::DeactivateRole->value, $deactivateRoleLog->action);
         $this->assertEquals($role->name, $deactivateRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $deactivateRoleLog->actionBy->id);
         $this->assertEquals($role->id, $deactivateRoleLog->actionTo->id);
@@ -234,7 +237,7 @@ class RoleServiceTest extends TestCase
         $role = $this->service->reactivate($role);
 
         $this->assertInstanceOf(RolePacket::class, $role);
-        $this->assertTrue($role->isActive());
+        $this->assertTrue($role->isActive);
     }
 
     public function test_reactivate_role_fails_if_roles_feature_disabled()
@@ -272,8 +275,9 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Role> $reactivateRoleLog */
         $reactivateRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_REACTIVATE, $reactivateRoleLog->action);
+        $this->assertEquals(AuditLogAction::ReactivateRole->value, $reactivateRoleLog->action);
         $this->assertEquals($role->name, $reactivateRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $reactivateRoleLog->actionBy->id);
         $this->assertEquals($role->id, $reactivateRoleLog->actionTo->id);
@@ -325,8 +329,9 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Role> $deleteRoleLog */
         $deleteRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_DELETE, $deleteRoleLog->action);
+        $this->assertEquals(AuditLogAction::DeleteRole->value, $deleteRoleLog->action);
         $this->assertEquals($role->name, $deleteRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $deleteRoleLog->actionBy->id);
         $this->assertEquals($role->id, $deleteRoleLog->action_to_model_id);
@@ -377,8 +382,9 @@ class RoleServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, User> $assignRoleLog */
         $assignRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_ASSIGN, $assignRoleLog->action);
+        $this->assertEquals(AuditLogAction::AssignRole->value, $assignRoleLog->action);
         $this->assertEquals($role->name, $assignRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
         $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
@@ -450,14 +456,15 @@ class RoleServiceTest extends TestCase
         $this->service->assignToModel($user, $role);
         $this->service->revokeFromModel($user, $role);
 
-        $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeRole->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        $assignRoleLog = $auditLogs->first();
-        $this->assertEquals(Action::ROLE_REVOKE, $assignRoleLog->action);
-        $this->assertEquals($role->name, $assignRoleLog->metadata['name']);
-        $this->assertEquals($this->user->id, $assignRoleLog->actionBy->id);
-        $this->assertEquals($user->id, $assignRoleLog->actionTo->id);
+        /** @var AuditLog<User, Role> $revokeRoleLog */
+        $revokeRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RevokeRole->value, $revokeRoleLog->action);
+        $this->assertEquals($role->name, $revokeRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $revokeRoleLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_role_revocation_when_auditing_disabled()
@@ -496,7 +503,7 @@ class RoleServiceTest extends TestCase
 
         $this->service->revokeAllFromModel($user, $roles);
 
-        $auditLogs = AuditLog::query()->where('action', Action::ROLE_REVOKE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeRole->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -602,7 +609,7 @@ class RoleServiceTest extends TestCase
         $found = $this->service->findByName($role->name);
 
         $this->assertInstanceOf(RolePacket::class, $found);
-        $this->assertEquals($role->id, $found->getId());
+        $this->assertEquals($role->id, $found->id);
     }
 
     public function test_find_by_name_returns_null_if_not_found()

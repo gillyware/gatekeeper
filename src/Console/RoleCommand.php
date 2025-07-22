@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
@@ -41,13 +41,13 @@ class RoleCommand extends AbstractBaseEntityCommand
 
         try {
             match ($this->action) {
-                Action::ROLE_CREATE => $this->handleCreate(),
-                Action::ROLE_UPDATE => $this->handleUpdate(),
-                Action::ROLE_DEACTIVATE => $this->handleDeactivate(),
-                Action::ROLE_REACTIVATE => $this->handleReactivate(),
-                Action::ROLE_DELETE => $this->handleDelete(),
-                Action::ROLE_ASSIGN => $this->handleAssign(),
-                Action::ROLE_REVOKE => $this->handleRevoke(),
+                AuditLogAction::CreateRole->value => $this->handleCreate(),
+                AuditLogAction::UpdateRole->value => $this->handleUpdate(),
+                AuditLogAction::DeactivateRole->value => $this->handleDeactivate(),
+                AuditLogAction::ReactivateRole->value => $this->handleReactivate(),
+                AuditLogAction::DeleteRole->value => $this->handleDelete(),
+                AuditLogAction::AssignRole->value => $this->handleAssign(),
+                AuditLogAction::RevokeRole->value => $this->handleRevoke(),
             };
 
             return self::SUCCESS;
@@ -281,13 +281,13 @@ class RoleCommand extends AbstractBaseEntityCommand
     protected function getActionOptions(): array
     {
         return [
-            Action::ROLE_CREATE => 'Create one or more new roles',
-            Action::ROLE_UPDATE => 'Update an existing role',
-            Action::ROLE_DEACTIVATE => 'Deactivate one or more active roles',
-            Action::ROLE_REACTIVATE => 'Reactivate one or more inactive roles',
-            Action::ROLE_DELETE => 'Delete one or more existing roles',
-            Action::ROLE_ASSIGN => 'Assign one or more roles to a model',
-            Action::ROLE_REVOKE => 'Revoke one or more roles from a model',
+            AuditLogAction::CreateRole->value => 'Create one or more new roles',
+            AuditLogAction::UpdateRole->value => 'Update an existing role',
+            AuditLogAction::DeactivateRole->value => 'Deactivate one or more active roles',
+            AuditLogAction::ReactivateRole->value => 'Reactivate one or more inactive roles',
+            AuditLogAction::DeleteRole->value => 'Delete one or more existing roles',
+            AuditLogAction::AssignRole->value => 'Assign one or more roles to a model',
+            AuditLogAction::RevokeRole->value => 'Revoke one or more roles from a model',
         ];
     }
 
@@ -299,18 +299,18 @@ class RoleCommand extends AbstractBaseEntityCommand
         $all = $this->roleRepository->all();
 
         $filtered = match ($this->action) {
-            Action::ROLE_UPDATE, Action::ROLE_DELETE, Action::ROLE_ASSIGN, Action::ROLE_REVOKE => $all,
-            Action::ROLE_DEACTIVATE => $all->filter(fn (Role $role) => $role->is_active),
-            Action::ROLE_REACTIVATE => $all->filter(fn (Role $role) => ! $role->is_active),
+            AuditLogAction::UpdateRole->value, AuditLogAction::DeleteRole->value, AuditLogAction::AssignRole->value, AuditLogAction::RevokeRole->value => $all,
+            AuditLogAction::DeactivateRole->value => $all->filter(fn (Role $role) => $role->is_active),
+            AuditLogAction::ReactivateRole->value => $all->filter(fn (Role $role) => ! $role->is_active),
             default => $all,
         };
 
         if ($filtered->isEmpty()) {
             throw new GatekeeperConsoleException(
                 match ($this->action) {
-                    Action::ROLE_UPDATE, Action::ROLE_DELETE, Action::ROLE_ASSIGN, Action::ROLE_REVOKE => 'No roles found.',
-                    Action::ROLE_DEACTIVATE => 'No active roles found.',
-                    Action::ROLE_REACTIVATE => 'No inactive roles found.',
+                    AuditLogAction::UpdateRole->value, AuditLogAction::DeleteRole->value, AuditLogAction::AssignRole->value, AuditLogAction::RevokeRole->value => 'No roles found.',
+                    AuditLogAction::DeactivateRole->value => 'No active roles found.',
+                    AuditLogAction::ReactivateRole->value => 'No inactive roles found.',
                     default => 'No roles found.',
                 });
         }

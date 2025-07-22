@@ -2,18 +2,19 @@
 
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
-use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Factories\EntityServiceFactory;
 use Gillyware\Gatekeeper\Factories\ModelHasEntityServiceFactory;
-use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntitiesPageRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\ModelEntityRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\ModelPageRequest;
-use Gillyware\Gatekeeper\Http\Requests\Model\ShowModelRequest;
+use Gillyware\Gatekeeper\Packets\Models\AbstractBaseModelPacket;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntityPacket;
+use Gillyware\Gatekeeper\Packets\Models\ModelPagePacket;
+use Gillyware\Gatekeeper\Packets\Models\ShowModelPacket;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Gillyware\Gatekeeper\Services\ModelService;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -29,13 +30,10 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of labels matching the label and search term.
      */
-    public function index(ModelPageRequest $request): HttpFoundationResponse
+    public function index(ModelPagePacket $packet): HttpFoundationResponse
     {
         try {
-            return Response::json($this->modelService->getModels(
-                $request->validated('model_label'),
-                (string) $request->validated('search_term')
-            ));
+            return Response::json($this->modelService->getModels($packet));
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -44,15 +42,11 @@ class ModelController extends AbstractBaseController
     /**
      * Get a model and its access.
      */
-    public function show(ShowModelRequest $request): HttpFoundationResponse
+    public function show(ShowModelPacket $packet): HttpFoundationResponse
     {
         try {
-            $label = $request->validated('modelLabel');
-            $pk = $request->validated('modelPk');
-
-            $modelData = $this->modelMetadataService->getModelDataByLabel($label);
-            $modelClass = $this->modelMetadataService->getClassFromModelData($modelData);
-            $model = $this->modelService->findModelInstance($modelClass, $pk);
+            $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
+            $model = $this->modelService->find($modelData, $packet->modelPk);
 
             $verbosePermissions = Gatekeeper::for($model)->getVerbosePermissions();
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
@@ -60,22 +54,9 @@ class ModelController extends AbstractBaseController
             $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
             $directTeamsCount = Gatekeeper::for($model)->getTeams()->count();
 
-            return Response::json([
-                'model_label' => $modelData['label'],
+            return Response::json(array_merge($modelData->toArray(), [
                 'model_pk' => (string) $model->getKey(),
-                'searchable' => $modelData['searchable'] ?? [],
-                'displayable' => $modelData['displayable'] ?? [],
-
                 'display' => $this->modelService->prepareModelForDisplay($modelData, $model),
-
-                'is_permission' => $this->modelIsPermission($model),
-                'is_role' => $this->modelIsRole($model),
-                'is_team' => $this->modelIsTeam($model),
-
-                'has_permissions' => $this->modelInteractsWithPermissions($model),
-                'has_roles' => $this->modelInteractsWithRoles($model),
-                'has_teams' => $this->modelInteractsWithTeams($model),
-
                 'access_sources' => [
                     'permissions' => $verbosePermissions,
                     'roles' => $verboseRoles,
@@ -83,7 +64,7 @@ class ModelController extends AbstractBaseController
                     'direct_roles_count' => $directRolesCount,
                     'direct_teams_count' => $directTeamsCount,
                 ],
-            ]);
+            ]));
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -92,20 +73,12 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of assigned entities for a model and entity.
      */
-    public function searchAssignedEntitiesForModel(ModelEntitiesPageRequest $request): HttpFoundationResponse
+    public function searchAssignedEntitiesForModel(ModelEntitiesPagePacket $packet): HttpFoundationResponse
     {
         try {
-            $modelLabel = $request->validated('modelLabel');
-            $modelPk = $request->validated('modelPk');
-            $pageNumber = $request->validated('page');
-            $entity = GatekeeperEntity::from($request->validated('entity'));
-            $entityNameSearchTerm = (string) $request->validated('search_term');
-
-            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
-            $model = $this->modelService->findModelInstance($className, $modelPk);
-
-            $modelHasEntityService = ModelHasEntityServiceFactory::create($entity);
-            $paginator = $modelHasEntityService->searchAssignmentsByEntityNameForModel($model, $entityNameSearchTerm, $pageNumber);
+            $model = $this->getModelFromPacket($packet);
+            $modelHasEntityService = ModelHasEntityServiceFactory::create($packet->getEntity());
+            $paginator = $modelHasEntityService->searchAssignmentsByEntityNameForModel($model, $packet);
 
             return Response::json($paginator);
         } catch (GatekeeperException $e) {
@@ -116,20 +89,12 @@ class ModelController extends AbstractBaseController
     /**
      * Get a page of unassigned entities for a model and entity.
      */
-    public function searchUnassignedEntitiesForModel(ModelEntitiesPageRequest $request): HttpFoundationResponse
+    public function searchUnassignedEntitiesForModel(ModelEntitiesPagePacket $packet): HttpFoundationResponse
     {
         try {
-            $modelLabel = $request->validated('modelLabel');
-            $modelPk = $request->validated('modelPk');
-            $pageNumber = $request->validated('page');
-            $entity = GatekeeperEntity::from($request->validated('entity'));
-            $entityNameSearchTerm = (string) $request->validated('search_term');
-
-            $className = $this->modelMetadataService->getClassFromLabel($modelLabel);
-            $model = $this->modelService->findModelInstance($className, $modelPk);
-
-            $modelHasEntityService = ModelHasEntityServiceFactory::create($entity);
-            $paginator = $modelHasEntityService->searchUnassignedByEntityNameForModel($model, $entityNameSearchTerm, $pageNumber);
+            $model = $this->getModelFromPacket($packet);
+            $modelHasEntityService = ModelHasEntityServiceFactory::create($packet->getEntity());
+            $paginator = $modelHasEntityService->searchUnassignedByEntityNameForModel($model, $packet);
 
             return Response::json($paginator);
         } catch (GatekeeperException $e) {
@@ -140,28 +105,19 @@ class ModelController extends AbstractBaseController
     /**
      * Assign an entity to a model.
      */
-    public function assign(ModelEntityRequest $request): HttpFoundationResponse
+    public function assign(ModelEntityPacket $packet): HttpFoundationResponse
     {
         try {
-            $label = $request->validated('modelLabel');
-            $pk = $request->validated('modelPk');
-            $entity = GatekeeperEntity::from($request->validated('entity'));
-            $entityName = $request->validated('entity_name');
+            $model = $this->getModelFromPacket($packet);
+            $entityService = EntityServiceFactory::create($packet->getEntity());
 
-            $modelClass = $this->modelMetadataService->getClassFromLabel($label);
-            $model = $this->modelService->findModelInstance($modelClass, $pk);
-
-            $entityService = EntityServiceFactory::create($entity);
-
-            if (! $entityService->exists($entityName)) {
-                return $this->errorResponse(ucfirst($entity->value).' does not exist');
+            if (! $entityService->exists($packet->entityName)) {
+                return $this->errorResponse("{$packet->getEntity()->name} does not exist");
             }
 
-            $entityService->assignToModel($model, $entityName);
+            $entityService->assignToModel($model, $packet->entityName);
 
-            return Response::json([
-                'message' => ucfirst($entity->value).' assigned successfully',
-            ]);
+            return Response::json(['message' => "{$packet->getEntity()->name} assigned successfully"]);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -170,30 +126,28 @@ class ModelController extends AbstractBaseController
     /**
      * Revoke an entity from a model.
      */
-    public function revoke(ModelEntityRequest $request): HttpFoundationResponse
+    public function revoke(ModelEntityPacket $packet): HttpFoundationResponse
     {
         try {
-            $label = $request->validated('modelLabel');
-            $pk = $request->validated('modelPk');
-            $entity = GatekeeperEntity::from($request->validated('entity'));
-            $entityName = $request->validated('entity_name');
+            $model = $this->getModelFromPacket($packet);
+            $entityService = EntityServiceFactory::create($packet->getEntity());
 
-            $modelClass = $this->modelMetadataService->getClassFromLabel($label);
-            $model = $this->modelService->findModelInstance($modelClass, $pk);
-
-            $entityService = EntityServiceFactory::create($entity);
-
-            if (! $entityService->exists($entityName)) {
-                return $this->errorResponse(ucfirst($entity->value).' does not exist');
+            if (! $entityService->exists($packet->entityName)) {
+                return $this->errorResponse("{$packet->getEntity()->name} does not exist");
             }
 
-            $entityService->revokeFromModel($model, $entityName);
+            $entityService->revokeFromModel($model, $packet->entityName);
 
-            return Response::json([
-                'message' => ucfirst($entity->value).' revoked successfully',
-            ]);
+            return Response::json(['message' => "{$packet->getEntity()->name} revoked successfully"]);
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
+    }
+
+    private function getModelFromPacket(AbstractBaseModelPacket $packet): Model
+    {
+        $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
+
+        return $this->modelService->find($modelData, $packet->modelPk);
     }
 }

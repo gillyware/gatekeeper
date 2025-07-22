@@ -65,8 +65,6 @@ class Gatekeeper
                 'models' => $modelMetadataService->getConfiguredModelsWithMetadata(),
             ],
             'user' => [
-                'name' => (string) $user?->name,
-                'email' => (string) $user?->email,
                 'permissions' => [
                     'can_view' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::View),
                     'can_manage' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::Manage),

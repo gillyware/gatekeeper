@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Contracts;
 
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -127,5 +128,5 @@ interface EntityRepositoryInterface
     /**
      * Get a page of entities.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator;
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator;
 }

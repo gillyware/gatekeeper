@@ -3,10 +3,10 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Role\RolePageRequest;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Role\StoreRoleRequest;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Role\UpdateRoleRequest;
 use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\StoreRolePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\UpdateRolePacket;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,21 +18,13 @@ class RoleController extends AbstractBaseController
     /**
      * Get a page of roles.
      */
-    public function index(RolePageRequest $request): HttpFoundationResponse
+    public function index(EntityPagePacket $packet): HttpFoundationResponse
     {
-        $pageNumber = $request->validated('page');
-        $searchTerm = (string) $request->validated('search_term');
-        $importantAttribute = $request->validated('prioritized_attribute');
-        $nameOrder = $request->validated('name_order');
-        $isActiveOrder = $request->validated('is_active_order');
-
         if (! $this->roleService->tableExists()) {
             return $this->errorResponse('The roles table does not exist in the database.');
         }
 
-        return Response::json(
-            $this->roleService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
-        );
+        return Response::json($this->roleService->getPage($packet));
     }
 
     /**
@@ -40,17 +32,16 @@ class RoleController extends AbstractBaseController
      */
     public function show(Role $role): HttpFoundationResponse
     {
-        return Response::json($role);
+        return Response::json($role->toPacket());
     }
 
     /**
      * Create a new role.
      */
-    public function store(StoreRoleRequest $request): HttpFoundationResponse
+    public function store(StoreRolePacket $packet): HttpFoundationResponse
     {
         try {
-            $roleName = $request->validated('name');
-            $role = $this->roleService->create($roleName);
+            $role = $this->roleService->create($packet->name);
 
             return Response::json($role, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -61,11 +52,10 @@ class RoleController extends AbstractBaseController
     /**
      * Update an existing role.
      */
-    public function update(UpdateRoleRequest $request, Role $role): HttpFoundationResponse
+    public function update(UpdateRolePacket $packet, Role $role): HttpFoundationResponse
     {
         try {
-            $newRoleName = $request->validated('name');
-            $role = $this->roleService->update($role, $newRoleName);
+            $role = $this->roleService->update($role, $packet->name);
 
             return Response::json($role);
         } catch (GatekeeperException $e) {

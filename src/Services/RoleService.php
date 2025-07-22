@@ -2,18 +2,19 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\AssignRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\CreateRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\DeactivateRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\DeleteRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\ReactivateRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\RevokeRoleAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Role\UpdateRoleAuditLogDto;
 use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\RolePacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\AssignRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\CreateRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\DeactivateRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\DeleteRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\ReactivateRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\RevokeRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\UpdateRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
@@ -71,7 +72,7 @@ class RoleService extends AbstractBaseEntityService
         $createdRole = $this->roleRepository->create($roleName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreateRoleAuditLogDto($createdRole));
+            $this->auditLogRepository->create(CreateRoleAuditLogPacket::make($createdRole));
         }
 
         return $createdRole->toPacket();
@@ -99,7 +100,7 @@ class RoleService extends AbstractBaseEntityService
         $updatedRole = $this->roleRepository->update($currentRole, $newRoleName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdateRoleAuditLogDto($updatedRole, $oldRoleName));
+            $this->auditLogRepository->create(UpdateRoleAuditLogPacket::make($updatedRole, $oldRoleName));
         }
 
         return $updatedRole->toPacket();
@@ -123,7 +124,7 @@ class RoleService extends AbstractBaseEntityService
         $deactivatedRole = $this->roleRepository->deactivate($currentRole);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivateRoleAuditLogDto($deactivatedRole));
+            $this->auditLogRepository->create(DeactivateRoleAuditLogPacket::make($deactivatedRole));
         }
 
         return $deactivatedRole->toPacket();
@@ -148,7 +149,7 @@ class RoleService extends AbstractBaseEntityService
         $reactivatedRole = $this->roleRepository->reactivate($currentRole);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivateRoleAuditLogDto($reactivatedRole));
+            $this->auditLogRepository->create(ReactivateRoleAuditLogPacket::make($reactivatedRole));
         }
 
         return $reactivatedRole->toPacket();
@@ -177,7 +178,7 @@ class RoleService extends AbstractBaseEntityService
         $deleted = $this->roleRepository->delete($role);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeleteRoleAuditLogDto($role));
+            $this->auditLogRepository->create(DeleteRoleAuditLogPacket::make($role));
         }
 
         return (bool) $deleted;
@@ -206,7 +207,7 @@ class RoleService extends AbstractBaseEntityService
         $this->modelHasRoleRepository->create($model, $role);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new AssignRoleAuditLogDto($model, $role));
+            $this->auditLogRepository->create(AssignRoleAuditLogPacket::make($model, $role));
         }
 
         return true;
@@ -242,7 +243,7 @@ class RoleService extends AbstractBaseEntityService
         $revoked = $this->modelHasRoleRepository->deleteForModelAndEntity($model, $role);
 
         if ($revoked && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new RevokeRoleAuditLogDto($model, $role));
+            $this->auditLogRepository->create(RevokeRoleAuditLogPacket::make($model, $role));
         }
 
         return $revoked;
@@ -425,9 +426,10 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Get a page of roles.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator
     {
-        return $this->roleRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+        return $this->roleRepository->getPage($packet)
+            ->through(fn (Role $role) => $role->toPacket());
     }
 
     /**

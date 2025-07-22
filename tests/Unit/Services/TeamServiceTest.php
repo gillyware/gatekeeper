@@ -2,8 +2,8 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
-use Gillyware\Gatekeeper\Constants\Action;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamsFeatureDisabledException;
@@ -11,7 +11,7 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\TeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
 use Gillyware\Gatekeeper\Tests\TestCase;
@@ -76,11 +76,12 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Team> $createTeamLog */
         $createTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_CREATE, $createTeamLog->action);
+        $this->assertEquals(AuditLogAction::CreateTeam->value, $createTeamLog->action);
         $this->assertEquals($name, $createTeamLog->metadata['name']);
         $this->assertTrue($this->user->is($createTeamLog->actionBy));
-        $this->assertEquals($team->getId(), $createTeamLog->actionTo->id);
+        $this->assertEquals($team->id, $createTeamLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_team_creation_when_auditing_disabled()
@@ -102,7 +103,7 @@ class TeamServiceTest extends TestCase
         $updatedTeam = $this->service->update($team, $newName);
 
         $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
-        $this->assertEquals($newName, $updatedTeam->getName());
+        $this->assertEquals($newName, $updatedTeam->name);
     }
 
     public function test_update_team_fails_if_teams_feature_disabled()
@@ -128,8 +129,9 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Team> $updateTeamLog */
         $updateTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_UPDATE, $updateTeamLog->action);
+        $this->assertEquals(AuditLogAction::UpdateTeam->value, $updateTeamLog->action);
         $this->assertEquals($newName, $updateTeamLog->metadata['name']);
         $this->assertEquals($name, $updateTeamLog->metadata['old_name']);
         $this->assertTrue($this->user->is($updateTeamLog->actionBy));
@@ -155,7 +157,7 @@ class TeamServiceTest extends TestCase
         $deactivatedTeam = $this->service->deactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->isActive());
+        $this->assertFalse($deactivatedTeam->isActive);
     }
 
     public function test_deactivate_team_is_idempotent()
@@ -178,7 +180,7 @@ class TeamServiceTest extends TestCase
         $deactivatedTeam = $this->service->deactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $deactivatedTeam);
-        $this->assertFalse($deactivatedTeam->isActive());
+        $this->assertFalse($deactivatedTeam->isActive);
     }
 
     public function test_audit_log_inserted_on_team_deactivation_when_auditing_enabled()
@@ -192,8 +194,9 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Team> $deactivateTeamLog */
         $deactivateTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_DEACTIVATE, $deactivateTeamLog->action);
+        $this->assertEquals(AuditLogAction::DeactivateTeam->value, $deactivateTeamLog->action);
         $this->assertEquals($team->name, $deactivateTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $deactivateTeamLog->actionBy->id);
         $this->assertEquals($team->id, $deactivateTeamLog->actionTo->id);
@@ -217,7 +220,7 @@ class TeamServiceTest extends TestCase
         $reactivatedTeam = $this->service->reactivate($team);
 
         $this->assertInstanceOf(TeamPacket::class, $reactivatedTeam);
-        $this->assertTrue($reactivatedTeam->isActive());
+        $this->assertTrue($reactivatedTeam->isActive);
     }
 
     public function test_reactivate_team_is_idempotent()
@@ -253,8 +256,9 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Team> $reactivateTeamLog */
         $reactivateTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_REACTIVATE, $reactivateTeamLog->action);
+        $this->assertEquals(AuditLogAction::ReactivateTeam->value, $reactivateTeamLog->action);
         $this->assertEquals($team->name, $reactivateTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $reactivateTeamLog->actionBy->id);
         $this->assertEquals($team->id, $reactivateTeamLog->actionTo->id);
@@ -317,8 +321,9 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, Team> $deleteTeamLog */
         $deleteTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_DELETE, $deleteTeamLog->action);
+        $this->assertEquals(AuditLogAction::DeleteTeam->value, $deleteTeamLog->action);
         $this->assertEquals($team->name, $deleteTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $deleteTeamLog->actionBy->id);
         $this->assertEquals($team->id, $deleteTeamLog->action_to_model_id);
@@ -376,8 +381,9 @@ class TeamServiceTest extends TestCase
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
+        /** @var AuditLog<User, User> $assignTeamLog */
         $assignTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_ADD, $assignTeamLog->action);
+        $this->assertEquals(AuditLogAction::AddTeam->value, $assignTeamLog->action);
         $this->assertEquals($team->name, $assignTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
         $this->assertEquals($user->id, $assignTeamLog->action_to_model_id);
@@ -455,14 +461,15 @@ class TeamServiceTest extends TestCase
         $this->service->assignToModel($user, $team);
         $this->service->revokeFromModel($user, $team);
 
-        $auditLogs = AuditLog::query()->where('action', Action::TEAM_REMOVE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        $assignTeamLog = $auditLogs->first();
-        $this->assertEquals(Action::TEAM_REMOVE, $assignTeamLog->action);
-        $this->assertEquals($team->name, $assignTeamLog->metadata['name']);
-        $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
-        $this->assertEquals($user->id, $assignTeamLog->actionTo->id);
+        /** @var AuditLog<User, User> $revokeTeamLog */
+        $revokeTeamLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RemoveTeam->value, $revokeTeamLog->action);
+        $this->assertEquals($team->name, $revokeTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $revokeTeamLog->actionTo->id);
     }
 
     public function test_audit_log_not_inserted_on_team_revocation_when_auditing_disabled()
@@ -506,7 +513,7 @@ class TeamServiceTest extends TestCase
 
         $this->service->revokeAllFromModel($user, $teams);
 
-        $auditLogs = AuditLog::query()->where('action', Action::TEAM_REMOVE)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -594,7 +601,7 @@ class TeamServiceTest extends TestCase
         $found = $this->service->findByName($team->name);
 
         $this->assertInstanceOf(TeamPacket::class, $found);
-        $this->assertSame($team->id, $found->getId());
+        $this->assertSame($team->id, $found->id);
     }
 
     public function test_find_by_name_returns_null_if_not_found()

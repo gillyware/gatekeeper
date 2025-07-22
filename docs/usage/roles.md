@@ -63,7 +63,7 @@ If the role already exists, a `RoleAlreadyExistsException` will be thrown.
 
 The `createRole` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -90,7 +90,7 @@ If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If a role with the new name already exists, a `RoleAlreadyExistsException` will be thrown.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -120,7 +120,7 @@ If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If the role is already inactive, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -147,7 +147,7 @@ If the role does not exist, a `RoleNotFoundException` will be thrown.
 
 If the role is already active, it will simply be returned without raising an exception.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -200,7 +200,7 @@ You may retrieve a role by its name. If the role does not exist, `null` will be 
 
 The `findRoleByName` method accepts a string or a string-backed enum.
 
-**Returns:** `\Gillyware\Gatekeeper\Packets\RolePacket|null`
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket|null`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -223,7 +223,7 @@ You may retrieve a collection of all roles defined in your application, regardle
 
 The `getAllRoles` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -555,7 +555,7 @@ You may get a model's direct roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectRoles()` chain
 - Calling `$model->getDirectRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -584,7 +584,7 @@ You may get a model's effective roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getEffectiveRoles()` chain
 - Calling `$model->getEffectiveRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
