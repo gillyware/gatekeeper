@@ -32,9 +32,9 @@ class ModelControllerTest extends TestCase
                     ['column' => 'email', 'label' => 'email'],
                 ],
                 'displayable' => [
-                    ['column' => 'id', 'label' => 'ID'],
-                    ['column' => 'name', 'label' => 'Name'],
-                    ['column' => 'email', 'label' => 'Email'],
+                    ['column' => 'id', 'label' => 'ID', 'cli_width' => 10],
+                    ['column' => 'name', 'label' => 'Name', 'cli_width' => 25],
+                    ['column' => 'email', 'label' => 'Email', 'cli_width' => 35],
                 ],
             ],
         ]);

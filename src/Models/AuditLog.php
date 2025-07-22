@@ -14,9 +14,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Config;
 
 /**
- * @template TFactory as Factory
- * @template TPacket as Packet
- *
  * @property int $id // PK
  * @property string $action
  * @property ?string $action_by_model_type

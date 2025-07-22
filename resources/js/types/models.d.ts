@@ -22,7 +22,7 @@ export type ModelPermissionAssignment = EntityAssignment & {
     assigned_at: string | null;
 };
 
-export type ModelRoleAssignmetn = EntityAssignment & {
+export type ModelRoleAssignment = EntityAssignment & {
     role_id: number;
     role: Role;
     assigned_at: string | null;

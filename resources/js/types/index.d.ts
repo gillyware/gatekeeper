@@ -51,7 +51,7 @@ export type GatekeeperEntity = GatekeeperPermission | GatekeeperRole | Gatekeepe
 
 export type GatekeeperModelEntityAssignmentMap = {
     permission: ModelPermissionAssignment;
-    role: ModelRoleAssignmetn;
+    role: ModelRoleAssignment;
     team: ModelTeamAssignment;
 };
 

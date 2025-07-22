@@ -46,8 +46,7 @@ class ModelController extends AbstractBaseController
     {
         try {
             $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
-            $modelClass = $this->modelMetadataService->getClassFromModelData($modelData);
-            $model = $this->modelService->findModelInstance($modelClass, $packet->modelPk);
+            $model = $this->modelService->findModelInstance($modelData, $packet->modelPk);
 
             $verbosePermissions = Gatekeeper::for($model)->getVerbosePermissions();
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
@@ -55,22 +54,9 @@ class ModelController extends AbstractBaseController
             $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
             $directTeamsCount = Gatekeeper::for($model)->getTeams()->count();
 
-            return Response::json([
-                'model_label' => $modelData['label'],
+            return Response::json(array_merge($modelData->toArray(), [
                 'model_pk' => (string) $model->getKey(),
-                'searchable' => $modelData['searchable'] ?? [],
-                'displayable' => $modelData['displayable'] ?? [],
-
                 'display' => $this->modelService->prepareModelForDisplay($modelData, $model),
-
-                'is_permission' => $this->modelIsPermission($model),
-                'is_role' => $this->modelIsRole($model),
-                'is_team' => $this->modelIsTeam($model),
-
-                'has_permissions' => $this->modelInteractsWithPermissions($model),
-                'has_roles' => $this->modelInteractsWithRoles($model),
-                'has_teams' => $this->modelInteractsWithTeams($model),
-
                 'access_sources' => [
                     'permissions' => $verbosePermissions,
                     'roles' => $verboseRoles,
@@ -78,7 +64,7 @@ class ModelController extends AbstractBaseController
                     'direct_roles_count' => $directRolesCount,
                     'direct_teams_count' => $directTeamsCount,
                 ],
-            ]);
+            ]));
         } catch (GatekeeperException $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -160,8 +146,8 @@ class ModelController extends AbstractBaseController
 
     private function getModelFromPacket(AbstractBaseModelPacket $packet): Model
     {
-        $className = $this->modelMetadataService->getClassFromLabel($packet->modelLabel);
+        $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
 
-        return $this->modelService->findModelInstance($className, $packet->modelPk);
+        return $this->modelService->findModelInstance($modelData, $packet->modelPk);
     }
 }
