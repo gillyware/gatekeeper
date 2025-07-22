@@ -3,10 +3,10 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Role\RolePageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\StoreRoleRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Role\UpdateRoleRequest;
 use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,21 +18,13 @@ class RoleController extends AbstractBaseController
     /**
      * Get a page of roles.
      */
-    public function index(RolePageRequest $request): HttpFoundationResponse
+    public function index(EntityPagePacket $entityPagePacket): HttpFoundationResponse
     {
-        $pageNumber = $request->validated('page');
-        $searchTerm = (string) $request->validated('search_term');
-        $importantAttribute = $request->validated('prioritized_attribute');
-        $nameOrder = $request->validated('name_order');
-        $isActiveOrder = $request->validated('is_active_order');
-
         if (! $this->roleService->tableExists()) {
             return $this->errorResponse('The roles table does not exist in the database.');
         }
 
-        return Response::json(
-            $this->roleService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
-        );
+        return Response::json($this->roleService->getPage($entityPagePacket));
     }
 
     /**

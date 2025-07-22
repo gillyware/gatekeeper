@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -239,20 +240,20 @@ class TeamRepository implements EntityRepositoryInterface
     /**
      * Get a page of teams.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
     {
-        $query = Team::query()->whereLike('name', "%{$searchTerm}%");
+        $query = Team::query()->whereLike('name', "%{$entityPagePacket->searchTerm}%");
 
-        if ($importantAttribute === 'is_active') {
+        if ($entityPagePacket->prioritizedAttribute === 'is_active') {
             $query = $query
-                ->orderBy('is_active', $isActiveOrder)
-                ->orderBy('name', $nameOrder);
+                ->orderBy('is_active', $entityPagePacket->isActiveOrder)
+                ->orderBy('name', $entityPagePacket->nameOrder);
         } else {
             $query = $query
-                ->orderBy('name', $nameOrder)
-                ->orderBy('is_active', $isActiveOrder);
+                ->orderBy('name', $entityPagePacket->nameOrder)
+                ->orderBy('is_active', $entityPagePacket->isActiveOrder);
         }
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $entityPagePacket->page);
     }
 }

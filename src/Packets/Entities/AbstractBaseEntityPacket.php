@@ -8,7 +8,7 @@ use Gillyware\Postal\Exceptions\PostalException;
 use Gillyware\Postal\Packet;
 use Illuminate\Contracts\Validation\Validator;
 
-class AbstractBaseEntityPacket extends Packet
+abstract class AbstractBaseEntityPacket extends Packet
 {
     public function __construct(
         #[Rule('required|integer|min:1')]

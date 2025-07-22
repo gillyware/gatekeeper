@@ -1,4 +1,5 @@
 providers:
+  - Gillyware\Postal\Providers\PostalServiceProvider
   - Gillyware\Gatekeeper\GatekeeperServiceProvider
 
 migrations:

@@ -4,9 +4,9 @@ namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\StoreTeamRequest;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Team\TeamPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Team\UpdateTeamRequest;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,21 +18,13 @@ class TeamController extends AbstractBaseController
     /**
      * Get a page of teams.
      */
-    public function index(TeamPageRequest $request): HttpFoundationResponse
+    public function index(EntityPagePacket $entityPagePacket): HttpFoundationResponse
     {
-        $pageNumber = $request->validated('page');
-        $searchTerm = (string) $request->validated('search_term');
-        $importantAttribute = $request->validated('prioritized_attribute');
-        $nameOrder = $request->validated('name_order');
-        $isActiveOrder = $request->validated('is_active_order');
-
         if (! $this->teamService->tableExists()) {
             return $this->errorResponse('The teams table does not exist in the database.');
         }
 
-        return Response::json(
-            $this->teamService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
-        );
+        return Response::json($this->teamService->getPage($entityPagePacket));
     }
 
     /**

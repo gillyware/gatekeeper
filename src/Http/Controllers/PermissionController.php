@@ -3,10 +3,10 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\PermissionPageRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\StorePermissionRequest;
 use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\UpdatePermissionRequest;
 use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,21 +18,13 @@ class PermissionController extends AbstractBaseController
     /**
      * Get a page of permissions.
      */
-    public function index(PermissionPageRequest $request): HttpFoundationResponse
+    public function index(EntityPagePacket $entityPagePacket): HttpFoundationResponse
     {
-        $pageNumber = $request->validated('page');
-        $searchTerm = (string) $request->validated('search_term');
-        $importantAttribute = $request->validated('prioritized_attribute');
-        $nameOrder = $request->validated('name_order');
-        $isActiveOrder = $request->validated('is_active_order');
-
         if (! $this->permissionService->tableExists()) {
             return $this->errorResponse('The permissions table does not exist in the database.');
         }
 
-        return Response::json(
-            $this->permissionService->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder)
-        );
+        return Response::json($this->permissionService->getPage($entityPagePacket));
     }
 
     /**

@@ -16,6 +16,7 @@ use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermis
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
@@ -469,9 +470,9 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get a page of permissions.
      */
-    public function getPage(int $pageNumber, string $searchTerm, string $importantAttribute, string $nameOrder, string $isActiveOrder): LengthAwarePaginator
+    public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
     {
-        return $this->permissionRepository->getPage($pageNumber, $searchTerm, $importantAttribute, $nameOrder, $isActiveOrder);
+        return $this->permissionRepository->getPage($entityPagePacket);
     }
 
     /**
