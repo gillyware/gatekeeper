@@ -46,7 +46,7 @@ class ModelController extends AbstractBaseController
     {
         try {
             $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
-            $model = $this->modelService->findModelInstance($modelData, $packet->modelPk);
+            $model = $this->modelService->find($modelData, $packet->modelPk);
 
             $verbosePermissions = Gatekeeper::for($model)->getVerbosePermissions();
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
@@ -148,6 +148,6 @@ class ModelController extends AbstractBaseController
     {
         $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
 
-        return $this->modelService->findModelInstance($modelData, $packet->modelPk);
+        return $this->modelService->find($modelData, $packet->modelPk);
     }
 }

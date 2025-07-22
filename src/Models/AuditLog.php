@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Config;
 
 /**
+ * @template TActionByModel of Model
+ * @template TActionToModel of Model
+ *
  * @property int $id // PK
  * @property string $action
  * @property ?string $action_by_model_type
@@ -24,6 +27,8 @@ use Illuminate\Support\Facades\Config;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property TActionByModel|null $actionBy
+ * @property TActionToModel|null $actionTo
  */
 class AuditLog extends Model implements PacketableInterface
 {

@@ -49,7 +49,7 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
 
         // If the entity is an enum, return the enum value.
         if ($entity instanceof BackedEnum || $entity instanceof UnitEnum) {
-            return enum_value($entity);
+            return (string) enum_value($entity);
         }
 
         // If the entity is a JSON string, decode it.

@@ -2,15 +2,15 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\AssignTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\CreateTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\DeactivateTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\DeleteTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\ReactivateTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\RevokeTeamAuditLogDto;
-use Gillyware\Gatekeeper\Dtos\AuditLog\Team\UpdateTeamAuditLogDto;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\AssignTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\CreateTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeactivateTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeleteTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\ReactivateTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\RevokeTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\UpdateTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
@@ -68,7 +68,7 @@ class TeamService extends AbstractBaseEntityService
         $createdTeam = $this->teamRepository->create($teamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new CreateTeamAuditLogDto($createdTeam));
+            $this->auditLogRepository->create(CreateTeamAuditLogPacket::make($createdTeam));
         }
 
         return $createdTeam->toPacket();
@@ -96,7 +96,7 @@ class TeamService extends AbstractBaseEntityService
         $updatedTeam = $this->teamRepository->update($currentTeam, $newTeamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new UpdateTeamAuditLogDto($updatedTeam, $oldTeamName));
+            $this->auditLogRepository->create(UpdateTeamAuditLogPacket::make($updatedTeam, $oldTeamName));
         }
 
         return $updatedTeam->toPacket();
@@ -120,7 +120,7 @@ class TeamService extends AbstractBaseEntityService
         $deactivatedTeam = $this->teamRepository->deactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeactivateTeamAuditLogDto($deactivatedTeam));
+            $this->auditLogRepository->create(DeactivateTeamAuditLogPacket::make($deactivatedTeam));
         }
 
         return $deactivatedTeam->toPacket();
@@ -145,7 +145,7 @@ class TeamService extends AbstractBaseEntityService
         $reactivatedTeam = $this->teamRepository->reactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new ReactivateTeamAuditLogDto($reactivatedTeam));
+            $this->auditLogRepository->create(ReactivateTeamAuditLogPacket::make($reactivatedTeam));
         }
 
         return $reactivatedTeam->toPacket();
@@ -174,7 +174,7 @@ class TeamService extends AbstractBaseEntityService
         $deleted = $this->teamRepository->delete($team);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new DeleteTeamAuditLogDto($team));
+            $this->auditLogRepository->create(DeleteTeamAuditLogPacket::make($team));
         }
 
         return (bool) $deleted;
@@ -204,7 +204,7 @@ class TeamService extends AbstractBaseEntityService
         $this->modelHasTeamRepository->create($model, $team);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new AssignTeamAuditLogDto($model, $team));
+            $this->auditLogRepository->create(AssignTeamAuditLogPacket::make($model, $team));
         }
 
         return true;
@@ -240,7 +240,7 @@ class TeamService extends AbstractBaseEntityService
         $removed = $this->modelHasTeamRepository->deleteForModelAndEntity($model, $team);
 
         if ($removed && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(new RevokeTeamAuditLogDto($model, $team));
+            $this->auditLogRepository->create(RevokeTeamAuditLogPacket::make($model, $team));
         }
 
         return $removed;

@@ -15,7 +15,7 @@ class ModelService
     /**
      * Resolve a model instance by its primary key.
      */
-    public function findModelInstance(ManageableModelPacket $modelData, int|string $pk): Model
+    public function find(ManageableModelPacket $modelData, int|string $pk): Model
     {
         $model = $modelData->class::find($pk);
 

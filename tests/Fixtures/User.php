@@ -11,14 +11,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Model;
 
 /**
- * @use HasFactory<UserFactory>
+ * @property int $id // PK
  */
 class User extends Model
 {
     use Authenticatable;
+    /** @use HasFactory<UserFactory> */
     use HasFactory;
     use HasPermissions;
     use HasRoles;
+
     use HasTeams;
 
     /**
