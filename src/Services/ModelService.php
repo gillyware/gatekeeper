@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
+use Gillyware\Gatekeeper\Packets\Models\ModelPagePacket;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -38,20 +39,20 @@ class ModelService
     /**
      * Search for models based on a label and search term.
      */
-    public function getModels(string $modelLabel, string $searchTerm): Collection
+    public function getModels(ModelPagePacket $packet): Collection
     {
-        $modelData = $this->modelMetadataService->getModelDataByLabel($modelLabel);
+        $modelData = $this->modelMetadataService->getModelDataByLabel($packet->modelLabel);
         $className = $this->modelMetadataService->getClassFromModelData($modelData ?? []);
 
         if (! $modelData || ! $className) {
-            throw new GatekeeperException("Model with label '{$modelLabel}' not found or not manageable.");
+            throw new GatekeeperException("Model with label '{$packet->modelLabel}' not found or not manageable.");
         }
 
         $searchableColumns = collect($modelData['searchable'] ?? [])->pluck('column')->values()->all();
         $query = $className::query();
 
         foreach ($searchableColumns as $column) {
-            $query->orWhereLike($column, "%{$searchTerm}%");
+            $query->orWhereLike($column, "%{$packet->searchTerm}%");
         }
 
         return $query->limit(10)->get()->map(fn (Model $model): array => [

@@ -238,20 +238,20 @@ class RoleRepository implements EntityRepositoryInterface
     /**
      * Get a page of roles.
      */
-    public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator
     {
-        $query = Role::query()->whereLike('name', "%{$entityPagePacket->searchTerm}%");
+        $query = Role::query()->whereLike('name', "%{$packet->searchTerm}%");
 
-        if ($entityPagePacket->prioritizedAttribute === 'is_active') {
+        if ($packet->prioritizedAttribute === 'is_active') {
             $query = $query
-                ->orderBy('is_active', $entityPagePacket->isActiveOrder)
-                ->orderBy('name', $entityPagePacket->nameOrder);
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('name', $packet->nameOrder);
         } else {
             $query = $query
-                ->orderBy('name', $entityPagePacket->nameOrder)
-                ->orderBy('is_active', $entityPagePacket->isActiveOrder);
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('is_active', $packet->isActiveOrder);
         }
 
-        return $query->paginate(10, ['*'], 'page', $entityPagePacket->page);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 }

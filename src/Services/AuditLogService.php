@@ -3,12 +3,11 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Constants\Action;
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\AuditLogServiceInterface;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Config;
 
 class AuditLogService implements AuditLogServiceInterface
 {
@@ -25,16 +24,10 @@ class AuditLogService implements AuditLogServiceInterface
     /**
      * Get a page of audit logs.
      */
-    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    public function getPage(AuditLogPagePacket $packet): LengthAwarePaginator
     {
-        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
-
-        return $this->auditLogRepository->getPage($pageNumber, $createdAtOrder)
-            ->through(fn (AuditLog $log) => [
-                'id' => $log->id,
-                'message' => $this->getMessageForAuditLog($log),
-                'created_at' => $log->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
-            ]);
+        return $this->auditLogRepository->getPage($packet)
+            ->through(fn (AuditLog $log) => $log->toPacket());
     }
 
     /**

@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
@@ -100,7 +101,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
     /**
      * Search model team assignments by team name.
      */
-    public function searchAssignmentsByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
         $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
@@ -109,27 +110,27 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->select("$modelTeamsTable.*")
             ->join($teamsTable, "$teamsTable.id", '=', "$modelTeamsTable.team_id")
             ->forModel($model)
-            ->whereIn('team_id', function ($sub) use ($teamsTable, $teamNameSearchTerm) {
+            ->whereIn('team_id', function ($sub) use ($teamsTable, $packet) {
                 $sub->select('id')
                     ->from($teamsTable)
-                    ->whereLike('name', "%{$teamNameSearchTerm}%");
+                    ->whereLike('name', "%{$packet->searchTerm}%");
             })
             ->orderByDesc("$teamsTable.is_active")
             ->orderBy("$teamsTable.name")
             ->with('team:id,name,is_active');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
      * Search unassigned teams by team name for model.
      */
-    public function searchUnassignedByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
 
         $query = Team::query()
-            ->whereLike('name', "%{$teamNameSearchTerm}%")
+            ->whereLike('name', "%{$packet->searchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelTeamsTable) {
                 $subquery->select('team_id')
                     ->from($modelTeamsTable)
@@ -140,6 +141,6 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->orderByDesc('is_active')
             ->orderBy('name');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 }

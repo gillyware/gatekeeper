@@ -3,10 +3,10 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Team\StoreTeamRequest;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Team\UpdateTeamRequest;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\StoreTeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\UpdateTeamPacket;
 use Gillyware\Gatekeeper\Services\TeamService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,13 +18,13 @@ class TeamController extends AbstractBaseController
     /**
      * Get a page of teams.
      */
-    public function index(EntityPagePacket $entityPagePacket): HttpFoundationResponse
+    public function index(EntityPagePacket $packet): HttpFoundationResponse
     {
         if (! $this->teamService->tableExists()) {
             return $this->errorResponse('The teams table does not exist in the database.');
         }
 
-        return Response::json($this->teamService->getPage($entityPagePacket));
+        return Response::json($this->teamService->getPage($packet));
     }
 
     /**
@@ -32,17 +32,16 @@ class TeamController extends AbstractBaseController
      */
     public function show(Team $team): HttpFoundationResponse
     {
-        return Response::json($team);
+        return Response::json($team->toPacket());
     }
 
     /**
      * Create a new team.
      */
-    public function store(StoreTeamRequest $request): HttpFoundationResponse
+    public function store(StoreTeamPacket $packet): HttpFoundationResponse
     {
         try {
-            $teamName = $request->validated('name');
-            $team = $this->teamService->create($teamName);
+            $team = $this->teamService->create($packet->name);
 
             return Response::json($team, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -53,11 +52,10 @@ class TeamController extends AbstractBaseController
     /**
      * Update an existing team.
      */
-    public function update(UpdateTeamRequest $request, Team $team): HttpFoundationResponse
+    public function update(UpdateTeamPacket $packet, Team $team): HttpFoundationResponse
     {
         try {
-            $newTeamName = $request->validated('name');
-            $team = $this->teamService->update($team, $newTeamName);
+            $team = $this->teamService->update($team, $packet->name);
 
             return Response::json($team);
         } catch (GatekeeperException $e) {

@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
@@ -100,7 +101,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
     /**
      * Search model permission assignments by permission name.
      */
-    public function searchAssignmentsByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
         $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
@@ -109,27 +110,27 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             ->select("$modelPermissionsTable.*")
             ->join($permissionsTable, "$permissionsTable.id", '=', "$modelPermissionsTable.permission_id")
             ->forModel($model)
-            ->whereIn('permission_id', function ($sub) use ($permissionsTable, $permissionNameSearchTerm) {
+            ->whereIn('permission_id', function ($sub) use ($permissionsTable, $packet) {
                 $sub->select('id')
                     ->from($permissionsTable)
-                    ->whereLike('name', "%{$permissionNameSearchTerm}%");
+                    ->whereLike('name', "%{$packet->searchTerm}%");
             })
             ->orderByDesc("$permissionsTable.is_active")
             ->orderBy("$permissionsTable.name")
             ->with('permission:id,name,is_active');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
      * Search unassigned permissions by permission name for model.
      */
-    public function searchUnassignedByEntityNameForModel(Model $model, string $permissionNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
         $modelPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
 
         $query = Permission::query()
-            ->whereLike('name', "%{$permissionNameSearchTerm}%")
+            ->whereLike('name', "%{$packet->searchTerm}%")
             ->whereNotIn('id', function ($subquery) use ($model, $modelPermissionsTable) {
                 $subquery->select('permission_id')
                     ->from($modelPermissionsTable)
@@ -140,6 +141,6 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             ->orderByDesc('is_active')
             ->orderBy('name');
 
-        return $query->paginate(10, ['*'], 'page', $pageNumber);
+        return $query->paginate(10, ['*'], 'page', $packet->page);
     }
 }

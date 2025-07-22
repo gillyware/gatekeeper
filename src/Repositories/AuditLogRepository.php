@@ -6,6 +6,7 @@ use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\AuditLogRepositoryInterface;
 use Gillyware\Gatekeeper\Dtos\AuditLog\AbstractAuditLogDto;
 use Gillyware\Gatekeeper\Models\AuditLog;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -38,10 +39,10 @@ class AuditLogRepository implements AuditLogRepositoryInterface
     /**
      * Get a page of audit logs.
      */
-    public function getPage(int $pageNumber, string $createdAtOrder): LengthAwarePaginator
+    public function getPage(AuditLogPagePacket $packet): LengthAwarePaginator
     {
         return AuditLog::query()
-            ->orderBy('created_at', $createdAtOrder)
-            ->paginate(10, ['*'], 'page', $pageNumber);
+            ->orderBy('created_at', $packet->createdAtOrder)
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 }

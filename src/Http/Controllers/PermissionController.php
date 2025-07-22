@@ -3,10 +3,10 @@
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\StorePermissionRequest;
-use Gillyware\Gatekeeper\Http\Requests\Entities\Permission\UpdatePermissionRequest;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\StorePermissionPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\UpdatePermissionPacket;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -18,13 +18,13 @@ class PermissionController extends AbstractBaseController
     /**
      * Get a page of permissions.
      */
-    public function index(EntityPagePacket $entityPagePacket): HttpFoundationResponse
+    public function index(EntityPagePacket $packet): HttpFoundationResponse
     {
         if (! $this->permissionService->tableExists()) {
             return $this->errorResponse('The permissions table does not exist in the database.');
         }
 
-        return Response::json($this->permissionService->getPage($entityPagePacket));
+        return Response::json($this->permissionService->getPage($packet));
     }
 
     /**
@@ -32,17 +32,16 @@ class PermissionController extends AbstractBaseController
      */
     public function show(Permission $permission): HttpFoundationResponse
     {
-        return Response::json($permission);
+        return Response::json($permission->toPacket());
     }
 
     /**
      * Create a new permission.
      */
-    public function store(StorePermissionRequest $request): HttpFoundationResponse
+    public function store(StorePermissionPacket $packet): HttpFoundationResponse
     {
         try {
-            $permissionName = $request->validated('name');
-            $permission = $this->permissionService->create($permissionName);
+            $permission = $this->permissionService->create($packet->name);
 
             return Response::json($permission, HttpFoundationResponse::HTTP_CREATED);
         } catch (GatekeeperException $e) {
@@ -53,11 +52,10 @@ class PermissionController extends AbstractBaseController
     /**
      * Update an existing permission.
      */
-    public function update(UpdatePermissionRequest $request, Permission $permission): HttpFoundationResponse
+    public function update(UpdatePermissionPacket $packet, Permission $permission): HttpFoundationResponse
     {
         try {
-            $newPermissionName = $request->validated('name');
-            $permission = $this->permissionService->update($permission, $newPermissionName);
+            $permission = $this->permissionService->update($permission, $packet->name);
 
             return Response::json($permission);
         } catch (GatekeeperException $e) {

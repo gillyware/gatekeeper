@@ -5,6 +5,8 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityServiceInterface;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
+use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Models\ModelEntitiesPagePacket;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -20,9 +22,9 @@ class ModelHasTeamService implements ModelHasEntityServiceInterface
     /**
      * Search model team assignments by team name.
      */
-    public function searchAssignmentsByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $paginator = $this->modelHasTeamRepository->searchAssignmentsByEntityNameForModel($model, $teamNameSearchTerm, $pageNumber);
+        $paginator = $this->modelHasTeamRepository->searchAssignmentsByEntityNameForModel($model, $packet);
         $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         return $paginator->through(function (ModelHasTeam $modelHasTeam) use ($displayTimezone) {
@@ -35,8 +37,9 @@ class ModelHasTeamService implements ModelHasEntityServiceInterface
     /**
      * Search unassigned teams by team name for model.
      */
-    public function searchUnassignedByEntityNameForModel(Model $model, string $teamNameSearchTerm, int $pageNumber): LengthAwarePaginator
+    public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        return $this->modelHasTeamRepository->searchUnassignedByEntityNameForModel($model, $teamNameSearchTerm, $pageNumber);
+        return $this->modelHasTeamRepository->searchUnassignedByEntityNameForModel($model, $packet)
+            ->through(fn (Team $team) => $team->toPacket());
     }
 }

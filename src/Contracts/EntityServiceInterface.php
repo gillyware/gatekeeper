@@ -150,5 +150,5 @@ interface EntityServiceInterface
     /**
      * Get a page of entities.
      */
-    public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator;
+    public function getPage(EntityPagePacket $packet): LengthAwarePaginator;
 }
