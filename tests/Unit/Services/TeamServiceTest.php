@@ -494,7 +494,7 @@ class TeamServiceTest extends TestCase
         $result = $this->service->revokeAllFromModel($user, $teams);
 
         $this->assertTrue($result);
-        $teams->each(function ($team) use ($user) {
+        $teams->each(function (Team $team) use ($user) {
             $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
                 'team_id' => $team->id,
                 'model_id' => $user->id,
