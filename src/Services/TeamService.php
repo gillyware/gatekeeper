@@ -366,7 +366,8 @@ class TeamService extends AbstractBaseEntityService
      */
     public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
     {
-        return $this->teamRepository->getPage($entityPagePacket);
+        return $this->teamRepository->getPage($entityPagePacket)
+            ->through(fn (Team $team) => $team->toPacket());
     }
 
     /**

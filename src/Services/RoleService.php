@@ -428,7 +428,8 @@ class RoleService extends AbstractBaseEntityService
      */
     public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
     {
-        return $this->roleRepository->getPage($entityPagePacket);
+        return $this->roleRepository->getPage($entityPagePacket)
+            ->through(fn (Role $role) => $role->toPacket());
     }
 
     /**

@@ -472,7 +472,8 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function getPage(EntityPagePacket $entityPagePacket): LengthAwarePaginator
     {
-        return $this->permissionRepository->getPage($entityPagePacket);
+        return $this->permissionRepository->getPage($entityPagePacket)
+            ->through(fn (Permission $permission) => $permission->toPacket());
     }
 
     /**
