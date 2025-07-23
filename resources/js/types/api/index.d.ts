@@ -9,7 +9,7 @@ export interface GatekeeperErrors {
 
 export interface GatekeeperResponse {
     status: number;
-    data?: any;
+    data?: unknown;
     errors?: GatekeeperErrors;
 }
 

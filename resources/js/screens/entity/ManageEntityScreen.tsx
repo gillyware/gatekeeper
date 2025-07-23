@@ -29,7 +29,7 @@ export default function ManageEntityScreen<E extends GatekeeperEntity>({ entity 
 
     useEffect(() => {
         getEntity(api, entity, { id }, setEntityModel, setLoadingEntity, setErrorLoadingEntity);
-    }, [entity]);
+    }, [api, entity, id]);
 
     if (loadingEntity) {
         return (

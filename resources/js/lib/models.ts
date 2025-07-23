@@ -4,15 +4,14 @@ import { manageModelText, type ModelEntitySupportText } from '@/lib/lang/en/mode
 import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperModelEntityAssignmentMap } from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import {
-    type AssignEntityToModelRequest,
     type ConfiguredModel,
     type ConfiguredModelMetadata,
     type ConfiguredModelSearchResult,
     type GetModelEntitiesPageRequest,
+    type ModelEntityRequest,
     type ModelEntitySupport,
     type ModelPageRequest,
-    type RevokeEntityFromModelRequest,
-    type ShowModelRequest,
+    type ModelRequest,
 } from '@/types/api/model';
 
 export async function getModels(
@@ -42,7 +41,7 @@ export async function getModels(
 
 export async function getModel(
     api: ReturnType<typeof useApi>,
-    params: ShowModelRequest,
+    params: ModelRequest,
     setModel: (model: ConfiguredModel | null) => void,
     setLoading: (loading: boolean) => void,
     setError: (error: string | null) => void,
@@ -114,7 +113,7 @@ export async function getUnassignedEntitiesForModel<E extends GatekeeperEntity>(
 
 export async function assignEntityToModel(
     api: ReturnType<typeof useApi>,
-    data: AssignEntityToModelRequest,
+    data: ModelEntityRequest,
     setLoading: (loading: boolean) => void,
     setError: (error: string | null) => void,
 ): Promise<boolean> {
@@ -135,7 +134,7 @@ export async function assignEntityToModel(
 
 export async function revokeEntityFromModel(
     api: ReturnType<typeof useApi>,
-    data: RevokeEntityFromModelRequest,
+    data: ModelEntityRequest,
     setLoading: (loading: boolean) => void,
     setError: (error: string | null) => void,
 ): Promise<boolean> {

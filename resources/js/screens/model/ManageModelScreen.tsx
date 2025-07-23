@@ -7,9 +7,9 @@ import { useApi } from '@/lib/api';
 import { manageModelText, type ManageModelText } from '@/lib/lang/en/model/manage';
 import { getModel } from '@/lib/models';
 import { GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type ModelManagementTab } from '@/types';
-import { ShowModelRequest, type ConfiguredModel } from '@/types/api/model';
+import { type ConfiguredModel, type ModelRequest } from '@/types/api/model';
 import { Loader } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
 export default function ManageModelScreen() {
@@ -23,14 +23,14 @@ export default function ManageModelScreen() {
     const [tab, setTab] = useState<ModelManagementTab>('overview');
     const language: ManageModelText = useMemo(() => manageModelText, []);
 
-    const refreshModel = async () => {
-        const request: ShowModelRequest = { model_label: modelLabel, model_pk: modelPk };
+    const refreshModel = useCallback(async () => {
+        const request: ModelRequest = { model_label: modelLabel, model_pk: modelPk };
         getModel(api, request, setModel, setLoadingModel, setErrorLoadingModel);
-    };
+    }, [modelLabel, modelPk, api]);
 
     useEffect(() => {
         refreshModel();
-    }, []);
+    }, [refreshModel]);
 
     if (loadingModel) {
         return (
