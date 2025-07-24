@@ -6,12 +6,12 @@ import { Ban } from 'lucide-react';
 import { useMemo, type PropsWithChildren } from 'react';
 
 export default function AuditLogLayout({ children }: PropsWithChildren) {
+    const { config } = useGatekeeper();
+    const language: AuditLogLayoutText = useMemo(() => auditLogText.layout, []);
+
     if (typeof window === 'undefined') {
         return null;
     }
-
-    const { config } = useGatekeeper();
-    const language: AuditLogLayoutText = useMemo(() => auditLogText.layout, []);
 
     return (
         <div className="px-4 py-6">

@@ -75,5 +75,5 @@ export interface ReactivateEntityResponse<E extends GatekeeperEntity> extends Ga
 }
 
 export interface DeleteEntityResponse extends GatekeeperResponse {
-    data?: {};
+    data?: [];
 }

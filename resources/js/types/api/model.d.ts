@@ -22,7 +22,7 @@ export interface EntitySupported {
 
 export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
     model_pk: string | number;
-    display: { [key: string]: any };
+    display: { [key: string]: unknown };
 }
 
 export interface PermissionSource {
@@ -83,12 +83,6 @@ export interface ModelEntityRequest extends ModelRequest {
     entity: GatekeeperEntity;
     entity_name: string;
 }
-
-export interface ShowModelRequest extends ModelRequest {}
-
-export interface AssignEntityToModelRequest extends ModelEntityRequest {}
-
-export interface RevokeEntityFromModelRequest extends ModelEntityRequest {}
 
 /**
  * ******************************************************************

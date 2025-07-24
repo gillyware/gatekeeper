@@ -10,11 +10,12 @@ import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
 export default function ModelLayout({ children }: PropsWithChildren) {
+    const location = useLocation();
+
     if (typeof window === 'undefined') {
         return null;
     }
 
-    const location = useLocation();
     const currentPath = location.pathname;
     const language: ModelLayoutText = modelLayoutText;
 

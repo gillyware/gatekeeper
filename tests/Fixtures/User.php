@@ -16,11 +16,12 @@ use Illuminate\Foundation\Auth\User as Model;
 class User extends Model
 {
     use Authenticatable;
+
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use HasPermissions;
     use HasRoles;
-
     use HasTeams;
 
     /**

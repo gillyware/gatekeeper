@@ -51,7 +51,7 @@ export default function LandingScreen() {
                     description: landing.tiles.audit.description,
                 },
             ].filter((x) => Boolean(x)) as Tile[],
-        [config],
+        [config, landing],
     );
 
     return (

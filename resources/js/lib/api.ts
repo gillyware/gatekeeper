@@ -20,24 +20,23 @@ import {
     type UpdateEntityResponse,
 } from '@/types/api/entity';
 import {
-    type AssignEntityToModelRequest,
     type AssignEntityToModelResponse,
     type GetModelEntitiesPageRequest,
     type LookupModelResponse,
     type ModelEntityAssignmentsPageResponse,
+    type ModelEntityRequest,
     type ModelPageRequest,
     type ModelPageResponse,
+    type ModelRequest,
     type ModelUnassignedEntitiesPageResponse,
-    type RevokeEntityFromModelRequest,
     type RevokeEntityFromModelResponse,
-    type ShowModelRequest,
 } from '@/types/api/model';
 import { type AxiosError, type AxiosResponse } from 'axios';
 import { useMemo } from 'react';
 
 export type FormResponse = {
     status: number;
-    errors: Record<string, string> | {};
+    errors: Record<string, string> | [];
 };
 
 export function useApi() {
@@ -177,7 +176,7 @@ export function useApi() {
                 });
             },
 
-            getModel: async (params: ShowModelRequest): Promise<LookupModelResponse> => {
+            getModel: async (params: ModelRequest): Promise<LookupModelResponse> => {
                 return handleResponse(() => {
                     return axios.get(`/models/${params.model_label}/${params.model_pk}`);
                 });
@@ -189,7 +188,7 @@ export function useApi() {
                 const { model_label, model_pk, entity, ...filterParams } = params;
 
                 return handleResponse(() => {
-                    return axios.get(`/models/${params.model_label}/${params.model_pk}/entities/${params.entity}/assigned`, { params: filterParams });
+                    return axios.get(`/models/${model_label}/${model_pk}/entities/${entity}/assigned`, { params: filterParams });
                 });
             },
 
@@ -199,13 +198,13 @@ export function useApi() {
                 const { model_label, model_pk, entity, ...filterParams } = params;
 
                 return handleResponse(() => {
-                    return axios.get(`/models/${params.model_label}/${params.model_pk}/entities/${params.entity}/unassigned`, {
+                    return axios.get(`/models/${model_label}/${model_pk}/entities/${entity}/unassigned`, {
                         params: filterParams,
                     });
                 });
             },
 
-            assignToModel: async (data: AssignEntityToModelRequest): Promise<AssignEntityToModelResponse> => {
+            assignToModel: async (data: ModelEntityRequest): Promise<AssignEntityToModelResponse> => {
                 const { entity_name } = data;
 
                 return handleResponse(() => {
@@ -213,7 +212,7 @@ export function useApi() {
                 });
             },
 
-            revokeFromModel: async (data: RevokeEntityFromModelRequest): Promise<RevokeEntityFromModelResponse> => {
+            revokeFromModel: async (data: ModelEntityRequest): Promise<RevokeEntityFromModelResponse> => {
                 const { entity_name } = data;
 
                 return handleResponse(() => {
@@ -233,7 +232,7 @@ export function useApi() {
     return api;
 }
 
-async function handleResponse(apiCall: () => Promise<AxiosResponse<any, any>>): Promise<GatekeeperResponse> {
+async function handleResponse(apiCall: () => Promise<AxiosResponse<unknown, unknown>>): Promise<GatekeeperResponse> {
     return apiCall()
         .then((response) => {
             return {
@@ -268,7 +267,9 @@ function handleError(error: AxiosError): GatekeeperResponse {
                 const rawErrors = JSON.parse(e.message) as Record<string, string[]>;
                 parsedErrors = Object.fromEntries(Object.entries(rawErrors).map(([key, value]) => [key, value.join(' ')]));
             }
-        } catch {}
+        } catch (e) {
+            console.error(e);
+        }
 
         return {
             status: 422,

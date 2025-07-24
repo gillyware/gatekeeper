@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 const container = document.getElementById('gatekeeper-root');
 if (container) {
-    const props: GatekeeperSharedData = (window as any).Gatekeeper || {};
+    const props: GatekeeperSharedData = (window as unknown).Gatekeeper || {};
     const root = createRoot(container);
 
     initializeTheme();

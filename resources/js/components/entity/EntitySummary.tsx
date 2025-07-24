@@ -16,7 +16,7 @@ interface EntitySummaryProps<E extends GatekeeperEntity> {
 
 export default function EntitySummary<E extends GatekeeperEntity>({ entity, entityModel }: EntitySummaryProps<E>) {
     const { config } = useGatekeeper();
-    const modelMetadata: ConfiguredModelMetadata | null = useMemo(() => getModelMetadataForEntity(config, entity), [entity]);
+    const modelMetadata: ConfiguredModelMetadata | null = useMemo(() => getModelMetadataForEntity(config, entity), [config, entity]);
     const language: EntitySummaryText = useMemo(() => manageEntityText[entity].entitySummaryText, [entity]);
 
     return (

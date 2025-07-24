@@ -16,14 +16,14 @@ interface EntityLayoutProps extends PropsWithChildren {
 }
 
 export default function EntityLayout({ entity, children }: EntityLayoutProps) {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
     const { user } = useGatekeeper();
     const location = useLocation();
     const currentPath = location.pathname;
     const language: EntityLayoutText = useMemo(() => entityLayoutText[entity], [entity]);
+
+    if (typeof window === 'undefined') {
+        return null;
+    }
 
     const navItems: NavItem[] = [
         {
