@@ -53,6 +53,7 @@ export interface AccessSources {
     roles: VerboseRole[];
     direct_permissions_count: number;
     direct_roles_count: number;
+    direct_features_count: number;
     direct_teams_count: number;
 }
 

@@ -52,6 +52,7 @@ class ModelController extends AbstractBaseController
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
             $directPermissionsCount = Gatekeeper::for($model)->getDirectPermissions()->count();
             $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
+            $directFeaturesCount = Gatekeeper::for($model)->getDirectFeatures()->count();
             $directTeamsCount = Gatekeeper::for($model)->getTeams()->count();
 
             return Response::json(array_merge($modelData->toArray(), [
@@ -62,6 +63,7 @@ class ModelController extends AbstractBaseController
                     'roles' => $verboseRoles,
                     'direct_permissions_count' => $directPermissionsCount,
                     'direct_roles_count' => $directRolesCount,
+                    'direct_features_count' => $directFeaturesCount,
                     'direct_teams_count' => $directTeamsCount,
                 ],
             ]));

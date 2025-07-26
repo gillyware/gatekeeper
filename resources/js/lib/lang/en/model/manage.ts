@@ -20,6 +20,7 @@ export interface ModelManagementTabsText {
     navOverview: string;
     navPermission: string;
     navRoles: string;
+    navFeatures: string;
     navTeams: string;
 }
 
@@ -99,6 +100,7 @@ export const manageModelText: ManageModelText = {
         navOverview: 'Overview',
         navPermission: 'Permissions',
         navRoles: 'Roles',
+        navFeatures: 'Features',
         navTeams: 'Teams',
     },
     modelSummaryText: {
