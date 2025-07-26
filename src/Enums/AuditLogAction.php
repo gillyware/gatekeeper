@@ -32,6 +32,20 @@ enum AuditLogAction: string
 
     case RevokeRole = 'role_revoke';
 
+    case CreateFeature = 'feature_create';
+
+    case UpdateFeature = 'feature_update';
+
+    case DeactivateFeature = 'feature_deactivate';
+
+    case ReactivateFeature = 'feature_reactivate';
+
+    case DeleteFeature = 'feature_delete';
+
+    case AssignFeature = 'feature_assign';
+
+    case RevokeFeature = 'feature_revoke';
+
     case CreateTeam = 'team_create';
 
     case UpdateTeam = 'team_update';

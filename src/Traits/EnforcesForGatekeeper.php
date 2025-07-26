@@ -3,13 +3,16 @@
 namespace Gillyware\Gatekeeper\Traits;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Exceptions\Feature\FeaturesFeatureDisabledException;
 use Gillyware\Gatekeeper\Exceptions\Model\InvalidEntityAssignmentException;
 use Gillyware\Gatekeeper\Exceptions\Model\MissingActingAsModelException;
+use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithFeaturesException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
 use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
 use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamsFeatureDisabledException;
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -93,6 +96,42 @@ trait EnforcesForGatekeeper
     }
 
     /**
+     * Enforce that the model interacts with features.
+     */
+    protected function enforceFeatureInteraction(Model $model): void
+    {
+        if (! $this->modelInteractsWithFeatures($model)) {
+            throw new ModelDoesNotInteractWithFeaturesException($model);
+        }
+    }
+
+    /**
+     * Check if the model interacts with features.
+     */
+    protected function modelInteractsWithFeatures(Model|string $model): bool
+    {
+        return in_array(HasFeatures::class, class_uses_recursive($model));
+    }
+
+    /**
+     * Enforce that the model is not a feature.
+     */
+    protected function enforceModelIsNotFeature(Model $model, string $message): void
+    {
+        if ($this->modelIsFeature($model)) {
+            throw new InvalidEntityAssignmentException($message);
+        }
+    }
+
+    /**
+     * Check if the model is a feature.
+     */
+    protected function modelIsFeature(Model|string $model): bool
+    {
+        return $model instanceof Feature || $model === Feature::class;
+    }
+
+    /**
      * Enforce that the model interacts with teams.
      */
     protected function enforceTeamInteraction(Model $model): void
@@ -164,6 +203,24 @@ trait EnforcesForGatekeeper
     protected function rolesFeatureEnabled(): bool
     {
         return Config::get('gatekeeper.features.roles.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED);
+    }
+
+    /**
+     * Enforce that the features feature is enabled.
+     */
+    protected function enforceFeaturesFeature(): void
+    {
+        if (! $this->featuresFeatureEnabled()) {
+            throw new FeaturesFeatureDisabledException;
+        }
+    }
+
+    /**
+     * Check if the features feature is enabled.
+     */
+    protected function featuresFeatureEnabled(): bool
+    {
+        return Config::get('gatekeeper.features.features.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED);
     }
 
     /**

@@ -42,28 +42,35 @@ class AuditLogService implements AuditLogServiceInterface
         $templates = [
             AuditLogAction::CreatePermission->value => '{actor} created a new {entity} named {name}',
             AuditLogAction::CreateRole->value => '{actor} created a new {entity} named {name}',
+            AuditLogAction::CreateFeature->value => '{actor} created a new {entity} named {name}',
             AuditLogAction::CreateTeam->value => '{actor} created a new {entity} named {name}',
 
             AuditLogAction::UpdatePermission->value => '{actor} updated {entity} name from {old_name} to {name}',
             AuditLogAction::UpdateRole->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateFeature->value => '{actor} updated {entity} name from {old_name} to {name}',
             AuditLogAction::UpdateTeam->value => '{actor} updated {entity} name from {old_name} to {name}',
 
             AuditLogAction::DeactivatePermission->value => '{actor} deactivated {entity} named {name}',
             AuditLogAction::DeactivateRole->value => '{actor} deactivated {entity} named {name}',
+            AuditLogAction::DeactivateFeature->value => '{actor} deactivated {entity} named {name}',
             AuditLogAction::DeactivateTeam->value => '{actor} deactivated {entity} named {name}',
 
             AuditLogAction::ReactivatePermission->value => '{actor} reactivated {entity} named {name}',
             AuditLogAction::ReactivateRole->value => '{actor} reactivated {entity} named {name}',
+            AuditLogAction::ReactivateFeature->value => '{actor} reactivated {entity} named {name}',
             AuditLogAction::ReactivateTeam->value => '{actor} reactivated {entity} named {name}',
 
             AuditLogAction::DeletePermission->value => '{actor} deleted {entity} named {name}',
             AuditLogAction::DeleteRole->value => '{actor} deleted {entity} named {name}',
+            AuditLogAction::DeleteFeature->value => '{actor} deleted {entity} named {name}',
             AuditLogAction::DeleteTeam->value => '{actor} deleted {entity} named {name}',
 
             AuditLogAction::AssignPermission->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::AssignRole->value => '{actor} assigned {entity} named {name} to {target}',
+            AuditLogAction::AssignFeature->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::RevokePermission->value => '{actor} revoked {entity} named {name} from {target}',
             AuditLogAction::RevokeRole->value => '{actor} revoked {entity} named {name} from {target}',
+            AuditLogAction::RevokeFeature->value => '{actor} revoked {entity} named {name} from {target}',
 
             AuditLogAction::AddTeam->value => '{actor} added {target} to team {name}',
             AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team {name}',
