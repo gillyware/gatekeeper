@@ -6,7 +6,7 @@ import ModelLayout from '@/layouts/model-layout';
 import { useApi } from '@/lib/api';
 import { manageModelText, type ManageModelText } from '@/lib/lang/en/model/manage';
 import { getModel } from '@/lib/models';
-import { GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type ModelManagementTab } from '@/types';
+import { GatekeeperFeature, GatekeeperPermission, GatekeeperRole, GatekeeperTeam, type ModelManagementTab } from '@/types';
 import { type ConfiguredModel, type ModelRequest } from '@/types/api/model';
 import { Loader } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -57,6 +57,8 @@ export default function ManageModelScreen() {
                     )}
 
                     {tab === 'roles' && <ModelEntityTables<GatekeeperRole> model={model} entity="role" refreshModel={refreshModel} />}
+
+                    {tab === 'features' && <ModelEntityTables<GatekeeperFeature> model={model} entity="feature" refreshModel={refreshModel} />}
 
                     {tab === 'teams' && <ModelEntityTables<GatekeeperTeam> model={model} entity="team" refreshModel={refreshModel} />}
                 </div>
