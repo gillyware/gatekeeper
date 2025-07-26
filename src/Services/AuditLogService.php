@@ -67,10 +67,10 @@ class AuditLogService implements AuditLogServiceInterface
 
             AuditLogAction::AssignPermission->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::AssignRole->value => '{actor} assigned {entity} named {name} to {target}',
-            AuditLogAction::AssignFeature->value => '{actor} assigned {entity} named {name} to {target}',
+            AuditLogAction::AssignFeature->value => '{actor} turned on {entity} named {name} for {target}',
             AuditLogAction::RevokePermission->value => '{actor} revoked {entity} named {name} from {target}',
             AuditLogAction::RevokeRole->value => '{actor} revoked {entity} named {name} from {target}',
-            AuditLogAction::RevokeFeature->value => '{actor} revoked {entity} named {name} from {target}',
+            AuditLogAction::RevokeFeature->value => '{actor} turned off {entity} named {name} for {target}',
 
             AuditLogAction::AddTeam->value => '{actor} added {target} to team {name}',
             AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team {name}',
