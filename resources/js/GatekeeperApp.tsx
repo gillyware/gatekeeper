@@ -6,7 +6,7 @@ import ManageEntityScreen from '@/screens/entity/ManageEntityScreen';
 import LandingScreen from '@/screens/LandingScreen';
 import ManageModelScreen from '@/screens/model/ManageModelScreen';
 import ModelIndexScreen from '@/screens/model/ModelIndexScreen';
-import { type GatekeeperPermission, type GatekeeperRole, type GatekeeperTeam } from '@/types';
+import { type GatekeeperFeature, type GatekeeperPermission, type GatekeeperRole, type GatekeeperTeam } from '@/types';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 const GatekeeperApp = () => {
@@ -24,6 +24,10 @@ const GatekeeperApp = () => {
                 <Route path="/roles" element={<EntityIndexScreen<GatekeeperRole> entity="role" />} />
                 <Route path="/roles/create" element={<CreateEntityScreen<GatekeeperRole> entity="role" />} />
                 <Route path="/roles/:id/manage" element={<ManageEntityScreen entity="role" />} />
+
+                <Route path="/features" element={<EntityIndexScreen<GatekeeperFeature> entity="feature" />} />
+                <Route path="/features/create" element={<CreateEntityScreen<GatekeeperFeature> entity="feature" />} />
+                <Route path="/features/:id/manage" element={<ManageEntityScreen entity="feature" />} />
 
                 <Route path="/teams" element={<EntityIndexScreen<GatekeeperTeam> entity="team" />} />
                 <Route path="/teams/create" element={<CreateEntityScreen<GatekeeperTeam> entity="team" />} />
