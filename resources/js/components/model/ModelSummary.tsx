@@ -109,6 +109,13 @@ function ModelInformation({ model, entitySupport, language }: ModelInformationPr
                     </div>
 
                     <div className="flex flex-row items-center justify-between gap-4">
+                        <span className="font-bold">{language.entitySupportText.feature.label}</span>
+                        <span>
+                            <SupportIndicator supported={entitySupport.feature.supported} tooltip={entitySupport.feature.reason || ''} />
+                        </span>
+                    </div>
+
+                    <div className="flex flex-row items-center justify-between gap-4">
                         <span className="font-bold">{language.entitySupportText.team.label}</span>
                         <span>
                             <SupportIndicator supported={entitySupport.team.supported} tooltip={entitySupport.team.reason || ''} />

@@ -30,12 +30,16 @@ export async function getEntities<E extends GatekeeperEntity>(
     setLoading(true);
     setError(null);
 
+    console.log(entity);
+
     const getPage = {
         permission: () => api.getPermissions(request),
         role: () => api.getRoles(request),
         feature: () => api.getFeatures(request),
         team: () => api.getTeams(request),
     };
+
+    console.log(getPage);
 
     const response = await getPage[entity]();
 
