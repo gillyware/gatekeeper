@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->string('name')->index();
             $table->boolean('is_active')->default(true);
-            $table->boolean('default_enabled')->default(true);
+            $table->boolean('default_enabled')->default(false);
 
             $table->timestamps();
             $table->softDeletes();
