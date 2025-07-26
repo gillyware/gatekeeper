@@ -116,6 +116,54 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
+     * Retrieve all features from the cache.
+     */
+    public function getAllFeatures(): ?Collection
+    {
+        return $this->cacheRepository->get($this->getAllFeaturesCacheKey());
+    }
+
+    /**
+     * Store all features in the cache.
+     */
+    public function putAllFeatures(Collection $features): void
+    {
+        $this->cacheRepository->put($this->getAllFeaturesCacheKey(), $features);
+    }
+
+    /**
+     * Retrieve feature names for a specific model from the cache.
+     */
+    public function getModelFeatureNames(Model $model): ?Collection
+    {
+        return $this->cacheRepository->get($this->getModelFeaturesCacheKey($model));
+    }
+
+    /**
+     * Store feature names for a specific model in the cache.
+     */
+    public function putModelFeatureNames(Model $model, Collection $featureNames): void
+    {
+        $this->cacheRepository->put($this->getModelFeaturesCacheKey($model), $featureNames);
+    }
+
+    /**
+     * Invalidate the cache for all features.
+     */
+    public function invalidateCacheForAllFeatures(): void
+    {
+        $this->cacheRepository->forget($this->getAllFeaturesCacheKey());
+    }
+
+    /**
+     * Invalidate the cache for a specific model's feature names.
+     */
+    public function invalidateCacheForModelFeatureNames(Model $model): void
+    {
+        $this->cacheRepository->forget($this->getModelFeaturesCacheKey($model));
+    }
+
+    /**
      * Retrieve all teams from the cache.
      */
     public function getAllTeams(): ?Collection
@@ -193,6 +241,22 @@ class CacheService implements CacheServiceInterface
     private function getModelRolesCacheKey(Model $model): string
     {
         return "roles.{$model->getMorphClass()}.{$model->getKey()}";
+    }
+
+    /**
+     * Get the cache key for all features.
+     */
+    private function getAllFeaturesCacheKey(): string
+    {
+        return 'features';
+    }
+
+    /**
+     * Get the cache key for a specific model's feature names.
+     */
+    private function getModelFeaturesCacheKey(Model $model): string
+    {
+        return "features.{$model->getMorphClass()}.{$model->getKey()}";
     }
 
     /**

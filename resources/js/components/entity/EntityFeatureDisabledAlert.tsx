@@ -15,6 +15,7 @@ export default function EntityFeatureDisabledAlert({ entity, language }: EntityF
     const featureEnabled = {
         permission: () => true,
         role: () => config.roles_enabled,
+        feature: () => config.features_enabled,
         team: () => config.teams_enabled,
     };
 

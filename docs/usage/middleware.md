@@ -66,6 +66,17 @@ If the user does not meet the middleware condition:
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you're protecting routes and controllers with middleware, you may explore Gatekeeper's Artisan commands:
+Entities:
+- [Permissions](permissions.md)
+- [Roles](roles.md)
+- [Features](features.md)
+- [Teams](teams.md)
 
-[Artisan Commands](artisan-commands.md)
+Control Access with Entities:
+- [Blade Directives](blade-directives.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](artisan-commands.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('audit-logging.md')

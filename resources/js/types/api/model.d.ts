@@ -7,9 +7,11 @@ export interface ConfiguredModelMetadata {
     displayable: { column: string; label: string; cli_width: number }[];
     is_permission: boolean;
     is_role: boolean;
+    is_feature: boolean;
     is_team: boolean;
     has_permissions: boolean;
     has_roles: boolean;
+    has_features: boolean;
     has_teams: boolean;
 }
 
@@ -41,16 +43,28 @@ export interface RoleSource {
     team?: string;
 }
 
+export interface FeatureSource {
+    type: 'default' | 'direct' | 'team';
+    team?: string;
+}
+
 export interface VerboseRole {
     name: string;
     sources: RoleSource[];
 }
 
+export interface VerboseFeature {
+    name: string;
+    sources: FeatureSource[];
+}
+
 export interface AccessSources {
     permissions: VerbosePermission[];
     roles: VerboseRole[];
+    features: VerboseFeature[];
     direct_permissions_count: number;
     direct_roles_count: number;
+    direct_features_count: number;
     direct_teams_count: number;
 }
 

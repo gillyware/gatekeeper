@@ -2,9 +2,11 @@
 
 namespace Gillyware\Gatekeeper\Contracts;
 
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
@@ -249,6 +251,120 @@ interface GatekeeperServiceInterface
      * Get all effective roles for the given model with the role source(s).
      */
     public function getVerboseRolesForModel(Model $model): Collection;
+
+    /**
+     * Check if a feature exists.
+     */
+    public function featureExists(string|UnitEnum $featureName): bool;
+
+    /**
+     * Create a new feature.
+     */
+    public function createFeature(string|UnitEnum $featureName): FeaturePacket;
+
+    /**
+     * Update an existing feature.
+     */
+    public function updateFeature(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName): FeaturePacket;
+
+    /**
+     * Turn feature off by default.
+     */
+    public function turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
+     * Turn feature on by default.
+     */
+    public function turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
+     * Deactivate a feature.
+     */
+    public function deactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
+     * Reactivate a feature.
+     */
+    public function reactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
+     * Delete a feature.
+     */
+    public function deleteFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Turn a feature on for a model.
+     */
+    public function turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Turn multiple features on for a model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function turnAllFeaturesOnForModel(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Turn a feature off for a model.
+     */
+    public function turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Turn multiple features off for a model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function turnAllFeaturesOffForModel(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Check if a model has the given feature.
+     */
+    public function modelHasFeature(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Check if a model has any of the given features.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function modelHasAnyFeature(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Check if a model has all of the given features.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function modelHasAllFeatures(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Find a feature by its name.
+     */
+    public function findFeatureByName(string|UnitEnum $featureName): ?FeaturePacket;
+
+    /**
+     * Get all features.
+     *
+     * @return Collection<FeaturePacket>
+     */
+    public function getAllFeatures(): Collection;
+
+    /**
+     * Get all features assigned directly to a model.
+     *
+     * @return Collection<FeaturePacket>
+     */
+    public function getDirectFeaturesForModel(Model $model): Collection;
+
+    /**
+     * Get all features assigned directly or indirectly to a model.
+     *
+     * @return Collection<FeaturePacket>
+     */
+    public function getEffectiveFeaturesForModel(Model $model): Collection;
+
+    /**
+     * Get all effective features for the given model with the feature source(s).
+     */
+    public function getVerboseFeaturesForModel(Model $model): Collection;
 
     /**
      * Check if a team exists.

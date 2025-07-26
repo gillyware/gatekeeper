@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Http\Middleware;
 
+use Gillyware\Gatekeeper\Services\FeatureService;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Services\TeamService;
@@ -14,6 +15,7 @@ abstract class AbstractBaseEntityMiddleware
     public function __construct(
         protected readonly PermissionService $permissionService,
         protected readonly RoleService $roleService,
+        protected readonly FeatureService $featureService,
         protected readonly TeamService $teamService,
     ) {}
 }

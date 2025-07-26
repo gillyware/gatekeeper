@@ -137,7 +137,7 @@ export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>
                                                         }
                                                     }}
                                                 >
-                                                    {language.assign}
+                                                    {language[entity].assign}
                                                 </Button>
                                             </td>
                                         )}

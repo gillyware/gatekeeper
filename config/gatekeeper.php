@@ -42,6 +42,9 @@ return [
         'roles' => [
             'enabled' => true,
         ],
+        'features' => [
+            'enabled' => false,
+        ],
         'teams' => [
             'enabled' => false,
         ],
@@ -60,9 +63,11 @@ return [
     'tables' => [
         'permissions' => 'permissions',
         'roles' => 'roles',
+        'features' => 'features',
         'teams' => 'teams',
         'model_has_permissions' => 'model_has_permissions',
         'model_has_roles' => 'model_has_roles',
+        'model_has_features' => 'model_has_features',
         'model_has_teams' => 'model_has_teams',
         'audit_log' => 'gatekeeper_audit_log',
     ],
@@ -120,6 +125,20 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
+                ],
+            ],
+
+            'feature' => [
+                'label' => 'Feature',
+                'class' => \Gillyware\Gatekeeper\Models\Feature::class,
+                'searchable' => [
+                    ['column' => 'name', 'label' => 'name'],
+                ],
+                'displayable' => [
+                    ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
+                    ['column' => 'default_enabled', 'label' => 'On By Default', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],
 
@@ -131,6 +150,7 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],
 

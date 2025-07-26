@@ -53,7 +53,19 @@ class ModelService
         $result = [];
 
         foreach ($modelData->displayable as $displayableEntry) {
-            $result[$displayableEntry['column']] = $model->{$displayableEntry['column']};
+            $column = $displayableEntry['column'];
+            $value = $model->{$column};
+
+            // Normalize boolean values to strings.
+            if (is_bool($value)) {
+                $result[$column] = $value ? 'Yes' : 'No';
+            }
+            // Ensure "0" is treated as a string and not falsy.
+            elseif ($value === 0 || $value === '0') {
+                $result[$column] = (string) $value;
+            } else {
+                $result[$column] = $value;
+            }
         }
 
         return $result;

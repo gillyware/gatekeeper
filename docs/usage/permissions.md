@@ -634,6 +634,17 @@ $verbosePermissions = $user->getVerbosePermissions();
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you've learned how to manage permissions, you may explore how to group them using roles:
+Entities:
+- [Roles](roles.md)
+- [Features](features.md)
+- [Teams](teams.md)
 
-[Roles](roles.md)
+Control Access with Entities:
+- [Middleware](middleware.md)
+- [Blade Directives](blade-directives.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](artisan-commands.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('audit-logging.md')

@@ -146,7 +146,7 @@ export default function ModelEntityAssignmentsTable<E extends GatekeeperEntity>(
                                                         }
                                                     }}
                                                 >
-                                                    {language.revoke}
+                                                    {language[entity].revoke}
                                                 </Button>
                                             </td>
                                         )}

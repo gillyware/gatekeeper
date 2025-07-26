@@ -2,7 +2,7 @@ import { useGatekeeper } from '@/context/GatekeeperContext';
 import { manageModelText, type ModelSummaryText } from '@/lib/lang/en/model/manage';
 import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
-import { VerboseRole, type ConfiguredModel, type ModelEntitySupport, type VerbosePermission } from '@/types/api/model';
+import { type ConfiguredModel, type ModelEntitySupport, type VerboseFeature, type VerbosePermission, type VerboseRole } from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
 import { Input } from '@components/ui/input';
 import { Separator } from '@components/ui/separator';
@@ -35,6 +35,11 @@ interface EffectiveRolesProps {
     language: ModelSummaryText;
 }
 
+interface EffectiveFeaturesProps {
+    effectiveFeatures: VerboseFeature[];
+    language: ModelSummaryText;
+}
+
 interface PermissionItemProps {
     permission: VerbosePermission;
     open: boolean;
@@ -44,6 +49,13 @@ interface PermissionItemProps {
 
 interface RoleItemProps {
     role: VerboseRole;
+    open: boolean;
+    onToggle: () => void;
+    language: ModelSummaryText;
+}
+
+interface FeatureItemProps {
+    feature: VerboseFeature;
     open: boolean;
     onToggle: () => void;
     language: ModelSummaryText;
@@ -61,6 +73,8 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
             <EffectivePermissions effectivePermissions={model.access_sources.permissions} language={language} />
 
             {entitySupport.role.supported && <EffectiveRoles effectiveRoles={model.access_sources.roles} language={language} />}
+
+            {entitySupport.feature.supported && <EffectiveFeatures effectiveFeatures={model.access_sources.features} language={language} />}
         </div>
     );
 }
@@ -80,7 +94,7 @@ function ModelInformation({ model, entitySupport, language }: ModelInformationPr
                     {model.displayable.map((x) => (
                         <div key={x.column} className="flex flex-row items-center justify-between gap-4">
                             <span className="font-bold">{x.label}:</span>
-                            <span className="truncate">{model.display[x.column] ?? ''}</span>
+                            <span className="truncate">{String(model.display[x.column])}</span>
                         </div>
                     ))}
                 </CardContent>
@@ -105,6 +119,13 @@ function ModelInformation({ model, entitySupport, language }: ModelInformationPr
                         <span className="font-bold">{language.entitySupportText.role.label}</span>
                         <span>
                             <SupportIndicator supported={entitySupport.role.supported} tooltip={entitySupport.role.reason || ''} />
+                        </span>
+                    </div>
+
+                    <div className="flex flex-row items-center justify-between gap-4">
+                        <span className="font-bold">{language.entitySupportText.feature.label}</span>
+                        <span>
+                            <SupportIndicator supported={entitySupport.feature.supported} tooltip={entitySupport.feature.reason || ''} />
                         </span>
                     </div>
 
@@ -291,6 +312,85 @@ function EffectiveRoles({ effectiveRoles, language }: EffectiveRolesProps) {
     );
 }
 
+function EffectiveFeatures({ effectiveFeatures, language }: EffectiveFeaturesProps) {
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const filteredFeatures = useMemo(
+        () => effectiveFeatures.filter((r) => r.name.toLowerCase().includes(searchTerm.toLowerCase())),
+        [effectiveFeatures, searchTerm],
+    );
+    const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => Object.fromEntries(filteredFeatures.map((r) => [r.name, false])));
+    const allOpen = useMemo(() => Object.values(openStates).every(Boolean), [openStates]);
+
+    useEffect(() => {
+        setOpenStates(Object.fromEntries(filteredFeatures.map((r) => [r.name, false])));
+    }, [filteredFeatures]);
+
+    const toggleAll = () => {
+        const next = Object.fromEntries(filteredFeatures.map((r) => [r.name, !allOpen]));
+        setOpenStates(next);
+    };
+
+    const toggleOne = (name: string) => {
+        setOpenStates((prev) => ({ ...prev, [name]: !prev[name] }));
+    };
+
+    return (
+        <Card className="col-span-full">
+            <CardContent className="flex flex-col gap-4">
+                <div className="mb-0 flex items-center justify-between">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="cursor-default font-bold">{language.effectiveFeaturesText.title}</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{language.effectiveFeaturesText.titleTooltip}</TooltipContent>
+                    </Tooltip>
+
+                    {effectiveFeatures.length > 0 && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={toggleAll}
+                                    className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
+                                >
+                                    <LayoutPanelTop className="h-4 w-4" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">{language.effectiveFeaturesText.toggleAllTooltip(allOpen)}</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+
+                {effectiveFeatures.length > 0 ? (
+                    <>
+                        <Input
+                            type="text"
+                            name="feature-search"
+                            placeholder={language.effectiveFeaturesText.searchPlaceholder}
+                            className="w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+
+                        <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
+                            {filteredFeatures.map((feature) => (
+                                <FeatureItem
+                                    key={feature.name}
+                                    feature={feature}
+                                    open={openStates[feature.name]}
+                                    onToggle={() => toggleOne(feature.name)}
+                                    language={language}
+                                />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <span>{language.effectiveFeaturesText.empty}</span>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 function PermissionItem({ permission, open, onToggle, language }: PermissionItemProps) {
     return (
         <div className={cn('w-full rounded-md sm:w-[calc(50%-0.5rem)]', open ? 'border' : '')}>
@@ -340,6 +440,35 @@ function RoleItem({ role, open, onToggle, language }: RoleItemProps) {
                         {role.sources.map((source, idx) => (
                             <li className="border-l-2 pl-4" key={idx}>
                                 {language.effectiveRolesText.sourceLabel(source)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function FeatureItem({ feature, open, onToggle, language }: FeatureItemProps) {
+    return (
+        <div className={cn('w-full rounded-md sm:w-[calc(50%-0.5rem)]', open ? 'border' : '')}>
+            <button
+                onClick={onToggle}
+                className={cn(
+                    'bg-muted hover:bg-accent sm:text-md flex w-full cursor-pointer items-center justify-between rounded-t-md px-4 py-2 text-left text-sm',
+                    !open ? 'border' : '',
+                )}
+            >
+                <span className="font-medium">{feature.name}</span>
+                {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+
+            {open && (
+                <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
+                    <ul className="space-y-1">
+                        {feature.sources.map((source, idx) => (
+                            <li className="border-l-2 pl-4" key={idx}>
+                                {language.effectiveFeaturesText.sourceLabel(source)}
                             </li>
                         ))}
                     </ul>

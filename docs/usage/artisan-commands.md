@@ -6,6 +6,7 @@
 - [gatekeeper:role](#gatekeeperrole)
 - [gatekeeper:team](#gatekeeperteam)
 - [gatekeeper:clear-cache](#gatekeeperclear-cache)
+- [Next Steps](#next-steps)
 
 <a name="overview"></a>
 ## Overview
@@ -144,3 +145,19 @@ php artisan gatekeeper:clear
 - Increments an internal `cache.version` value used in all Gatekeeper cache keys.
 - This forces all future queries to generate fresh results.
 - Does not remove items from the cache store directly—just invalidates them.
+
+<a name="next-steps"></a>
+## Next Steps
+
+Entities:
+- [Permissions](permissions.md)
+- [Roles](roles.md)
+- [Features](features.md)
+- [Teams](teams.md)
+
+Control Access with Entities:
+- [Middleware](middleware.md)
+- [Blade Directives](blade-directives.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('audit-logging.md')

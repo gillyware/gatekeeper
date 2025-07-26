@@ -32,6 +32,14 @@ export interface UpdateEntityRequest {
     name: string;
 }
 
+export interface TurnEntityOffByDefaultRequest {
+    id: number | string;
+}
+
+export interface TurnEntityOnByDefaultRequest {
+    id: number | string;
+}
+
 export interface DeactivateEntityRequest {
     id: number | string;
 }
@@ -63,6 +71,14 @@ export interface StoreEntityResponse<E extends GatekeeperEntity> extends Gatekee
 }
 
 export interface UpdateEntityResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
+    data?: GatekeeperEntityModelMap[E];
+}
+
+export interface TurnEntityOffByDefaultResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
+    data?: GatekeeperEntityModelMap[E];
+}
+
+export interface TurnEntityOnByDefaultResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
     data?: GatekeeperEntityModelMap[E];
 }
 

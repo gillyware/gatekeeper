@@ -2,9 +2,11 @@
 
 namespace Gillyware\Gatekeeper\Facades;
 
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
@@ -60,6 +62,26 @@ use UnitEnum;
  * @method static Collection getDirectRolesForModel(Model $model)
  * @method static Collection getEffectiveRolesForModel(Model $model)
  * @method static Collection getVerboseRolesForModel(Model $model)
+ * @method static bool featureExists(string|UnitEnum $featureName)
+ * @method static Feature createFeature(string|UnitEnum $featureName)
+ * @method static Feature updateFeature(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName)
+ * @method static Feature turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static Feature turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static Feature deactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static Feature reactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static bool deleteFeature(Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static bool turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static bool turnAllFeaturesOnForModel(Model $model, array|Arrayable $features)
+ * @method static bool turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static bool turnAllFeaturesOffForModel(Model $model, array|Arrayable $features)
+ * @method static bool modelHasFeature(Model $model, Feature|FeaturePacket|string|UnitEnum $feature)
+ * @method static bool modelHasAnyFeature(Model $model, array|Arrayable $features)
+ * @method static bool modelHasAllFeatures(Model $model, array|Arrayable $features)
+ * @method static ?FeaturePacket findFeatureByName(string|UnitEnum $featureName)
+ * @method static Collection getAllFeatures()
+ * @method static Collection getDirectFeaturesForModel(Model $model)
+ * @method static Collection getEffectiveFeaturesForModel(Model $model)
+ * @method static Collection getVerboseFeaturesForModel(Model $model)
  * @method static bool teamExists(string|UnitEnum $teamName)
  * @method static Team createTeam(string|UnitEnum $teamName)
  * @method static Team updateTeam(Team|TeamPacket|string|UnitEnum $team, string|UnitEnum $teamName)

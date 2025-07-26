@@ -3,9 +3,11 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Contracts\GatekeeperServiceInterface;
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
@@ -26,6 +28,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     public function __construct(
         private readonly PermissionService $permissionService,
         private readonly RoleService $roleService,
+        private readonly FeatureService $featureService,
         private readonly TeamService $teamService,
         private readonly GatekeeperForModelService $gatekeeperForModelService,
     ) {
@@ -368,6 +371,166 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function featureExists(string|UnitEnum $featureName): bool
+    {
+        return $this->featureService->exists($featureName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function createFeature(string|UnitEnum $featureName): FeaturePacket
+    {
+        return $this->featureService->create($featureName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function updateFeature(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName): FeaturePacket
+    {
+        return $this->featureService->update($feature, $featureName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->turnOffByDefault($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->turnOnByDefault($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function deactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->deactivate($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function reactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->reactivate($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function deleteFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return $this->featureService->delete($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return $this->featureService->assignToModel($model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnAllFeaturesOnForModel(Model $model, array|Arrayable $features): bool
+    {
+        return $this->featureService->assignAllToModel($model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return $this->featureService->revokeFromModel($model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnAllFeaturesOffForModel(Model $model, array|Arrayable $features): bool
+    {
+        return $this->featureService->revokeAllFromModel($model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function modelHasFeature(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return $this->featureService->modelHas($model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function modelHasAnyFeature(Model $model, array|Arrayable $features): bool
+    {
+        return $this->featureService->modelHasAny($model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function modelHasAllFeatures(Model $model, array|Arrayable $features): bool
+    {
+        return $this->featureService->modelHasAll($model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findFeatureByName(string|UnitEnum $featureName): ?FeaturePacket
+    {
+        return $this->featureService->findByName($featureName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAllFeatures(): Collection
+    {
+        return $this->featureService->getAll();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDirectFeaturesForModel(Model $model): Collection
+    {
+        return $this->featureService->getDirectForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEffectiveFeaturesForModel(Model $model): Collection
+    {
+        return $this->featureService->getForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getVerboseFeaturesForModel(Model $model): Collection
+    {
+        return $this->featureService->getVerboseForModel($model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function teamExists(string|UnitEnum $teamName): bool
     {
         return $this->teamService->exists($teamName);
@@ -472,9 +635,9 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function findTeamByName(string|UnitEnum $roleName): ?TeamPacket
+    public function findTeamByName(string|UnitEnum $teamName): ?TeamPacket
     {
-        return $this->teamService->findByName($roleName);
+        return $this->teamService->findByName($teamName);
     }
 
     /**
@@ -509,6 +672,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     {
         $this->permissionService->actingAs($model);
         $this->roleService->actingAs($model);
+        $this->featureService->actingAs($model);
         $this->teamService->actingAs($model);
     }
 }

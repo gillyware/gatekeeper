@@ -8,6 +8,7 @@ use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class RoleRepository implements EntityRepositoryInterface
 {
+    use EnforcesForGatekeeper;
+
     public function __construct(
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
@@ -196,6 +199,10 @@ class RoleRepository implements EntityRepositoryInterface
 
         if ($allRoleNames) {
             return $allRoleNames;
+        }
+
+        if (! $this->modelInteractsWithRoles($model)) {
+            return collect();
         }
 
         $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);

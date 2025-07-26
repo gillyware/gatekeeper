@@ -38,7 +38,7 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
     },
     role: {
         title: 'Roles Index',
-        description: "Take stock of your application's permissions",
+        description: "Take stock of your application's roles",
         entityTableText: {
             searchInputPlaceholder: 'Search by role name',
             nameColumn: 'Name',
@@ -52,9 +52,25 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
             next: 'Next',
         },
     },
+    feature: {
+        title: 'Features Index',
+        description: "Take stock of your application's features",
+        entityTableText: {
+            searchInputPlaceholder: 'Search by feature name',
+            nameColumn: 'Name',
+            statusColumn: 'Status',
+            active: 'Active',
+            inactive: 'Inactive',
+            empty: 'No features found.',
+            errorFallback: 'Failed to load features.',
+            pagination: (from, to, total) => `${from} to ${to} of ${total}`,
+            previous: 'Previous',
+            next: 'Next',
+        },
+    },
     team: {
         title: 'Teams Index',
-        description: "Take stock of your application's permissions",
+        description: "Take stock of your application's teams",
         entityTableText: {
             searchInputPlaceholder: 'Search by team name',
             nameColumn: 'Name',

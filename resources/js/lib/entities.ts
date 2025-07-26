@@ -2,14 +2,18 @@ import { type EntityFormType } from '@/components/entity/EntityForm';
 import { useApi } from '@/lib/api';
 import { apiText } from '@/lib/lang/en/api';
 import { flattenStrings } from '@/lib/utils';
-import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
+import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import { type EntityPageRequest, type ShowEntityRequest } from '@/types/api/entity';
 import { type ConfiguredModelMetadata } from '@/types/api/model';
 
 export function getModelMetadataForEntity(config: GatekeeperConfig, entity: GatekeeperEntity): ConfiguredModelMetadata | null {
     const model = config.models.find(
-        (m) => (m.is_permission && entity === 'permission') || (m.is_role && entity === 'role') || (m.is_team && entity === 'team'),
+        (m) =>
+            (m.is_permission && entity === 'permission') ||
+            (m.is_role && entity === 'role') ||
+            (m.is_feature && entity === 'feature') ||
+            (m.is_team && entity === 'team'),
     );
 
     return model || null;
@@ -29,6 +33,7 @@ export async function getEntities<E extends GatekeeperEntity>(
     const getPage = {
         permission: () => api.getPermissions(request),
         role: () => api.getRoles(request),
+        feature: () => api.getFeatures(request),
         team: () => api.getTeams(request),
     };
 
@@ -61,6 +66,7 @@ export async function getEntity<E extends GatekeeperEntity>(
     const getEntity = {
         permission: () => api.getPermission(request),
         role: () => api.getRole(request),
+        feature: () => api.getFeature(request),
         team: () => api.getTeam(request),
     };
 
@@ -98,11 +104,13 @@ export async function persistEntity<E extends GatekeeperEntity>(
         create: {
             permission: () => api.storePermission({ name }),
             role: () => api.storeRole({ name }),
+            feature: () => api.storeFeature({ name }),
             team: () => api.storeTeam({ name }),
         },
         update: {
             permission: () => api.updatePermission({ id: entityId, name }),
             role: () => api.updateRole({ id: entityId, name }),
+            feature: () => api.updateFeature({ id: entityId, name }),
             team: () => api.updateTeam({ id: entityId, name }),
         },
     };
@@ -121,6 +129,64 @@ export async function persistEntity<E extends GatekeeperEntity>(
     setProcessing(false);
 }
 
+export async function turnEntityOffByDefault<E extends GatekeeperFeature>(
+    api: ReturnType<typeof useApi>,
+    entity: GatekeeperFeature,
+    entityId: number,
+    setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
+    setProcessing: (processing: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<void> {
+    setProcessing(true);
+    setError(null);
+
+    const turnOffByDefault = {
+        feature: () => api.turnFeatureOffByDefault({ id: entityId }),
+    };
+
+    const response = await turnOffByDefault[entity]();
+
+    if (response.status >= 400) {
+        const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOffByDefaultError);
+        setProcessing(false);
+        return;
+    }
+
+    const entityModel = response.data as GatekeeperEntityModelMap[E];
+    setEntityModel(entityModel);
+    setProcessing(false);
+}
+
+export async function turnEntityOnByDefault<E extends GatekeeperFeature>(
+    api: ReturnType<typeof useApi>,
+    entity: GatekeeperFeature,
+    entityId: number,
+    setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
+    setProcessing: (processing: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<void> {
+    setProcessing(true);
+    setError(null);
+
+    const turnOnByDefault = {
+        feature: () => api.turnFeatureOnByDefault({ id: entityId }),
+    };
+
+    const response = await turnOnByDefault[entity]();
+
+    if (response.status >= 400) {
+        const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOnByDefaultError);
+        setProcessing(false);
+        return;
+    }
+
+    const entityModel = response.data as GatekeeperEntityModelMap[E];
+    setEntityModel(entityModel);
+    setProcessing(false);
+}
+
 export async function deactivateEntity<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,
     entity: GatekeeperEntity,
@@ -135,6 +201,7 @@ export async function deactivateEntity<E extends GatekeeperEntity>(
     const deactivate = {
         permission: () => api.deactivatePermission({ id: entityId }),
         role: () => api.deactivateRole({ id: entityId }),
+        feature: () => api.deactivateFeature({ id: entityId }),
         team: () => api.deactivateTeam({ id: entityId }),
     };
 
@@ -166,6 +233,7 @@ export async function reactivateEntity<E extends GatekeeperEntity>(
     const deactivate = {
         permission: () => api.reactivatePermission({ id: entityId }),
         role: () => api.reactivateRole({ id: entityId }),
+        feature: () => api.reactivateFeature({ id: entityId }),
         team: () => api.reactivateTeam({ id: entityId }),
     };
 
@@ -197,6 +265,7 @@ export async function deleteEntity(
     const deleteEntity = {
         permission: () => api.deletePermission({ id: entityId }),
         role: () => api.deleteRole({ id: entityId }),
+        feature: () => api.deleteFeature({ id: entityId }),
         team: () => api.deleteTeam({ id: entityId }),
     };
 

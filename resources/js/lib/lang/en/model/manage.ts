@@ -1,5 +1,5 @@
 import { type GatekeeperEntity } from '@/types';
-import { PermissionSource, RoleSource } from '@/types/api/model';
+import { type FeatureSource, type PermissionSource, type RoleSource } from '@/types/api/model';
 
 export interface ManageModelText {
     failedToLoad: string;
@@ -14,12 +14,14 @@ export interface ModelSummaryText {
     entitySupportText: ModelEntitySupportText;
     effectivePermissionsText: ModelEffectivePermissionsText;
     effectiveRolesText: ModelEffectiveRolesText;
+    effectiveFeaturesText: ModelEffectiveFeaturesText;
 }
 
 export interface ModelManagementTabsText {
     navOverview: string;
     navPermission: string;
     navRoles: string;
+    navFeatures: string;
     navTeams: string;
 }
 
@@ -33,6 +35,15 @@ export interface ModelEntitySupportText {
         label: string;
         featureDisabled: string;
         isPermission: string;
+        isRole: string;
+        isFeature: string;
+        missingTrait: string;
+    };
+    feature: {
+        label: string;
+        featureDisabled: string;
+        isPermission: string;
+        isFeature: string;
         isRole: string;
         missingTrait: string;
     };
@@ -64,17 +75,26 @@ export interface ModelEffectiveRolesText {
     empty: string;
 }
 
+export interface ModelEffectiveFeaturesText {
+    title: string;
+    titleTooltip: string;
+    toggleAllTooltip: (allOpen: boolean) => string;
+    searchPlaceholder: string;
+    sourceLabel: (source: FeatureSource) => string;
+    empty: string;
+}
+
 export type ModelEntityTablesText = {
     actionHeader: string;
     assignedDateTimeHeader: string;
-    assign: string;
-    revoke: string;
     previous: string;
     next: string;
     pagination: (from: number, to: number, total: number) => string;
 } & Record<GatekeeperEntity, EntitySpecificModelEntityTablesText>;
 
 interface EntitySpecificModelEntityTablesText {
+    assign: string;
+    revoke: string;
     assignedHeader: string;
     unassignedHeader: string;
     searchPlaceholder: string;
@@ -90,6 +110,7 @@ export const manageModelText: ManageModelText = {
         navOverview: 'Overview',
         navPermission: 'Permissions',
         navRoles: 'Roles',
+        navFeatures: 'Features',
         navTeams: 'Teams',
     },
     modelSummaryText: {
@@ -106,7 +127,16 @@ export const manageModelText: ManageModelText = {
                 featureDisabled: "The 'roles' feature is disabled in the configuration",
                 isPermission: 'Roles cannot be assigned to permissions',
                 isRole: 'Roles cannot be assigned to other roles',
+                isFeature: 'Roles cannot be assigned to features',
                 missingTrait: 'The model is not using the `HasRoles` trait',
+            },
+            feature: {
+                label: 'Features:',
+                featureDisabled: "The 'features' feature is disabled in the configuration",
+                isPermission: 'Features cannot be assigned to permissions',
+                isFeature: 'Features cannot be assigned to other features',
+                isRole: 'Features cannot be assigned to roles',
+                missingTrait: 'The model is not using the `HasFeatures` trait',
             },
             team: {
                 label: 'Teams:',
@@ -155,16 +185,35 @@ export const manageModelText: ManageModelText = {
             },
             empty: 'This model has no effective roles.',
         },
+        effectiveFeaturesText: {
+            title: 'Effective Features',
+            titleTooltip: 'All features this model currently has — whether turned on directly, via teams, or on by default',
+            toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
+            searchPlaceholder: 'Search features by name',
+            sourceLabel: (source: FeatureSource) => {
+                switch (source.type) {
+                    case 'direct':
+                        return 'Direct';
+                    case 'team':
+                        return `Team: ${source.team}`;
+                    case 'default':
+                        return 'Default';
+                    default:
+                        return 'Unknown';
+                }
+            },
+            empty: 'This model has no effective features.',
+        },
     },
     modelEntityTablesText: {
         actionHeader: 'Action',
         assignedDateTimeHeader: 'Assigned Date/Time',
-        assign: 'Assign',
-        revoke: 'Revoke',
         previous: 'Previous',
         next: 'Next',
         pagination: (from: number, to: number, total: number) => `${from} to ${to} of ${total}`,
         permission: {
+            assign: 'Assign',
+            revoke: 'Revoke',
             assignedHeader: 'Assigned Permissions',
             unassignedHeader: 'Unassigned Permissions',
             searchPlaceholder: 'Search by permission name',
@@ -174,6 +223,8 @@ export const manageModelText: ManageModelText = {
             unassignedEmpty: 'No unassigned permissions.',
         },
         role: {
+            assign: 'Assign',
+            revoke: 'Revoke',
             assignedHeader: 'Assigned Roles',
             unassignedHeader: 'Unassigned Roles',
             searchPlaceholder: 'Search by role name',
@@ -182,7 +233,20 @@ export const manageModelText: ManageModelText = {
             assignedEmpty: 'No roles assigned.',
             unassignedEmpty: 'No unassigned roles.',
         },
+        feature: {
+            assign: 'Turn On',
+            revoke: 'Turn Off',
+            assignedHeader: 'Assigned Features',
+            unassignedHeader: 'Unassigned Features',
+            searchPlaceholder: 'Search by feature name',
+            nameHeader: 'Feature Name',
+            statusHeader: 'Feature Status',
+            assignedEmpty: 'No features assigned.',
+            unassignedEmpty: 'No unassigned features.',
+        },
         team: {
+            assign: 'Assign',
+            revoke: 'Revoke',
             assignedHeader: 'Assigned Teams',
             unassignedHeader: 'Unassigned Teams',
             searchPlaceholder: 'Search by team name',

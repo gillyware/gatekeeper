@@ -43,12 +43,13 @@ Determines which core Gatekeeper features are enabled:
 'features' => [
     'audit' => ['enabled' => true],
     'roles' => ['enabled' => true],
+    'features' => ['enabled' => false],
     'teams' => ['enabled' => false],
 ],
 ```
 
 > [!WARNING]
-> Gatekeeper ships with the `teams` feature disabled, so be sure to enable it if your application depends on it.
+> Gatekeeper ships with the `features` and `teams` features disabled, so be sure to enable them if your application depends on them.
 
 <a name="tables"></a>
 ## Tables
@@ -61,9 +62,11 @@ Specifies the database table names used by Gatekeeper. There are 3 tables for en
 'tables' => [
     'permissions' => 'permissions',
     'roles' => 'roles',
+    'features' => 'features',
     'teams' => 'teams',
     'model_has_permissions' => 'model_has_permissions',
     'model_has_roles' => 'model_has_roles',
+    'model_has_features' => 'model_has_features',
     'model_has_teams' => 'model_has_teams',
     'audit_log' => 'gatekeeper_audit_log',
 ],
@@ -123,6 +126,18 @@ Indicates which models are manageable by Gatekeeper. For each model, you may spe
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you've configured Gatekeeper, you can begin managing access using permissions:
+Entities:
+- [Permissions](usage/permissions.md)
+- [Roles](usage/roles.md)
+- [Features](usage/features.md)
+- [Teams](usage/teams.md)
 
-[Permissions](usage/permissions.md)
+Control Access with Entities:
+- [Middleware](usage/middleware.md)
+- [Blade Directives](usage/blade-directives.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](usage/artisan-commands.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('usage/audit-logging.md')

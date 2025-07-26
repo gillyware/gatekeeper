@@ -2,7 +2,7 @@ import { useGatekeeper } from '@/context/GatekeeperContext';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
 import { landingText, type LandingText } from '@/lib/lang/en/landing';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
-import { FileClock, KeyRound, LucideIcon, Shapes, ShieldCheck, Users } from 'lucide-react';
+import { FileClock, KeyRound, LucideIcon, Shapes, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -31,6 +31,12 @@ export default function LandingScreen() {
                     title: landing.tiles.roles.title,
                     icon: ShieldCheck,
                     description: landing.tiles.roles.description,
+                },
+                config.features_enabled && {
+                    to: '/features',
+                    title: landing.tiles.features.title,
+                    icon: Sparkles,
+                    description: landing.tiles.features.description,
                 },
                 config.teams_enabled && {
                     to: '/teams',
