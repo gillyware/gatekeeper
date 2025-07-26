@@ -51,7 +51,7 @@ final class ManageableModelPacket extends Packet
             'is_team' => $this->modelIsTeam($this->class),
             'has_permissions' => $this->modelInteractsWithPermissions($this->class),
             'has_roles' => $this->modelInteractsWithRoles($this->class),
-            'has_features' => $this->modelInteractsWithTeams($this->class),
+            'has_features' => $this->modelInteractsWithFeatures($this->class),
             'has_teams' => $this->modelInteractsWithTeams($this->class),
         ];
     }
