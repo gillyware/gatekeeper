@@ -1,5 +1,5 @@
 import { type GatekeeperEntity } from '@/types';
-import { PermissionSource, RoleSource } from '@/types/api/model';
+import { type FeatureSource, type PermissionSource, type RoleSource } from '@/types/api/model';
 
 export interface ManageModelText {
     failedToLoad: string;
@@ -14,6 +14,7 @@ export interface ModelSummaryText {
     entitySupportText: ModelEntitySupportText;
     effectivePermissionsText: ModelEffectivePermissionsText;
     effectiveRolesText: ModelEffectiveRolesText;
+    effectiveFeaturesText: ModelEffectiveFeaturesText;
 }
 
 export interface ModelManagementTabsText {
@@ -71,6 +72,15 @@ export interface ModelEffectiveRolesText {
     toggleAllTooltip: (allOpen: boolean) => string;
     searchPlaceholder: string;
     sourceLabel: (source: RoleSource) => string;
+    empty: string;
+}
+
+export interface ModelEffectiveFeaturesText {
+    title: string;
+    titleTooltip: string;
+    toggleAllTooltip: (allOpen: boolean) => string;
+    searchPlaceholder: string;
+    sourceLabel: (source: FeatureSource) => string;
     empty: string;
 }
 
@@ -174,6 +184,25 @@ export const manageModelText: ManageModelText = {
                 }
             },
             empty: 'This model has no effective roles.',
+        },
+        effectiveFeaturesText: {
+            title: 'Effective Features',
+            titleTooltip: 'All features this model currently has — whether turned on directly, via teams, or on by default',
+            toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
+            searchPlaceholder: 'Search features by name',
+            sourceLabel: (source: FeatureSource) => {
+                switch (source.type) {
+                    case 'direct':
+                        return 'Direct';
+                    case 'team':
+                        return `Team: ${source.team}`;
+                    case 'default':
+                        return 'Default';
+                    default:
+                        return 'Unknown';
+                }
+            },
+            empty: 'This model has no effective features.',
         },
     },
     modelEntityTablesText: {

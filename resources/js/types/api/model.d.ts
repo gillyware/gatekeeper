@@ -43,14 +43,25 @@ export interface RoleSource {
     team?: string;
 }
 
+export interface FeatureSource {
+    type: 'default' | 'direct' | 'team';
+    team?: string;
+}
+
 export interface VerboseRole {
     name: string;
     sources: RoleSource[];
 }
 
+export interface VerboseFeature {
+    name: string;
+    sources: FeatureSource[];
+}
+
 export interface AccessSources {
     permissions: VerbosePermission[];
     roles: VerboseRole[];
+    features: VerboseFeature[];
     direct_permissions_count: number;
     direct_roles_count: number;
     direct_features_count: number;

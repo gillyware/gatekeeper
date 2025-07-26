@@ -6,4 +6,5 @@ enum FeatureSourceType: string
 {
     case DIRECT = 'direct';
     case TEAM = 'team';
+    case DEFAULT = 'default';
 }

@@ -50,6 +50,7 @@ class ModelController extends AbstractBaseController
 
             $verbosePermissions = Gatekeeper::for($model)->getVerbosePermissions();
             $verboseRoles = Gatekeeper::for($model)->getVerboseRoles();
+            $verboseFeatures = Gatekeeper::for($model)->getVerboseFeatures();
             $directPermissionsCount = Gatekeeper::for($model)->getDirectPermissions()->count();
             $directRolesCount = Gatekeeper::for($model)->getDirectRoles()->count();
             $directFeaturesCount = Gatekeeper::for($model)->getDirectFeatures()->count();
@@ -61,6 +62,7 @@ class ModelController extends AbstractBaseController
                 'access_sources' => [
                     'permissions' => $verbosePermissions,
                     'roles' => $verboseRoles,
+                    'features' => $verboseFeatures,
                     'direct_permissions_count' => $directPermissionsCount,
                     'direct_roles_count' => $directRolesCount,
                     'direct_features_count' => $directFeaturesCount,
