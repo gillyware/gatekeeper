@@ -47,6 +47,17 @@ export const apiText: ApiText = {
             reactivateError: 'Failed to reactivate role.',
             deleteError: 'Failed to delete role.',
         },
+        feature: {
+            getPageError: 'Failed to fetch features.',
+            getOneError: 'Faild to fetch feature.',
+            persistError: {
+                create: 'Failed to create feature.',
+                update: 'Failed to update feature.',
+            },
+            deactivateError: 'Failed to deactivate feature.',
+            reactivateError: 'Failed to reactivate feature.',
+            deleteError: 'Failed to delete feature.',
+        },
         team: {
             getPageError: 'Failed to fetch teams.',
             getOneError: 'Faild to fetch team.',

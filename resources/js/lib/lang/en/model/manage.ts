@@ -34,6 +34,15 @@ export interface ModelEntitySupportText {
         featureDisabled: string;
         isPermission: string;
         isRole: string;
+        isFeature: string;
+        missingTrait: string;
+    };
+    feature: {
+        label: string;
+        featureDisabled: string;
+        isPermission: string;
+        isFeature: string;
+        isRole: string;
         missingTrait: string;
     };
     team: {
@@ -106,7 +115,16 @@ export const manageModelText: ManageModelText = {
                 featureDisabled: "The 'roles' feature is disabled in the configuration",
                 isPermission: 'Roles cannot be assigned to permissions',
                 isRole: 'Roles cannot be assigned to other roles',
+                isFeature: 'Roles cannot be assigned to features',
                 missingTrait: 'The model is not using the `HasRoles` trait',
+            },
+            feature: {
+                label: 'Features:',
+                featureDisabled: "The 'features' feature is disabled in the configuration",
+                isPermission: 'Features cannot be assigned to permissions',
+                isFeature: 'Features cannot be assigned to other features',
+                isRole: 'Features cannot be assigned to roles',
+                missingTrait: 'The model is not using the `HasFeatures` trait',
             },
             team: {
                 label: 'Teams:',
@@ -181,6 +199,15 @@ export const manageModelText: ManageModelText = {
             statusHeader: 'Role Status',
             assignedEmpty: 'No roles assigned.',
             unassignedEmpty: 'No unassigned roles.',
+        },
+        feature: {
+            assignedHeader: 'Assigned Features',
+            unassignedHeader: 'Unassigned Features',
+            searchPlaceholder: 'Search by feature name',
+            nameHeader: 'Feature Name',
+            statusHeader: 'Feature Status',
+            assignedEmpty: 'No features assigned.',
+            unassignedEmpty: 'No unassigned features.',
         },
         team: {
             assignedHeader: 'Assigned Teams',

@@ -14,6 +14,10 @@ export const createEntityText: Record<GatekeeperEntity, CreateEntityText> = {
         title: 'Create Role',
         description: 'Introduce a new role into your application',
     },
+    feature: {
+        title: 'Create Feature',
+        description: 'Introduce a new feature into your application',
+    },
     team: {
         title: 'Create Team',
         description: 'Introduce a new team into your application',

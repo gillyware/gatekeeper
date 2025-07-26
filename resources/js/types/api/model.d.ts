@@ -7,9 +7,11 @@ export interface ConfiguredModelMetadata {
     displayable: { column: string; label: string; cli_width: number }[];
     is_permission: boolean;
     is_role: boolean;
+    is_feature: boolean;
     is_team: boolean;
     has_permissions: boolean;
     has_roles: boolean;
+    has_features: boolean;
     has_teams: boolean;
 }
 

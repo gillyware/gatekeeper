@@ -4,6 +4,7 @@ export interface LandingText {
     tiles: {
         permissions: { title: string; description: string };
         roles: { title: string; description: string };
+        features: { title: string; description: string };
         teams: { title: string; description: string };
         models: { title: string; description: string };
         audit: { title: string; description: string };
@@ -21,6 +22,10 @@ export const landingText: LandingText = {
         roles: {
             title: 'Roles',
             description: "Manage your application's roles",
+        },
+        features: {
+            title: 'Features',
+            description: "Manage your application's features",
         },
         teams: {
             title: 'Teams',

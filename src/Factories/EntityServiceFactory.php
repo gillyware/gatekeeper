@@ -4,6 +4,7 @@ namespace Gillyware\Gatekeeper\Factories;
 
 use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
+use Gillyware\Gatekeeper\Services\FeatureService;
 use Gillyware\Gatekeeper\Services\PermissionService;
 use Gillyware\Gatekeeper\Services\RoleService;
 use Gillyware\Gatekeeper\Services\TeamService;
@@ -16,6 +17,7 @@ class EntityServiceFactory
         return match ($entity) {
             GatekeeperEntity::Permission => app(PermissionService::class),
             GatekeeperEntity::Role => app(RoleService::class),
+            GatekeeperEntity::Feature => app(FeatureService::class),
             GatekeeperEntity::Team => app(TeamService::class),
             default => throw new InvalidArgumentException('Invalid entity.'),
         };

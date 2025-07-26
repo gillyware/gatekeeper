@@ -172,6 +172,62 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
             mismatchError: 'Role name does not match.',
         },
     },
+    feature: {
+        failedToLoad: 'Failed to load feature',
+        entitySummaryText: {
+            title: 'Feature',
+            nameLabel: 'Name:',
+            statusLabel: 'Status:',
+            active: 'Active',
+            inactive: 'Inactive',
+            manageAccessLabel: 'Manage Feature Access',
+        },
+        entityFormText: {
+            create: {
+                title: 'Create Feature',
+                inputLabel: 'Feature Name',
+                submitButton: 'Create',
+                successMessage: 'Saved',
+            },
+            update: {
+                title: 'Update Feature',
+                inputLabel: 'Feature Name',
+                submitButton: 'Update',
+                successMessage: 'Saved',
+            },
+        },
+        entityDeactivationText: {
+            title: 'Deactivate Feature',
+            description:
+                'Deactivating this feature will keep all assignments intact but will temporarily stop granting its permissions to assigned models.',
+            confirmTitle: 'Are you sure you want to deactivate this feature?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm deactivation of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Deactivate',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        entityReactivationText: {
+            title: 'Reactivate Feature',
+            description: 'Reactivating this feature will resume granting permissions to its assigned models.',
+            confirmTitle: 'Are you sure you want to reactivate this feature?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm reactivation of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Reactivate',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        entityDeletionText: {
+            title: 'Delete Feature',
+            description: 'Deleting this feature will remove it from the application and unassign it from all models.',
+            confirmTitle: 'Are you sure you want to delete this feature?',
+            confirmDescription: (entityName: string) => `Type "${entityName}" to confirm deletion of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Delete',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+    },
     team: {
         failedToLoad: 'Failed to load team',
         entitySummaryText: {

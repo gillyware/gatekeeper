@@ -30,6 +30,16 @@ export const entityLayoutText: Record<GatekeeperEntity, EntityLayoutText> = {
         navCreate: 'Create',
         navManage: 'Manage',
     },
+    feature: {
+        title: 'Features',
+        description: "Manage your application's features",
+        featureDisabledTitle: 'Features Feature Disabled',
+        featureDisabledDescription:
+            'Features cannot be created, edited, reactivated, or turned on at this time. Only deactivation and turning off are allowed. For full functionality, please enable the features feature in your Gatekeeper configuration.',
+        navIndex: 'Index',
+        navCreate: 'Create',
+        navManage: 'Manage',
+    },
     team: {
         title: 'Teams',
         description: "Manage your application's teams",

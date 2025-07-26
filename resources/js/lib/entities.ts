@@ -9,7 +9,11 @@ import { type ConfiguredModelMetadata } from '@/types/api/model';
 
 export function getModelMetadataForEntity(config: GatekeeperConfig, entity: GatekeeperEntity): ConfiguredModelMetadata | null {
     const model = config.models.find(
-        (m) => (m.is_permission && entity === 'permission') || (m.is_role && entity === 'role') || (m.is_team && entity === 'team'),
+        (m) =>
+            (m.is_permission && entity === 'permission') ||
+            (m.is_role && entity === 'role') ||
+            (m.is_feature && entity === 'feature') ||
+            (m.is_team && entity === 'team'),
     );
 
     return model || null;
@@ -29,6 +33,7 @@ export async function getEntities<E extends GatekeeperEntity>(
     const getPage = {
         permission: () => api.getPermissions(request),
         role: () => api.getRoles(request),
+        feature: () => api.getFeatures(request),
         team: () => api.getTeams(request),
     };
 
@@ -61,6 +66,7 @@ export async function getEntity<E extends GatekeeperEntity>(
     const getEntity = {
         permission: () => api.getPermission(request),
         role: () => api.getRole(request),
+        feature: () => api.getFeature(request),
         team: () => api.getTeam(request),
     };
 
@@ -98,11 +104,13 @@ export async function persistEntity<E extends GatekeeperEntity>(
         create: {
             permission: () => api.storePermission({ name }),
             role: () => api.storeRole({ name }),
+            feature: () => api.storeFeature({ name }),
             team: () => api.storeTeam({ name }),
         },
         update: {
             permission: () => api.updatePermission({ id: entityId, name }),
             role: () => api.updateRole({ id: entityId, name }),
+            feature: () => api.updateFeature({ id: entityId, name }),
             team: () => api.updateTeam({ id: entityId, name }),
         },
     };
@@ -135,6 +143,7 @@ export async function deactivateEntity<E extends GatekeeperEntity>(
     const deactivate = {
         permission: () => api.deactivatePermission({ id: entityId }),
         role: () => api.deactivateRole({ id: entityId }),
+        feature: () => api.deactivateFeature({ id: entityId }),
         team: () => api.deactivateTeam({ id: entityId }),
     };
 
@@ -166,6 +175,7 @@ export async function reactivateEntity<E extends GatekeeperEntity>(
     const deactivate = {
         permission: () => api.reactivatePermission({ id: entityId }),
         role: () => api.reactivateRole({ id: entityId }),
+        feature: () => api.reactivateFeature({ id: entityId }),
         team: () => api.reactivateTeam({ id: entityId }),
     };
 
@@ -197,6 +207,7 @@ export async function deleteEntity(
     const deleteEntity = {
         permission: () => api.deletePermission({ id: entityId }),
         role: () => api.deleteRole({ id: entityId }),
+        feature: () => api.deleteFeature({ id: entityId }),
         team: () => api.deleteTeam({ id: entityId }),
     };
 
