@@ -27,7 +27,7 @@ class FeatureFactory extends Factory
         return [
             'name' => fake()->unique()->word(),
             'is_active' => true,
-            'default_enabled' => true,
+            'default_enabled' => false,
         ];
     }
 
@@ -60,10 +60,10 @@ class FeatureFactory extends Factory
      *
      * @return $this
      */
-    public function defaultDisabled(): static
+    public function defaultOn(): static
     {
         return $this->state([
-            'default_enabled' => false,
+            'default_enabled' => true,
         ]);
     }
 }

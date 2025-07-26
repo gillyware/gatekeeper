@@ -300,7 +300,7 @@ class FeatureService extends AbstractBaseEntityService
             }
         }
 
-        return false;
+        return $feature->default_enabled;
     }
 
     /**
@@ -392,6 +392,12 @@ class FeatureService extends AbstractBaseEntityService
         if (! $this->featuresFeatureEnabled()) {
             return $result;
         }
+
+        $this->featureRepository->active()->each(function (Feature $feature) use (&$sourcesMap) {
+            $sourcesMap[$feature->name][] = [
+                'type' => FeatureSourceType::DEFAULT,
+            ];
+        });
 
         if ($this->modelInteractsWithFeatures($model)) {
             $this->featureRepository->activeForModel($model)
