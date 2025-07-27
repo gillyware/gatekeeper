@@ -50,6 +50,9 @@ class AuditLogService implements AuditLogServiceInterface
             AuditLogAction::UpdateFeature->value => '{actor} updated {entity} name from {old_name} to {name}',
             AuditLogAction::UpdateTeam->value => '{actor} updated {entity} name from {old_name} to {name}',
 
+            AuditLogAction::TurnFeatureOffByDefault->value => '{actor} turned {entity} named {name} off by default',
+            AuditLogAction::TurnFeatureOnByDefault->value => '{actor} turned {entity} named {name} on by default',
+
             AuditLogAction::DeactivatePermission->value => '{actor} deactivated {entity} named {name}',
             AuditLogAction::DeactivateRole->value => '{actor} deactivated {entity} named {name}',
             AuditLogAction::DeactivateFeature->value => '{actor} deactivated {entity} named {name}',
@@ -86,7 +89,7 @@ class AuditLogService implements AuditLogServiceInterface
         return [
             'actor' => $this->actor($log),
             'target' => $this->target($log),
-            'entity' => strtolower(class_basename($log->action_to_model_type)),
+            'entity' => Str::before($log->action, '_'),
             'name' => Arr::get($log->metadata, 'name', ''),
             'old_name' => Arr::get($log->metadata, 'old_name', ''),
         ];

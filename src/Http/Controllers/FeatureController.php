@@ -64,6 +64,34 @@ class FeatureController extends AbstractBaseController
     }
 
     /**
+     * Turn feature off by default.
+     */
+    public function turnOffByDefault(Feature $feature): HttpFoundationResponse
+    {
+        try {
+            $feature = $this->featureService->turnOffByDefault($feature);
+
+            return Response::json($feature);
+        } catch (GatekeeperException $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Turn feature on by default.
+     */
+    public function turnOnByDefault(Feature $feature): HttpFoundationResponse
+    {
+        try {
+            $feature = $this->featureService->turnOnByDefault($feature);
+
+            return Response::json($feature);
+        } catch (GatekeeperException $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    /**
      * Deactivate a feature.
      */
     public function deactivate(Feature $feature): HttpFoundationResponse

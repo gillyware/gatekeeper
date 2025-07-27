@@ -15,33 +15,33 @@ trait HasFeatures
     /**
      * Assign a feature to the model.
      */
-    public function assignFeature(Feature|string|UnitEnum $feature): bool
+    public function turnFeatureOn(Feature|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::for($this)->assignFeature($feature);
+        return Gatekeeper::for($this)->turnFeatureOn($feature);
     }
 
     /**
      * Assign multiple features to the model.
      */
-    public function assignAllFeatures(array|Arrayable $features): bool
+    public function turnAllFeaturesOn(array|Arrayable $features): bool
     {
-        return Gatekeeper::for($this)->assignAllFeatures($features);
+        return Gatekeeper::for($this)->turnAllFeaturesOn($features);
     }
 
     /**
      * Revoke a feature from the model.
      */
-    public function revokeFeature(Feature|string|UnitEnum $feature): bool
+    public function turnFeatureOff(Feature|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::for($this)->revokeFeature($feature);
+        return Gatekeeper::for($this)->turnFeatureOff($feature);
     }
 
     /**
      * Revoke multiple features from the model.
      */
-    public function revokeAllFeatures(array|Arrayable $features): bool
+    public function turnAllFeaturesOff(array|Arrayable $features): bool
     {
-        return Gatekeeper::for($this)->revokeAllFeatures($features);
+        return Gatekeeper::for($this)->turnAllFeaturesOff($features);
     }
 
     /**

@@ -25,9 +25,9 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('assignFeatureToModel')->with($user, $feature)->once();
+        Gatekeeper::shouldReceive('turnFeatureOnForModel')->with($user, $feature)->once();
 
-        $user->assignFeature($feature);
+        $user->turnFeatureOn($feature);
     }
 
     public function test_assign_features_delegates_to_facade()
@@ -37,9 +37,9 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('assignAllFeaturesToModel')->with($user, $features)->once();
+        Gatekeeper::shouldReceive('turnAllFeaturesOnForModel')->with($user, $features)->once();
 
-        $user->assignAllFeatures($features);
+        $user->turnAllFeaturesOn($features);
     }
 
     public function test_revoke_feature_delegates_to_facade()
@@ -49,9 +49,9 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokeFeatureFromModel')->with($user, $feature)->once();
+        Gatekeeper::shouldReceive('turnFeatureOffForModel')->with($user, $feature)->once();
 
-        $user->revokeFeature($feature);
+        $user->turnFeatureOff($feature);
     }
 
     public function test_revoke_features_delegates_to_facade()
@@ -61,9 +61,9 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokeAllFeaturesFromModel')->with($user, $features)->once();
+        Gatekeeper::shouldReceive('turnAllFeaturesOffForModel')->with($user, $features)->once();
 
-        $user->revokeAllFeatures($features);
+        $user->turnAllFeaturesOff($features);
     }
 
     public function test_has_feature_delegates_to_facade()

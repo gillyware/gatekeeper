@@ -194,33 +194,33 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function turnFeatureOn(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::assignFeatureToModel($this->model, $feature);
+        return Gatekeeper::turnFeatureOnForModel($this->model, $feature);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function assignAllFeatures(array|Arrayable $features): bool
+    public function turnAllFeaturesOn(array|Arrayable $features): bool
     {
-        return Gatekeeper::assignAllFeaturesToModel($this->model, $features);
+        return Gatekeeper::turnAllFeaturesOnForModel($this->model, $features);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function revokeFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function turnFeatureOff(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::revokeFeatureFromModel($this->model, $feature);
+        return Gatekeeper::turnFeatureOffForModel($this->model, $feature);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function revokeAllFeatures(array|Arrayable $features): bool
+    public function turnAllFeaturesOff(array|Arrayable $features): bool
     {
-        return Gatekeeper::revokeAllFeaturesFromModel($this->model, $features);
+        return Gatekeeper::turnAllFeaturesOffForModel($this->model, $features);
     }
 
     /**

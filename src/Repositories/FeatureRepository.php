@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
+use Gillyware\Gatekeeper\Contracts\FeatureRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Feature\FeatureNotFoundException;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * @implements EntityRepositoryInterface<Feature>
+ * @implements FeatureRepositoryInterface<Feature>
  */
-class FeatureRepository implements EntityRepositoryInterface
+class FeatureRepository implements FeatureRepositoryInterface
 {
     public function __construct(
         private readonly CacheService $cacheService,
@@ -92,6 +92,34 @@ class FeatureRepository implements EntityRepositoryInterface
     public function update($feature, string $newFeatureName): Feature
     {
         if ($feature->update(['name' => $newFeatureName])) {
+            $this->cacheService->clear();
+        }
+
+        return $feature;
+    }
+
+    /**
+     * Set a feature as off by default.
+     *
+     * @param  Feature  $feature
+     */
+    public function turnOffByDefault($feature): Feature
+    {
+        if ($feature->update(['default_enabled' => false])) {
+            $this->cacheService->clear();
+        }
+
+        return $feature;
+    }
+
+    /**
+     * Set a feature as on by default.
+     *
+     * @param  Feature  $feature
+     */
+    public function turnOnByDefault($feature): Feature
+    {
+        if ($feature->update(['default_enabled' => true])) {
             $this->cacheService->clear();
         }
 

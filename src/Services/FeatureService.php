@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Contracts\FeatureServiceInterface;
 use Gillyware\Gatekeeper\Enums\FeatureSourceType;
 use Gillyware\Gatekeeper\Exceptions\Feature\FeatureAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Feature;
@@ -12,6 +13,8 @@ use Gillyware\Gatekeeper\Packets\AuditLog\Feature\DeactivateFeatureAuditLogPacke
 use Gillyware\Gatekeeper\Packets\AuditLog\Feature\DeleteFeatureAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Feature\ReactivateFeatureAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Feature\RevokeFeatureAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Feature\TurnedOffByDefaultFeatureAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Feature\TurnedOnByDefaultFeatureAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Feature\UpdateFeatureAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
@@ -27,8 +30,10 @@ use UnitEnum;
 
 /**
  * @extends AbstractBaseEntityService<Feature, FeaturePacket>
+ *
+ * @implements FeatureServiceInterface<Feature, FeaturePacket>
  */
-class FeatureService extends AbstractBaseEntityService
+class FeatureService extends AbstractBaseEntityService implements FeatureServiceInterface
 {
     public function __construct(
         private readonly FeatureRepository $featureRepository,
@@ -104,6 +109,55 @@ class FeatureService extends AbstractBaseEntityService
         }
 
         return $updatedFeature->toPacket();
+    }
+
+    /**
+     * Set a feature as off by default.
+     *
+     * @param  Feature|FeaturePacket|string|UnitEnum  $feature
+     */
+    public function turnOffByDefault($feature): FeaturePacket
+    {
+        $this->enforceAuditFeature();
+
+        $currentFeature = $this->resolveEntity($feature, orFail: true);
+
+        if (! $currentFeature->default_enabled) {
+            return $currentFeature->toPacket();
+        }
+
+        $defaultedOffFeature = $this->featureRepository->turnOffByDefault($currentFeature);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(TurnedOffByDefaultFeatureAuditLogPacket::make($defaultedOffFeature));
+        }
+
+        return $defaultedOffFeature->toPacket();
+    }
+
+    /**
+     * Set a feature as on by default.
+     *
+     * @param  Feature|FeaturePacket|string|UnitEnum  $feature
+     */
+    public function turnOnByDefault($feature): FeaturePacket
+    {
+        $this->enforceAuditFeature();
+        $this->enforceFeaturesFeature();
+
+        $currentFeature = $this->resolveEntity($feature, orFail: true);
+
+        if ($currentFeature->default_enabled) {
+            return $currentFeature->toPacket();
+        }
+
+        $defaultedOnFeature = $this->featureRepository->turnOnByDefault($currentFeature);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(TurnedOnByDefaultFeatureAuditLogPacket::make($defaultedOnFeature));
+        }
+
+        return $defaultedOnFeature->toPacket();
     }
 
     /**
@@ -185,7 +239,7 @@ class FeatureService extends AbstractBaseEntityService
     }
 
     /**
-     * Assign a feature to a model.
+     * Turn a feature on for a model.
      *
      * @param  Feature|FeaturePacket|string|UnitEnum  $feature
      */
@@ -214,7 +268,7 @@ class FeatureService extends AbstractBaseEntityService
     }
 
     /**
-     * Assign multiple features to a model.
+     * Turn multiple features on for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
@@ -230,7 +284,7 @@ class FeatureService extends AbstractBaseEntityService
     }
 
     /**
-     * Revoke a feature from a model.
+     * Turn a feature off for a model.
      *
      * @param  Feature|FeaturePacket|string|UnitEnum  $feature
      */
@@ -250,7 +304,7 @@ class FeatureService extends AbstractBaseEntityService
     }
 
     /**
-     * Revoke multiple features from a model.
+     * Turn multiple features off for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */

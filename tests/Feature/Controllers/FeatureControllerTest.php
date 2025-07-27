@@ -90,6 +90,28 @@ class FeatureControllerTest extends TestCase
             ->assertJson(['name' => 'new.name']);
     }
 
+    public function test_turn_feature_off_by_default()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $feature = Feature::factory()->defaultOn()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.features.default-off', ['feature' => $feature]))
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['default_enabled' => false]);
+    }
+
+    public function test_turn_feature_on_by_default()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $feature = Feature::factory()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.features.default-on', ['feature' => $feature]))
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['default_enabled' => true]);
+    }
+
     public function test_deactivate_feature()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);

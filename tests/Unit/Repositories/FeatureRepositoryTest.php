@@ -113,6 +113,28 @@ class FeatureRepositoryTest extends TestCase
         $this->assertEquals($newName, $updatedFeature->name);
     }
 
+    public function test_turn_feature_off_by_default_sets_flag_and_clears_cache()
+    {
+        $feature = Feature::factory()->create(['default_enabled' => true]);
+
+        $this->cacheService->expects($this->once())->method('clear');
+
+        $defaultOffFeature = $this->repository->turnOffByDefault($feature);
+
+        $this->assertFalse($defaultOffFeature->default_enabled);
+    }
+
+    public function test_turn_feature_on_by_default_sets_flag_and_clears_cache()
+    {
+        $feature = Feature::factory()->create(['default_enabled' => false]);
+
+        $this->cacheService->expects($this->once())->method('clear');
+
+        $defaultOnFeature = $this->repository->turnOnByDefault($feature);
+
+        $this->assertTrue($defaultOnFeature->default_enabled);
+    }
+
     public function test_deactivate_feature_sets_active_to_false_and_clears_cache()
     {
         $feature = Feature::factory()->create(['is_active' => true]);

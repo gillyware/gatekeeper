@@ -268,6 +268,16 @@ interface GatekeeperServiceInterface
     public function updateFeature(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName): FeaturePacket;
 
     /**
+     * Turn feature off by default.
+     */
+    public function turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
+     * Turn feature on by default.
+     */
+    public function turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+
+    /**
      * Deactivate a feature.
      */
     public function deactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
@@ -283,28 +293,28 @@ interface GatekeeperServiceInterface
     public function deleteFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Assign a feature to a model.
+     * Turn a feature on for a model.
      */
-    public function assignFeatureToModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Assign multiple features to a model.
+     * Turn multiple features on for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function assignAllFeaturesToModel(Model $model, array|Arrayable $features): bool;
+    public function turnAllFeaturesOnForModel(Model $model, array|Arrayable $features): bool;
 
     /**
-     * Revoke a feature from a model.
+     * Turn a feature off for a model.
      */
-    public function revokeFeatureFromModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Revoke multiple features from a model.
+     * Turn multiple features off for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function revokeAllFeaturesFromModel(Model $model, array|Arrayable $features): bool;
+    public function turnAllFeaturesOffForModel(Model $model, array|Arrayable $features): bool;
 
     /**
      * Check if a model has the given feature.

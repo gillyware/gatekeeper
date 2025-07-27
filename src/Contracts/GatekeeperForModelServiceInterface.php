@@ -148,28 +148,28 @@ interface GatekeeperForModelServiceInterface
     public function getVerboseRoles(): Collection;
 
     /**
-     * Assign a feature to a model.
+     * Turn a feature on for a model.
      */
-    public function assignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function turnFeatureOn(Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Assign multiple features to a model.
+     * Turn multiple features on for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function assignAllFeatures(array|Arrayable $features): bool;
+    public function turnAllFeaturesOn(array|Arrayable $features): bool;
 
     /**
-     * Revoke a feature from a model.
+     * Turn a feature off for a model.
      */
-    public function revokeFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function turnFeatureOff(Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Revoke multiple features from a model.
+     * Turn multiple features off for a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function revokeAllFeatures(array|Arrayable $features): bool;
+    public function turnAllFeaturesOff(array|Arrayable $features): bool;
 
     /**
      * Check if a model has the given feature.

@@ -168,6 +168,136 @@ class FeatureServiceTest extends TestCase
         $this->assertCount(0, AuditLog::all());
     }
 
+    // / ***********************
+
+    public function test_turn_feature_off_by_default()
+    {
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $feature = $this->service->turnOffByDefault($feature);
+
+        $this->assertInstanceOf(FeaturePacket::class, $feature);
+        $this->assertFalse($feature->enabledByDefault);
+    }
+
+    public function test_turn_feature_off_by_default_succeeds_if_features_feature_disabled()
+    {
+        Config::set('gatekeeper.features.features.enabled', false);
+
+        $feature = Feature::factory()->defaultOn()->create();
+        $feature = $this->service->turnOffByDefault($feature);
+
+        $this->assertFalse($feature->enabledByDefault);
+    }
+
+    public function test_feature_off_by_default_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $feature = $this->service->turnOffByDefault($feature);
+        $feature = $this->service->turnOffByDefault($feature);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_turn_feature_off_by_default_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $this->service->turnOffByDefault($feature);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Feature> $turnOffByDefaultAuditLog */
+        $turnOffByDefaultAuditLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::TurnFeatureOffByDefault->value, $turnOffByDefaultAuditLog->action);
+        $this->assertEquals($feature->name, $turnOffByDefaultAuditLog->metadata['name']);
+        $this->assertEquals($this->user->id, $turnOffByDefaultAuditLog->actionBy->id);
+        $this->assertEquals($feature->id, $turnOffByDefaultAuditLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_turn_feature_off_by_default_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $this->service->turnOffByDefault($feature);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_feature_on_by_default_feature()
+    {
+        $feature = Feature::factory()->create();
+
+        $feature = $this->service->turnOnByDefault($feature);
+
+        $this->assertInstanceOf(FeaturePacket::class, $feature);
+        $this->assertTrue($feature->enabledByDefault);
+    }
+
+    public function test_feature_on_by_default_feature_fails_if_features_feature_disabled()
+    {
+        Config::set('gatekeeper.features.features.enabled', false);
+
+        $feature = Feature::factory()->create();
+
+        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->service->turnOnByDefault($feature);
+
+        $this->assertFalse($feature->fresh()->default_enabled);
+    }
+
+    public function test_feature_on_by_default_feature_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $this->service->turnOnByDefault($feature);
+        $this->service->turnOnByDefault($feature);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_turn_feature_on_by_default_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $this->service->turnOnByDefault($feature);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Feature> $turnOnByDefaultFeatureLog */
+        $turnOnByDefaultFeatureLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::TurnFeatureOnByDefault->value, $turnOnByDefaultFeatureLog->action);
+        $this->assertEquals($feature->name, $turnOnByDefaultFeatureLog->metadata['name']);
+        $this->assertEquals($this->user->id, $turnOnByDefaultFeatureLog->actionBy->id);
+        $this->assertEquals($feature->id, $turnOnByDefaultFeatureLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_turn_feature_on_by_default_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $feature = Feature::factory()->create();
+
+        $this->service->turnOnByDefault($feature);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    // / ***********************
+
     public function test_deactivate_feature()
     {
         $feature = Feature::factory()->create();
@@ -526,7 +656,7 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
         $team = Team::factory()->create();
 
-        $team->assignFeature($feature);
+        $team->turnFeatureOn($feature);
         $user->addToTeam($team);
 
         $this->assertTrue($this->service->modelHas($user, $feature));
@@ -574,7 +704,7 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
         $team = Team::factory()->inactive()->create();
 
-        $team->assignFeature($feature);
+        $team->turnFeatureOn($feature);
         $user->addToTeam($team);
 
         $this->assertFalse($this->service->modelHas($user, $feature));
@@ -657,10 +787,10 @@ class FeatureServiceTest extends TestCase
         $teamFeature = Feature::factory()->create();
 
         $team = Team::factory()->create();
-        $team->assignFeature($teamFeature);
+        $team->turnFeatureOn($teamFeature);
         $user->addToTeam($team);
 
-        $user->assignFeature($directFeature);
+        $user->turnFeatureOn($directFeature);
 
         $effective = $this->service->getForModel($user);
 

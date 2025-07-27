@@ -94,6 +94,10 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
             Route::put('{feature}', 'update')->name('update');
 
+            Route::patch('{feature}/default-off', 'turnOffByDefault')->name('default-off');
+
+            Route::patch('{feature}/default-on', 'turnOnByDefault')->name('default-on');
+
             Route::patch('{feature}/deactivate', 'deactivate')->name('deactivate');
 
             Route::patch('{feature}/reactivate', 'reactivate')->name('reactivate');

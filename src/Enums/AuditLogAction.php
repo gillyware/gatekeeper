@@ -36,6 +36,10 @@ enum AuditLogAction: string
 
     case UpdateFeature = 'feature_update';
 
+    case TurnFeatureOffByDefault = 'feature_default_off';
+
+    case TurnFeatureOnByDefault = 'feature_default_on';
+
     case DeactivateFeature = 'feature_deactivate';
 
     case ReactivateFeature = 'feature_reactivate';

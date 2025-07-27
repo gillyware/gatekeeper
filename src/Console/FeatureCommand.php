@@ -43,6 +43,8 @@ class FeatureCommand extends AbstractBaseEntityCommand
             match ($this->action) {
                 AuditLogAction::CreateFeature->value => $this->handleCreate(),
                 AuditLogAction::UpdateFeature->value => $this->handleUpdate(),
+                AuditLogAction::TurnFeatureOffByDefault->value => $this->handleTurnOffByDefault(),
+                AuditLogAction::TurnFeatureOnByDefault->value => $this->handleTurnOnByDefault(),
                 AuditLogAction::DeactivateFeature->value => $this->handleDeactivate(),
                 AuditLogAction::ReactivateFeature->value => $this->handleReactivate(),
                 AuditLogAction::DeleteFeature->value => $this->handleDelete(),
@@ -144,6 +146,70 @@ class FeatureCommand extends AbstractBaseEntityCommand
     }
 
     /**
+     * Handle the turning off by defaule one or more enabled by default features.
+     */
+    private function handleTurnOffByDefault(): void
+    {
+        $featureNames = $this->gatherOneOrMoreExistingEntityNames();
+
+        $this->resolveActor();
+
+        [$successes, $failures] = $featureNames->partition(function (string $featureName) {
+            try {
+                Gatekeeper::turnFeatureOffByDefault($featureName);
+
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
+
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Feature{$plural} '{$successes->implode(', ')}' successfully turned off by default.");
+        }
+
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to turn feature{$plural} '{$failures->implode(', ')}' off by default.");
+        }
+    }
+
+    /**
+     * Handle the turning on by defaule one or more disabled by default features.
+     */
+    private function handleTurnOnByDefault(): void
+    {
+        $featureNames = $this->gatherOneOrMoreExistingEntityNames();
+
+        $this->resolveActor();
+
+        [$successes, $failures] = $featureNames->partition(function (string $featureName) {
+            try {
+                Gatekeeper::turnFeatureOnByDefault($featureName);
+
+                return true;
+            } catch (GatekeeperException $e) {
+                error($e->getMessage());
+
+                return false;
+            }
+        });
+
+        if ($successes->isNotEmpty()) {
+            $plural = $successes->count() > 1 ? 's' : '';
+            info("Feature{$plural} '{$successes->implode(', ')}' successfully turned on by default.");
+        }
+
+        if ($failures->isNotEmpty()) {
+            $plural = $failures->count() > 1 ? 's' : '';
+            error("Failed to turn feature{$plural} '{$failures->implode(', ')}' on by default.");
+        }
+    }
+
+    /**
      * Handle the reactivation of one or more deactivated features.
      */
     private function handleReactivate(): void
@@ -220,7 +286,7 @@ class FeatureCommand extends AbstractBaseEntityCommand
 
         [$successes, $failures] = $featureNames->partition(function (string $featureName) use ($actee) {
             try {
-                Gatekeeper::for($actee)->assignFeature($featureName);
+                Gatekeeper::for($actee)->turnFeatureOn($featureName);
 
                 return true;
             } catch (GatekeeperException $e) {
@@ -254,7 +320,7 @@ class FeatureCommand extends AbstractBaseEntityCommand
 
         [$successes, $failures] = $featureNames->partition(function (string $featureName) use ($actee) {
             try {
-                Gatekeeper::for($actee)->revokeFeature($featureName);
+                Gatekeeper::for($actee)->turnFeatureOff($featureName);
 
                 return true;
             } catch (GatekeeperException $e) {
@@ -283,6 +349,8 @@ class FeatureCommand extends AbstractBaseEntityCommand
         return [
             AuditLogAction::CreateFeature->value => 'Create one or more new features',
             AuditLogAction::UpdateFeature->value => 'Update an existing feature',
+            AuditLogAction::TurnFeatureOffByDefault->value => 'Turn one or more features off by default',
+            AuditLogAction::TurnFeatureOnByDefault->value => 'Turn one or more features on by default',
             AuditLogAction::DeactivateFeature->value => 'Deactivate one or more active features',
             AuditLogAction::ReactivateFeature->value => 'Reactivate one or more inactive features',
             AuditLogAction::DeleteFeature->value => 'Delete one or more existing features',
@@ -300,6 +368,8 @@ class FeatureCommand extends AbstractBaseEntityCommand
 
         $filtered = match ($this->action) {
             AuditLogAction::UpdateFeature->value, AuditLogAction::DeleteFeature->value, AuditLogAction::AssignFeature->value, AuditLogAction::RevokeFeature->value => $all,
+            AuditLogAction::TurnFeatureOffByDefault->value => $all->filter(fn (Feature $feature) => $feature->default_enabled),
+            AuditLogAction::TurnFeatureOnByDefault->value => $all->filter(fn (Feature $feature) => ! $feature->default_enabled),
             AuditLogAction::DeactivateFeature->value => $all->filter(fn (Feature $feature) => $feature->is_active),
             AuditLogAction::ReactivateFeature->value => $all->filter(fn (Feature $feature) => ! $feature->is_active),
             default => $all,
@@ -309,6 +379,8 @@ class FeatureCommand extends AbstractBaseEntityCommand
             throw new GatekeeperConsoleException(
                 match ($this->action) {
                     AuditLogAction::UpdateFeature->value, AuditLogAction::DeleteFeature->value, AuditLogAction::AssignFeature->value, AuditLogAction::RevokeFeature->value => 'No features found.',
+                    AuditLogAction::TurnFeatureOffByDefault->value => 'No features enabled by default found.',
+                    AuditLogAction::TurnFeatureOnByDefault->value => 'No features disabled by default found.',
                     AuditLogAction::DeactivateFeature->value => 'No active features found.',
                     AuditLogAction::ReactivateFeature->value => 'No inactive features found.',
                     default => 'No features found.',

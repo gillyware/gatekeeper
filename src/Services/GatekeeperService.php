@@ -395,6 +395,22 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->turnOffByDefault($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
+    {
+        return $this->featureService->turnOnByDefault($feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function deactivateFeature(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket
     {
         return $this->featureService->deactivate($feature);
@@ -419,7 +435,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignFeatureToModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
         return $this->featureService->assignToModel($model, $feature);
     }
@@ -427,7 +443,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function assignAllFeaturesToModel(Model $model, array|Arrayable $features): bool
+    public function turnAllFeaturesOnForModel(Model $model, array|Arrayable $features): bool
     {
         return $this->featureService->assignAllToModel($model, $features);
     }
@@ -435,7 +451,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokeFeatureFromModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
         return $this->featureService->revokeFromModel($model, $feature);
     }
@@ -443,7 +459,7 @@ class GatekeeperService implements GatekeeperServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokeAllFeaturesFromModel(Model $model, array|Arrayable $features): bool
+    public function turnAllFeaturesOffForModel(Model $model, array|Arrayable $features): bool
     {
         return $this->featureService->revokeAllFromModel($model, $features);
     }

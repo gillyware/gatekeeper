@@ -163,6 +163,28 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($newName, $updatedFeature->name);
     }
 
+    public function test_turn_feature_off_by_default_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $feature = $this->service->turnFeatureOffByDefault($feature);
+
+        $this->assertFalse($feature->enabledByDefault);
+    }
+
+    public function test_turn_on_feature_by_default_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $feature = $this->service->turnFeatureOnByDefault($feature);
+
+        $this->assertTrue($feature->enabledByDefault);
+    }
+
     public function test_deactivate_feature_delegates_to_feature_service()
     {
         Config::set('gatekeeper.features.features.enabled', true);
@@ -296,13 +318,13 @@ class GatekeeperServiceTest extends TestCase
         $feature1 = Feature::factory()->create(['name' => fake()->unique()->word()]);
         $feature2 = Feature::factory()->create(['name' => fake()->unique()->word()]);
 
-        $this->assertTrue($this->service->assignFeatureToModel($user, $feature1->name));
-        $this->assertTrue($this->service->assignAllFeaturesToModel($user, [$feature2->name]));
+        $this->assertTrue($this->service->turnFeatureOnForModel($user, $feature1->name));
+        $this->assertTrue($this->service->turnAllFeaturesOnForModel($user, [$feature2->name]));
         $this->assertTrue($this->service->modelHasFeature($user, $feature1->name));
         $this->assertTrue($this->service->modelHasAnyFeature($user, [$feature1->name, $feature2->name]));
         $this->assertTrue($this->service->modelHasAllFeatures($user, [$feature1->name, $feature2->name]));
-        $this->assertTrue($this->service->revokeFeatureFromModel($user, $feature1->name));
-        $this->assertTrue($this->service->revokeAllFeaturesFromModel($user, [$feature2->name]));
+        $this->assertTrue($this->service->turnFeatureOffForModel($user, $feature1->name));
+        $this->assertTrue($this->service->turnAllFeaturesOffForModel($user, [$feature2->name]));
     }
 
     public function test_model_team_methods_delegate()
