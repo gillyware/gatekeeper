@@ -94,7 +94,7 @@ function ModelInformation({ model, entitySupport, language }: ModelInformationPr
                     {model.displayable.map((x) => (
                         <div key={x.column} className="flex flex-row items-center justify-between gap-4">
                             <span className="font-bold">{x.label}:</span>
-                            <span className="truncate">{String(model.display[x.column]) ?? ''}</span>
+                            <span className="truncate">{String(model.display[x.column])}</span>
                         </div>
                     ))}
                 </CardContent>

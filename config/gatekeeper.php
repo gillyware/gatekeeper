@@ -125,6 +125,7 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],
 
@@ -136,7 +137,8 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
-                    ['column' => 'default_enabled', 'label' => 'Default Active', 'cli_width' => 20],
+                    ['column' => 'default_enabled', 'label' => 'On By Default', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],
 
@@ -148,6 +150,7 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
+                    ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],
 
