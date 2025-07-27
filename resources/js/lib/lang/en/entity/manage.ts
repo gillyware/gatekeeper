@@ -13,8 +13,11 @@ export interface ManageEntityText {
 export interface EntitySummaryText {
     title: string;
     nameLabel: string;
+    defaultValueLabel: string;
     statusLabel: string;
     manageAccessLabel: string;
+    offByDefault: string;
+    onByDefault: string;
     active: string;
     inactive: string;
 }
@@ -65,7 +68,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Permission',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: '',
@@ -121,7 +127,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Role',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Role Access',
@@ -177,7 +186,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Feature',
             nameLabel: 'Name:',
+            defaultValueLabel: 'Default:',
             statusLabel: 'Status:',
+            offByDefault: 'Off',
+            onByDefault: 'On',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Feature Access',
@@ -233,7 +245,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Team',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Team Access',

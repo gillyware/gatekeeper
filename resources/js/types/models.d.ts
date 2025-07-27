@@ -14,7 +14,9 @@ export type Permission = EntityModel;
 
 export type Role = EntityModel;
 
-export type Feature = EntityModel;
+export type Feature = EntityModel & {
+    default_enabled: boolean;
+};
 
 export type Team = EntityModel;
 
