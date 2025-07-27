@@ -28,12 +28,12 @@ export default function EntitySummary<E extends GatekeeperEntity>({ entity, enti
             </CardHeader>
             <CardContent className="flex-1 gap-2">
                 <div className="flex flex-row items-center justify-start gap-2">
-                    <span className="min-w-[60px] font-bold">{language.nameLabel}</span>
+                    <span className="min-w-[65px] font-bold">{language.nameLabel}</span>
                     <span>{entityModel.name}</span>
                 </div>
                 {entity === 'feature' && (
                     <div className="flex flex-row items-center justify-start gap-2">
-                        <span className="min-w-[60px] font-bold">{language.defaultValueLabel}</span>
+                        <span className="min-w-[65px] font-bold">{language.defaultValueLabel}</span>
 
                         {(entityModel as Feature).default_enabled ? (
                             <div className="flex items-center justify-start gap-2">
@@ -49,7 +49,7 @@ export default function EntitySummary<E extends GatekeeperEntity>({ entity, enti
                     </div>
                 )}
                 <div className="flex flex-row items-center justify-start gap-2">
-                    <span className="min-w-[60px] font-bold">{language.statusLabel}</span>
+                    <span className="min-w-[65px] font-bold">{language.statusLabel}</span>
 
                     {entityModel.is_active ? (
                         <div className="flex items-center justify-start gap-2">
