@@ -3,12 +3,15 @@ import DeleteEntity from '@/components/entity/DeleteEntity';
 import EntityForm from '@/components/entity/EntityForm';
 import EntitySummary from '@/components/entity/EntitySummary';
 import ReactivateEntity from '@/components/entity/ReactivateEntity';
+import TurnOffByDefaultEntity from '@/components/entity/TurnOffByDefaultEntity';
+import TurnOnByDefaultEntity from '@/components/entity/TurnOnByDefaultEntity';
 import EntityLayout from '@/layouts/entity-layout';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
 import { useApi } from '@/lib/api';
 import { getEntity } from '@/lib/entities';
 import { manageEntityText, type ManageEntityText } from '@/lib/lang/en/entity/manage';
-import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperPermission } from '@/types';
+import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
+import { type Feature } from '@/types/models';
 import { Loader } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
@@ -46,19 +49,34 @@ export default function ManageEntityScreen<E extends GatekeeperEntity>({ entity 
     return (
         <GatekeeperLayout>
             <EntityLayout entity={entity}>
-                <EntitySummary<GatekeeperPermission> entity={entity} entityModel={entityModel} />
+                <EntitySummary<E> entity={entity} entityModel={entityModel} />
 
                 <div className="space-y-6">
-                    <EntityForm<GatekeeperPermission> formType="update" entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
+                    <EntityForm<E> formType="update" entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
                 </div>
 
+                {entity === 'feature' &&
+                    ((entityModel as Feature).default_enabled ? (
+                        <TurnOffByDefaultEntity<GatekeeperFeature>
+                            entity={entity}
+                            entityModel={entityModel as Feature}
+                            updateEntity={setEntityModel}
+                        />
+                    ) : (
+                        <TurnOnByDefaultEntity<GatekeeperFeature>
+                            entity={entity}
+                            entityModel={entityModel as Feature}
+                            updateEntity={setEntityModel}
+                        />
+                    ))}
+
                 {entityModel.is_active ? (
-                    <DeactivateEntity<GatekeeperPermission> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
+                    <DeactivateEntity<E> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
                 ) : (
-                    <ReactivateEntity<GatekeeperPermission> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
+                    <ReactivateEntity<E> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
                 )}
 
-                <DeleteEntity<GatekeeperPermission> entity={entity} entityModel={entityModel} />
+                <DeleteEntity<E> entity={entity} entityModel={entityModel} />
             </EntityLayout>
         </GatekeeperLayout>
     );

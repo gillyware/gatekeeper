@@ -23,6 +23,10 @@ import {
     type ShowEntityResponse,
     type StoreEntityRequest,
     type StoreEntityResponse,
+    type TurnEntityOffByDefaultRequest,
+    type TurnEntityOffByDefaultResponse,
+    type TurnEntityOnByDefaultRequest,
+    type TurnEntityOnByDefaultResponse,
     type UpdateEntityRequest,
     type UpdateEntityResponse,
 } from '@/types/api/entity';
@@ -157,6 +161,18 @@ export function useApi() {
                 return handleResponse(() => {
                     return axios.put(`/features/${data.id}`, { name: data.name });
                 }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
+            },
+
+            turnFeatureOffByDefault: async (data: TurnEntityOffByDefaultRequest): Promise<TurnEntityOffByDefaultResponse<GatekeeperFeature>> => {
+                return handleResponse(() => {
+                    return axios.patch(`/features/${data.id}/default-off`);
+                }) as Promise<TurnEntityOffByDefaultResponse<GatekeeperFeature>>;
+            },
+
+            turnFeatureOnByDefault: async (data: TurnEntityOnByDefaultRequest): Promise<TurnEntityOnByDefaultResponse<GatekeeperFeature>> => {
+                return handleResponse(() => {
+                    return axios.patch(`/features/${data.id}/default-on`);
+                }) as Promise<TurnEntityOnByDefaultResponse<GatekeeperFeature>>;
             },
 
             deactivateFeature: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperFeature>> => {

@@ -5,6 +5,8 @@ export interface ManageEntityText {
     failedToLoad: string;
     entitySummaryText: EntitySummaryText;
     entityFormText: Record<EntityFormType, EntityFormText>;
+    turnEntityOffByDefaultText: TurnEntityOffByDefaultText;
+    turnEntityOnByDefaultText: TurnEntityOnByDefaultText;
     entityDeactivationText: EntityDeactivationText;
     entityReactivationText: EntityReactivationText;
     entityDeletionText: EntityDeletionText;
@@ -27,6 +29,28 @@ export interface EntityFormText {
     inputLabel: string;
     submitButton: string;
     successMessage: string;
+}
+
+export interface TurnEntityOffByDefaultText {
+    title: string;
+    description: string;
+    confirmTitle: string;
+    confirmDescription: (entityName: string) => string;
+    inputLabel: string;
+    confirmButton: string;
+    cancelButton: string;
+    mismatchError: string;
+}
+
+export interface TurnEntityOnByDefaultText {
+    title: string;
+    description: string;
+    confirmTitle: string;
+    confirmDescription: (entityName: string) => string;
+    inputLabel: string;
+    confirmButton: string;
+    cancelButton: string;
+    mismatchError: string;
 }
 
 export interface EntityDeactivationText {
@@ -90,6 +114,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
         },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
         entityDeactivationText: {
             title: 'Deactivate Permission',
             description:
@@ -148,6 +192,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
+        },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
         },
         entityDeactivationText: {
             title: 'Deactivate Role',
@@ -208,6 +272,27 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
         },
+        turnEntityOffByDefaultText: {
+            title: 'Turn Feature Off by Default',
+            description:
+                'Turning this feature off by default will require models to have it directly assigned or assigned via a team to access the feature.',
+            confirmTitle: 'Are you sure you want to turn this feature off by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature off by default.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Turn Off By Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        turnEntityOnByDefaultText: {
+            title: 'Turn Feature On by Default',
+            description: 'Turning this feature on by default will allow all models to access the feature.',
+            confirmTitle: 'Are you sure you want to turn this feature on by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature on by default.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Turn On By Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
         entityDeactivationText: {
             title: 'Deactivate Feature',
             description:
@@ -266,6 +351,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
+        },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
         },
         entityDeactivationText: {
             title: 'Deactivate Team',

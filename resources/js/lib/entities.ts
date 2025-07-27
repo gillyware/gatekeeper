@@ -2,7 +2,7 @@ import { type EntityFormType } from '@/components/entity/EntityForm';
 import { useApi } from '@/lib/api';
 import { apiText } from '@/lib/lang/en/api';
 import { flattenStrings } from '@/lib/utils';
-import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
+import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import { type EntityPageRequest, type ShowEntityRequest } from '@/types/api/entity';
 import { type ConfiguredModelMetadata } from '@/types/api/model';
@@ -126,6 +126,64 @@ export async function persistEntity<E extends GatekeeperEntity>(
 
     const entityModel = response.data as GatekeeperEntityModelMap[E];
     onSuccess(entityModel);
+    setProcessing(false);
+}
+
+export async function turnEntityOffByDefault<E extends GatekeeperFeature>(
+    api: ReturnType<typeof useApi>,
+    entity: GatekeeperFeature,
+    entityId: number,
+    setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
+    setProcessing: (processing: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<void> {
+    setProcessing(true);
+    setError(null);
+
+    const turnOffByDefault = {
+        feature: () => api.turnFeatureOffByDefault({ id: entityId }),
+    };
+
+    const response = await turnOffByDefault[entity]();
+
+    if (response.status >= 400) {
+        const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOffByDefaultError);
+        setProcessing(false);
+        return;
+    }
+
+    const entityModel = response.data as GatekeeperEntityModelMap[E];
+    setEntityModel(entityModel);
+    setProcessing(false);
+}
+
+export async function turnEntityOnByDefault<E extends GatekeeperFeature>(
+    api: ReturnType<typeof useApi>,
+    entity: GatekeeperFeature,
+    entityId: number,
+    setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
+    setProcessing: (processing: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<void> {
+    setProcessing(true);
+    setError(null);
+
+    const turnOnByDefault = {
+        feature: () => api.turnFeatureOnByDefault({ id: entityId }),
+    };
+
+    const response = await turnOnByDefault[entity]();
+
+    if (response.status >= 400) {
+        const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOnByDefaultError);
+        setProcessing(false);
+        return;
+    }
+
+    const entityModel = response.data as GatekeeperEntityModelMap[E];
+    setEntityModel(entityModel);
     setProcessing(false);
 }
 
