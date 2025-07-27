@@ -8,6 +8,7 @@ use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class TeamRepository implements EntityRepositoryInterface
 {
+    use EnforcesForGatekeeper;
+
     public function __construct(
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
@@ -198,6 +201,10 @@ class TeamRepository implements EntityRepositoryInterface
 
         if ($allTeamNames) {
             return $allTeamNames;
+        }
+
+        if (! $this->modelInteractsWithTeams($model)) {
+            return collect();
         }
 
         $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);

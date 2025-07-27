@@ -157,29 +157,46 @@ export function getEntitySupportForModel(config: GatekeeperConfig, model: Config
     const result: ModelEntitySupport = {
         permission: { supported: true },
         role: { supported: true },
+        feature: { supported: true },
         team: { supported: true },
     };
 
     const permissionsSupported = model.has_permissions && !model.is_permission;
-    const rolesSupported = config.roles_enabled && model.has_roles && !model.is_role && !model.is_permission;
+    const rolesSupported = config.roles_enabled && model.has_roles && !model.is_role && !model.is_feature && !model.is_permission;
+    const featuresSupported = config.features_enabled && model.has_features && !model.is_feature && !model.is_role && !model.is_permission;
     const teamsSupported = config.teams_enabled && model.has_teams && !model.is_team && !model.is_role && !model.is_permission;
 
     const language: ModelEntitySupportText = manageModelText.modelSummaryText.entitySupportText;
 
     if (!permissionsSupported) {
         result.permission.supported = false;
-        result.permission.reason = model.is_role ? language.permission.isPermission : language.permission.missingTrait;
+        result.permission.reason = model.is_permission ? language.permission.isPermission : language.permission.missingTrait;
     }
 
     if (!rolesSupported) {
         result.role.supported = false;
         result.role.reason = model.is_role
             ? language.role.isRole
-            : model.is_permission
-              ? language.role.isPermission
-              : !config.roles_enabled
-                ? language.role.featureDisabled
-                : language.role.missingTrait;
+            : model.is_feature
+              ? language.role.isFeature
+              : model.is_permission
+                ? language.role.isPermission
+                : !config.roles_enabled
+                  ? language.role.featureDisabled
+                  : language.role.missingTrait;
+    }
+
+    if (!featuresSupported) {
+        result.feature.supported = false;
+        result.feature.reason = model.is_feature
+            ? language.role.isFeature
+            : model.is_role
+              ? language.feature.isRole
+              : model.is_permission
+                ? language.feature.isPermission
+                : !config.features_enabled
+                  ? language.feature.featureDisabled
+                  : language.feature.missingTrait;
     }
 
     if (!teamsSupported) {

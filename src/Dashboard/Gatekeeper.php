@@ -61,6 +61,7 @@ class Gatekeeper
                 'path' => Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH),
                 'audit_enabled' => Config::get('gatekeeper.features.audit.enabled', GatekeeperConfigDefault::FEATURES_AUDIT_ENABLED),
                 'roles_enabled' => Config::get('gatekeeper.features.roles.enabled', GatekeeperConfigDefault::FEATURES_ROLES_ENABLED),
+                'features_enabled' => Config::get('gatekeeper.features.features.enabled', GatekeeperConfigDefault::FEATURES_FEATURES_ENABLED),
                 'teams_enabled' => Config::get('gatekeeper.features.teams.enabled', GatekeeperConfigDefault::FEATURES_TEAMS_ENABLED),
                 'models' => $modelMetadataService->getConfiguredModelsWithMetadata(),
             ],

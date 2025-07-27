@@ -574,6 +574,17 @@ $teams = $user->getTeams();
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you've learned how to manage teams, you may explore how to track changes made to roles, permissions, and teams:
+Entities:
+- [Permissions](permissions.md)
+- [Roles](roles.md)
+- [Features](features.md)
 
-[Audit Logging](audit-logging.md)
+Control Access with Entities:
+- [Middleware](middleware.md)
+- [Blade Directives](blade-directives.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](artisan-commands.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('audit-logging.md')

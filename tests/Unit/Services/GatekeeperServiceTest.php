@@ -2,9 +2,11 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
@@ -136,6 +138,87 @@ class GatekeeperServiceTest extends TestCase
         $this->assertSoftDeleted($role);
     }
 
+    public function test_create_feature_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $featureName = fake()->unique()->word();
+
+        $feature = $this->service->createFeature($featureName);
+
+        $this->assertInstanceOf(FeaturePacket::class, $feature);
+        $this->assertEquals($featureName, $feature->name);
+    }
+
+    public function test_update_feature_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+        $newName = fake()->unique()->word();
+
+        $updatedFeature = $this->service->updateFeature($feature, $newName);
+
+        $this->assertInstanceOf(FeaturePacket::class, $updatedFeature);
+        $this->assertEquals($newName, $updatedFeature->name);
+    }
+
+    public function test_turn_feature_off_by_default_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->defaultOn()->create();
+
+        $feature = $this->service->turnFeatureOffByDefault($feature);
+
+        $this->assertFalse($feature->enabledByDefault);
+    }
+
+    public function test_turn_on_feature_by_default_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $feature = $this->service->turnFeatureOnByDefault($feature);
+
+        $this->assertTrue($feature->enabledByDefault);
+    }
+
+    public function test_deactivate_feature_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $feature = $this->service->deactivateFeature($feature);
+
+        $this->assertFalse($feature->isActive);
+    }
+
+    public function test_reactivate_feature_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->inactive()->create();
+
+        $feature = $this->service->reactivateFeature($feature);
+
+        $this->assertTrue($feature->isActive);
+    }
+
+    public function test_delete_feature_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $deleted = $this->service->deleteFeature($feature);
+
+        $this->assertTrue($deleted);
+        $this->assertSoftDeleted($feature);
+    }
+
     public function test_create_team_delegates_to_team_service()
     {
         Config::set('gatekeeper.features.teams.enabled', true);
@@ -225,6 +308,23 @@ class GatekeeperServiceTest extends TestCase
         $this->assertTrue($this->service->modelHasAllRoles($user, [$role1->name, $role2->name]));
         $this->assertTrue($this->service->revokeRoleFromModel($user, $role1->name));
         $this->assertTrue($this->service->revokeAllRolesFromModel($user, [$role2->name]));
+    }
+
+    public function test_model_feature_methods_delegate()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $user = User::factory()->create();
+        $feature1 = Feature::factory()->create(['name' => fake()->unique()->word()]);
+        $feature2 = Feature::factory()->create(['name' => fake()->unique()->word()]);
+
+        $this->assertTrue($this->service->turnFeatureOnForModel($user, $feature1->name));
+        $this->assertTrue($this->service->turnAllFeaturesOnForModel($user, [$feature2->name]));
+        $this->assertTrue($this->service->modelHasFeature($user, $feature1->name));
+        $this->assertTrue($this->service->modelHasAnyFeature($user, [$feature1->name, $feature2->name]));
+        $this->assertTrue($this->service->modelHasAllFeatures($user, [$feature1->name, $feature2->name]));
+        $this->assertTrue($this->service->turnFeatureOffForModel($user, $feature1->name));
+        $this->assertTrue($this->service->turnAllFeaturesOffForModel($user, [$feature2->name]));
     }
 
     public function test_model_team_methods_delegate()

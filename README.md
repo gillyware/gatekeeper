@@ -17,16 +17,26 @@ Gatekeeper is an access control management system for Laravel that combines a co
 
 ## Official Documentation
 
-Full documentation is available in the [`/docs`](./docs) directory.
+### Full documentation is available in the [`/docs`](./docs) directory.
 
+Getting Started:
 - [Installation](./docs/installation.md)
 - [Configuration](./docs/configuration.md)
+
+Entities:
 - [Permissions](./docs/usage/permissions.md)
 - [Roles](./docs/usage/roles.md)
+- [Features](./docs/usage/features.md)
 - [Teams](./docs/usage/teams.md)
+
+Tracking Entity and Entity Assignment Changes:
 - [Audit Logging](./docs/advanced/audit-logging.md)
+
+Controlling Access Using Entities:
 - [Blade Directives](./docs/usage/blade-directives.md)
 - [Middleware](./docs/usage/middleware.md)
+
+Manage Entities and Assignments:
 - [Artisan Commands](./docs/usage/artisan-commands.md)
 
 ## License

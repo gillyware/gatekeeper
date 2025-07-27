@@ -1,5 +1,5 @@
 import { ConfiguredModelMetadata } from '@/types/api/model';
-import { type Permission, type Role, type Team } from '@/types/models';
+import { type Feature, type ModelFeatureAssignment, type Permission, type Role, type Team } from '@/types/models';
 import { LucideIcon } from 'lucide-react';
 
 export type GatekeeperSharedData = {
@@ -11,6 +11,7 @@ export type GatekeeperConfig = {
     path: string;
     audit_enabled: boolean;
     roles_enabled: boolean;
+    features_enabled: boolean;
     teams_enabled: boolean;
     models: ConfiguredModelMetadata[];
 };
@@ -45,20 +46,24 @@ export type GatekeeperPermission = 'permission';
 
 export type GatekeeperRole = 'role';
 
+export type GatekeeperFeature = 'feature';
+
 export type GatekeeperTeam = 'team';
 
-export type GatekeeperEntity = GatekeeperPermission | GatekeeperRole | GatekeeperTeam;
+export type GatekeeperEntity = GatekeeperPermission | GatekeeperRole | GatekeeperFeature | GatekeeperTeam;
 
 export type GatekeeperModelEntityAssignmentMap = {
     permission: ModelPermissionAssignment;
     role: ModelRoleAssignment;
+    feature: ModelFeatureAssignment;
     team: ModelTeamAssignment;
 };
 
 export type GatekeeperEntityModelMap = {
     permission: Permission;
     role: Role;
+    feature: Feature;
     team: Team;
 };
 
-export type ModelManagementTab = 'overview' | 'permissions' | 'roles' | 'teams';
+export type ModelManagementTab = 'overview' | 'permissions' | 'roles' | 'features' | 'teams';

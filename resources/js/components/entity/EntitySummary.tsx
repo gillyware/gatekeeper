@@ -3,9 +3,10 @@ import { getModelMetadataForEntity } from '@/lib/entities';
 import { manageEntityText, type EntitySummaryText } from '@/lib/lang/en/entity/manage';
 import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { type ConfiguredModelMetadata } from '@/types/api/model';
+import { type Feature } from '@/types/models';
 import { Button } from '@components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@components/ui/card';
-import { CheckCircle, Info, PauseCircle } from 'lucide-react';
+import { Ban, CheckCircle, Info, PauseCircle } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -27,11 +28,28 @@ export default function EntitySummary<E extends GatekeeperEntity>({ entity, enti
             </CardHeader>
             <CardContent className="flex-1 gap-2">
                 <div className="flex flex-row items-center justify-start gap-2">
-                    <span className="min-w-[60px] font-bold">{language.nameLabel}</span>
+                    <span className="min-w-[65px] font-bold">{language.nameLabel}</span>
                     <span>{entityModel.name}</span>
                 </div>
+                {entity === 'feature' && (
+                    <div className="flex flex-row items-center justify-start gap-2">
+                        <span className="min-w-[65px] font-bold">{language.defaultValueLabel}</span>
+
+                        {(entityModel as Feature).default_enabled ? (
+                            <div className="flex items-center justify-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <span className="text-green-700 dark:text-green-300">{language.onByDefault}</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-start gap-2">
+                                <Ban className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                <span className="text-red-600 dark:text-red-400">{language.offByDefault}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <div className="flex flex-row items-center justify-start gap-2">
-                    <span className="min-w-[60px] font-bold">{language.statusLabel}</span>
+                    <span className="min-w-[65px] font-bold">{language.statusLabel}</span>
 
                     {entityModel.is_active ? (
                         <div className="flex items-center justify-start gap-2">

@@ -8,6 +8,7 @@ use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class PermissionRepository implements EntityRepositoryInterface
 {
+    use EnforcesForGatekeeper;
+
     public function __construct(private readonly CacheService $cacheService) {}
 
     /**
@@ -190,6 +193,10 @@ class PermissionRepository implements EntityRepositoryInterface
 
         if ($allPermissionNames) {
             return $allPermissionNames;
+        }
+
+        if (! $this->modelInteractsWithPermissions($model)) {
+            return collect();
         }
 
         $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);

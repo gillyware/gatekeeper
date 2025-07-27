@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Console;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -16,17 +17,19 @@ class ListCommand extends AbstractBaseGatekeeperCommand
     protected $signature = 'gatekeeper:list
         {--permissions : Filter for permissions}
         {--roles : Filter for roles}
+        {--features : Filter for features}
         {--teams : Filter for teams}';
 
-    protected $description = 'List permissions, roles, and teams';
+    protected $description = 'List permissions, roles, features, and teams';
 
     public function handle(): int
     {
         $this->clearTerminal();
 
-        $showPermissions = $this->option('permissions') || (! $this->option('roles') && ! $this->option('teams'));
-        $showRoles = $this->option('roles') || (! $this->option('permissions') && ! $this->option('teams'));
-        $showTeams = $this->option('teams') || (! $this->option('permissions') && ! $this->option('roles'));
+        $showPermissions = $this->option('permissions') || (! $this->option('roles') && ! $this->option('features') && ! $this->option('teams'));
+        $showRoles = $this->option('roles') || (! $this->option('permissions') && ! $this->option('features') && ! $this->option('teams'));
+        $showFeatures = $this->option('features') || (! $this->option('permissions') && ! $this->option('roles') && ! $this->option('teams'));
+        $showTeams = $this->option('teams') || (! $this->option('permissions') && ! $this->option('roles') && ! $this->option('features'));
         $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
 
         if ($showPermissions) {
@@ -60,6 +63,23 @@ class ListCommand extends AbstractBaseGatekeeperCommand
                 ]));
             } else {
                 warning('No roles found.');
+            }
+        }
+
+        if ($showFeatures) {
+            $features = Feature::query()
+                ->orderByDesc('is_active')
+                ->orderBy('name')
+                ->get(['name', 'is_active', 'default_enabled', 'created_at', 'updated_at']);
+
+            $this->info('Features');
+
+            if ($features->isNotEmpty()) {
+                table(['Name', 'Active', 'Default', 'Created', 'Updated'], $features->map(fn (Feature $f) => [
+                    $f->name, $f->is_active ? 'Yes' : 'No', $f->default_enabled ? 'On' : 'Off', $f->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'), $f->updated_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'),
+                ]));
+            } else {
+                warning('No features found.');
             }
         }
 

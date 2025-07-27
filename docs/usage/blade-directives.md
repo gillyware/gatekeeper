@@ -152,6 +152,17 @@ Renders if the model is on all of the given teams.
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you've learned how to show or hide content in Blade templates, you may want to restrict access at the route or controller level:
+Entities:
+- [Permissions](permissions.md)
+- [Roles](roles.md)
+- [Features](features.md)
+- [Teams](teams.md)
 
-[Middleware](middleware.md)
+Control Access with Entities:
+- [Middleware](middleware.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](artisan-commands.md)
+
+Track Entity and Entity Assignment Changes:
+- [Audit Logging]('audit-logging.md')

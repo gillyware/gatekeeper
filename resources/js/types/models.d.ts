@@ -14,6 +14,10 @@ export type Permission = EntityModel;
 
 export type Role = EntityModel;
 
+export type Feature = EntityModel & {
+    default_enabled: boolean;
+};
+
 export type Team = EntityModel;
 
 export type ModelPermissionAssignment = EntityAssignment & {
@@ -25,6 +29,12 @@ export type ModelPermissionAssignment = EntityAssignment & {
 export type ModelRoleAssignment = EntityAssignment & {
     role_id: number;
     role: Role;
+    assigned_at: string | null;
+};
+
+export type ModelFeatureAssignment = EntityAssignment & {
+    feature_id: number;
+    feature: Feature;
     assigned_at: string | null;
 };
 

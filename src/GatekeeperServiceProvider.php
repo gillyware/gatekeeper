@@ -6,6 +6,8 @@ use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
+use Gillyware\Gatekeeper\Repositories\FeatureRepository;
+use Gillyware\Gatekeeper\Repositories\ModelHasFeatureRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
@@ -14,8 +16,10 @@ use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Services\FeatureService;
 use Gillyware\Gatekeeper\Services\GatekeeperForModelService;
 use Gillyware\Gatekeeper\Services\GatekeeperService;
+use Gillyware\Gatekeeper\Services\ModelHasFeatureService;
 use Gillyware\Gatekeeper\Services\ModelHasPermissionService;
 use Gillyware\Gatekeeper\Services\ModelHasRoleService;
 use Gillyware\Gatekeeper\Services\ModelHasTeamService;
@@ -64,17 +68,21 @@ class GatekeeperServiceProvider extends ServiceProvider
 
         $this->app->singleton(PermissionRepository::class);
         $this->app->singleton(RoleRepository::class);
+        $this->app->singleton(FeatureRepository::class);
         $this->app->singleton(TeamRepository::class);
         $this->app->singleton(ModelHasPermissionRepository::class);
         $this->app->singleton(ModelHasRoleRepository::class);
+        $this->app->singleton(ModelHasFeatureRepository::class);
         $this->app->singleton(ModelHasTeamRepository::class);
         $this->app->singleton(AuditLogRepository::class);
 
         $this->app->singleton(PermissionService::class);
         $this->app->singleton(RoleService::class);
+        $this->app->singleton(FeatureService::class);
         $this->app->singleton(TeamService::class);
         $this->app->singleton(ModelHasPermissionService::class);
         $this->app->singleton(ModelHasRoleService::class);
+        $this->app->singleton(ModelHasFeatureService::class);
         $this->app->singleton(ModelHasTeamService::class);
         $this->app->singleton(AuditLogService::class);
         $this->app->singleton(GatekeeperForModelService::class);
@@ -82,6 +90,7 @@ class GatekeeperServiceProvider extends ServiceProvider
         $this->app->singleton('gatekeeper', fn ($app) => new GatekeeperService(
             $app->make(PermissionService::class),
             $app->make(RoleService::class),
+            $app->make(FeatureService::class),
             $app->make(TeamService::class),
             $app->make(GatekeeperForModelService::class),
         ));
@@ -224,6 +233,39 @@ class GatekeeperServiceProvider extends ServiceProvider
         });
 
         /**
+         * Features.
+         */
+        Blade::if('hasFeature', function ($model, $feature = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::for($model)->hasFeature($feature);
+            }
+
+            [$model, $feature] = [Auth::user(), $model];
+
+            return Gatekeeper::for($model)->hasFeature($feature);
+        });
+
+        Blade::if('hasAnyFeature', function ($model, $features = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::for($model)->hasAnyFeature($features);
+            }
+
+            [$model, $features] = [Auth::user(), $model];
+
+            return Gatekeeper::for($model)->hasAnyFeature($features);
+        });
+
+        Blade::if('hasAllFeatures', function ($model, $features = null) {
+            if (func_num_args() === 2) {
+                return Gatekeeper::for($model)->hasAllFeatures($features);
+            }
+
+            [$model, $features] = [Auth::user(), $model];
+
+            return Gatekeeper::for($model)->hasAllFeatures($features);
+        });
+
+        /**
          * Teams.
          */
         Blade::if('onTeam', function ($model, $team = null) {
@@ -268,14 +310,17 @@ class GatekeeperServiceProvider extends ServiceProvider
 
         $router->aliasMiddleware('has_permission', \Gillyware\Gatekeeper\Http\Middleware\HasPermission::class);
         $router->aliasMiddleware('has_role', \Gillyware\Gatekeeper\Http\Middleware\HasRole::class);
+        $router->aliasMiddleware('has_feature', \Gillyware\Gatekeeper\Http\Middleware\HasFeature::class);
         $router->aliasMiddleware('on_team', \Gillyware\Gatekeeper\Http\Middleware\OnTeam::class);
 
         $router->aliasMiddleware('has_any_permission', \Gillyware\Gatekeeper\Http\Middleware\HasAnyPermission::class);
         $router->aliasMiddleware('has_any_role', \Gillyware\Gatekeeper\Http\Middleware\HasAnyRole::class);
+        $router->aliasMiddleware('has_any_feature', \Gillyware\Gatekeeper\Http\Middleware\HasAnyFeature::class);
         $router->aliasMiddleware('on_any_team', \Gillyware\Gatekeeper\Http\Middleware\OnAnyTeam::class);
 
         $router->aliasMiddleware('has_all_permissions', \Gillyware\Gatekeeper\Http\Middleware\HasAllPermissions::class);
         $router->aliasMiddleware('has_all_roles', \Gillyware\Gatekeeper\Http\Middleware\HasAllRoles::class);
+        $router->aliasMiddleware('has_all_features', \Gillyware\Gatekeeper\Http\Middleware\HasAllFeatures::class);
         $router->aliasMiddleware('on_all_teams', \Gillyware\Gatekeeper\Http\Middleware\OnAllTeams::class);
     }
 
@@ -294,6 +339,7 @@ class GatekeeperServiceProvider extends ServiceProvider
             \Gillyware\Gatekeeper\Console\ListCommand::class,
             \Gillyware\Gatekeeper\Console\PermissionCommand::class,
             \Gillyware\Gatekeeper\Console\RoleCommand::class,
+            \Gillyware\Gatekeeper\Console\FeatureCommand::class,
             \Gillyware\Gatekeeper\Console\TeamCommand::class,
             \Gillyware\Gatekeeper\Console\ClearCacheCommand::class,
         ]);

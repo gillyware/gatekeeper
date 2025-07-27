@@ -3,12 +3,13 @@ import AppLogo from '@components/app/app-logo';
 import { NavFooter } from '@components/app/app-nav-footer';
 import { NavMain } from '@components/app/app-nav-main';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@components/ui/sidebar';
-import { BookOpen, FileClock, Folder, KeyRound, Shapes, ShieldCheck, Users } from 'lucide-react';
+import { BookOpen, FileClock, Folder, KeyRound, Shapes, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const mainNavItems: NavItem[] = [
     { title: 'Permissions', href: '/permissions', icon: KeyRound },
     { title: 'Roles', href: '/roles', icon: ShieldCheck },
+    { title: 'Features', href: '/features', icon: Sparkles },
     { title: 'Teams', href: '/teams', icon: Users },
     { title: 'Models', href: '/models', icon: Shapes },
     { title: 'Audit', href: '/audit', icon: FileClock },

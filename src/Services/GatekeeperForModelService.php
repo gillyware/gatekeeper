@@ -4,9 +4,11 @@ namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Contracts\GatekeeperForModelServiceInterface;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
@@ -187,6 +189,86 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     public function getVerboseRoles(): Collection
     {
         return Gatekeeper::getVerboseRolesForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOn(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::turnFeatureOnForModel($this->model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnAllFeaturesOn(array|Arrayable $features): bool
+    {
+        return Gatekeeper::turnAllFeaturesOnForModel($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnFeatureOff(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::turnFeatureOffForModel($this->model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function turnAllFeaturesOff(array|Arrayable $features): bool
+    {
+        return Gatekeeper::turnAllFeaturesOffForModel($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::modelHasFeature($this->model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasAnyFeature(array|Arrayable $features): bool
+    {
+        return Gatekeeper::modelHasAnyFeature($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasAllFeatures(array|Arrayable $features): bool
+    {
+        return Gatekeeper::modelHasAllFeatures($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDirectFeatures(): Collection
+    {
+        return Gatekeeper::getDirectFeaturesForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEffectiveFeatures(): Collection
+    {
+        return Gatekeeper::getEffectiveFeaturesForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getVerboseFeatures(): Collection
+    {
+        return Gatekeeper::getVerboseFeaturesForModel($this->model);
     }
 
     /**

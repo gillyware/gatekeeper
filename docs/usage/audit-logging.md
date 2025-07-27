@@ -68,6 +68,15 @@ When audit logging is enabled, the following actions are recorded:
 <a name="next-steps"></a>
 ## Next Steps
 
-Now that you've learned about the audit log, you may explore the blade directives offered by Gatekeeper:
+Entities:
+- [Permissions](permissions.md)
+- [Roles](roles.md)
+- [Features](features.md)
+- [Teams](teams.md)
 
-[Blade Directives](blade-directives.md)
+Control Access with Entities:
+- [Middleware](middleware.md)
+- [Blade Directives](blade-directives.md)
+
+Manage Entities and Assignments:
+- [Artisan Commands](artisan-commands.md)

@@ -4,7 +4,7 @@ import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
 import { type ModelManagementTab } from '@/types';
 import { type ConfiguredModel, type ModelEntitySupport } from '@/types/api/model';
-import { KeyRound, LucideIcon, ShieldCheck, Square, Users } from 'lucide-react';
+import { KeyRound, LucideIcon, ShieldCheck, Sparkles, Square, Users } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface ModelManagementTabsProps {
@@ -25,6 +25,7 @@ export default function ModelManagementTabs({ tab, changeTab, model }: ModelMana
 
     const showPermissiosnTab = entitySupport.permission.supported || model.access_sources.direct_permissions_count > 0;
     const showRolesTab = entitySupport.role.supported || model.access_sources.direct_roles_count > 0;
+    const showFeaturesTab = entitySupport.feature.supported || model.access_sources.direct_features_count > 0;
     const showTeamsTab = entitySupport.team.supported || model.access_sources.direct_teams_count > 0;
     const language: ModelManagementTabsText = useMemo(() => manageModelText.modelManagementTabsText, []);
 
@@ -32,6 +33,7 @@ export default function ModelManagementTabs({ tab, changeTab, model }: ModelMana
         { value: 'overview', icon: Square, label: language.navOverview },
         showPermissiosnTab && { value: 'permissions', icon: KeyRound, label: language.navPermission },
         showRolesTab && { value: 'roles', icon: ShieldCheck, label: language.navRoles },
+        showFeaturesTab && { value: 'features', icon: Sparkles, label: language.navFeatures },
         showTeamsTab && { value: 'teams', icon: Users, label: language.navTeams },
     ].filter((x) => Boolean(x)) as Tab[];
 

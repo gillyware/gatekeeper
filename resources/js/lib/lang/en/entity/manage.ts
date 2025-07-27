@@ -5,6 +5,8 @@ export interface ManageEntityText {
     failedToLoad: string;
     entitySummaryText: EntitySummaryText;
     entityFormText: Record<EntityFormType, EntityFormText>;
+    turnEntityOffByDefaultText: TurnEntityOffByDefaultText;
+    turnEntityOnByDefaultText: TurnEntityOnByDefaultText;
     entityDeactivationText: EntityDeactivationText;
     entityReactivationText: EntityReactivationText;
     entityDeletionText: EntityDeletionText;
@@ -13,8 +15,11 @@ export interface ManageEntityText {
 export interface EntitySummaryText {
     title: string;
     nameLabel: string;
+    defaultValueLabel: string;
     statusLabel: string;
     manageAccessLabel: string;
+    offByDefault: string;
+    onByDefault: string;
     active: string;
     inactive: string;
 }
@@ -24,6 +29,28 @@ export interface EntityFormText {
     inputLabel: string;
     submitButton: string;
     successMessage: string;
+}
+
+export interface TurnEntityOffByDefaultText {
+    title: string;
+    description: string;
+    confirmTitle: string;
+    confirmDescription: (entityName: string) => string;
+    inputLabel: string;
+    confirmButton: string;
+    cancelButton: string;
+    mismatchError: string;
+}
+
+export interface TurnEntityOnByDefaultText {
+    title: string;
+    description: string;
+    confirmTitle: string;
+    confirmDescription: (entityName: string) => string;
+    inputLabel: string;
+    confirmButton: string;
+    cancelButton: string;
+    mismatchError: string;
 }
 
 export interface EntityDeactivationText {
@@ -65,7 +92,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Permission',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: '',
@@ -83,6 +113,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
+        },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
         },
         entityDeactivationText: {
             title: 'Deactivate Permission',
@@ -121,7 +171,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Role',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Role Access',
@@ -139,6 +192,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
+        },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
         },
         entityDeactivationText: {
             title: 'Deactivate Role',
@@ -172,12 +245,95 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
             mismatchError: 'Role name does not match.',
         },
     },
+    feature: {
+        failedToLoad: 'Failed to load feature',
+        entitySummaryText: {
+            title: 'Feature',
+            nameLabel: 'Name:',
+            defaultValueLabel: 'Default:',
+            statusLabel: 'Status:',
+            offByDefault: 'Off',
+            onByDefault: 'On',
+            active: 'Active',
+            inactive: 'Inactive',
+            manageAccessLabel: 'Manage Feature Access',
+        },
+        entityFormText: {
+            create: {
+                title: 'Create Feature',
+                inputLabel: 'Feature Name',
+                submitButton: 'Create',
+                successMessage: 'Saved',
+            },
+            update: {
+                title: 'Update Feature',
+                inputLabel: 'Feature Name',
+                submitButton: 'Update',
+                successMessage: 'Saved',
+            },
+        },
+        turnEntityOffByDefaultText: {
+            title: 'Turn Feature Off by Default',
+            description:
+                'Turning this feature off by default will require models to have it directly assigned or assigned via a team to access the feature.',
+            confirmTitle: 'Are you sure you want to turn this feature off by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature off by default.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Turn Off By Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        turnEntityOnByDefaultText: {
+            title: 'Turn Feature On by Default',
+            description: 'Turning this feature on by default will allow all models to access the feature.',
+            confirmTitle: 'Are you sure you want to turn this feature on by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature on by default.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Turn On By Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        entityDeactivationText: {
+            title: 'Deactivate Feature',
+            description:
+                'Deactivating this feature will keep all assignments intact but will temporarily stop granting its permissions to assigned models.',
+            confirmTitle: 'Are you sure you want to deactivate this feature?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm deactivation of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Deactivate',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        entityReactivationText: {
+            title: 'Reactivate Feature',
+            description: 'Reactivating this feature will resume granting permissions to its assigned models.',
+            confirmTitle: 'Are you sure you want to reactivate this feature?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm reactivation of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Reactivate',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+        entityDeletionText: {
+            title: 'Delete Feature',
+            description: 'Deleting this feature will remove it from the application and unassign it from all models.',
+            confirmTitle: 'Are you sure you want to delete this feature?',
+            confirmDescription: (entityName: string) => `Type "${entityName}" to confirm deletion of this feature.`,
+            inputLabel: 'Feature Name',
+            confirmButton: 'Delete',
+            cancelButton: 'Cancel',
+            mismatchError: 'Feature name does not match.',
+        },
+    },
     team: {
         failedToLoad: 'Failed to load team',
         entitySummaryText: {
             title: 'Team',
             nameLabel: 'Name:',
+            defaultValueLabel: '',
             statusLabel: 'Status:',
+            offByDefault: '',
+            onByDefault: '',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Team Access',
@@ -195,6 +351,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
+        },
+        turnEntityOffByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
+        },
+        turnEntityOnByDefaultText: {
+            title: '',
+            description: '',
+            confirmTitle: '',
+            confirmDescription: (entityName) => `${entityName}`,
+            inputLabel: '',
+            confirmButton: '',
+            cancelButton: '',
+            mismatchError: '',
         },
         entityDeactivationText: {
             title: 'Deactivate Team',

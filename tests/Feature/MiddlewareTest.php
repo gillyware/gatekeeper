@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Feature;
 
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -19,6 +20,7 @@ class MiddlewareTest extends TestCase
 
         Config::set('gatekeeper.features.audit.enabled', false);
         Config::set('gatekeeper.features.roles.enabled', true);
+        Config::set('gatekeeper.features.features.enabled', true);
         Config::set('gatekeeper.features.teams.enabled', true);
     }
 
@@ -135,6 +137,68 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_role:$r1,$r2"))
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function test_has_feature_middleware_allows_access()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $user = User::factory()->create();
+        $featureName = fake()->unique()->word();
+
+        Feature::factory()->withName($featureName)->create();
+        $user->turnFeatureOn($featureName);
+
+        $this->actingAs($user)
+            ->get($this->registerTestRoute("has_feature:$featureName"))
+            ->assertStatus(Response::HTTP_OK)
+            ->assertSee('OK');
+    }
+
+    public function test_has_feature_middleware_denies_access()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $user = User::factory()->create();
+        $featureName = fake()->unique()->word();
+
+        Feature::factory()->withName($featureName)->create();
+
+        $this->actingAs($user)
+            ->get($this->registerTestRoute("has_feature:$featureName"))
+            ->assertStatus(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function test_has_any_feature_middleware_allows_access()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $user = User::factory()->create();
+        [$r1, $r2] = [fake()->unique()->word(), fake()->unique()->word()];
+
+        Feature::factory()->withName($r1)->create();
+        Feature::factory()->withName($r2)->create();
+        $user->turnFeatureOn($r1);
+
+        $this->actingAs($user)
+            ->get($this->registerTestRoute("has_any_feature:$r1,$r2"))
+            ->assertStatus(Response::HTTP_OK)
+            ->assertSee('OK');
+    }
+
+    public function test_has_any_feature_middleware_denies_access()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $user = User::factory()->create();
+        [$r1, $r2] = [fake()->unique()->word(), fake()->unique()->word()];
+
+        Feature::factory()->withName($r1)->create();
+        Feature::factory()->withName($r2)->create();
+
+        $this->actingAs($user)
+            ->get($this->registerTestRoute("has_any_feature:$r1,$r2"))
             ->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 

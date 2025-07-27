@@ -3,6 +3,7 @@
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Http\Controllers\AuditLogController;
+use Gillyware\Gatekeeper\Http\Controllers\FeatureController;
 use Gillyware\Gatekeeper\Http\Controllers\LandingController;
 use Gillyware\Gatekeeper\Http\Controllers\ModelController;
 use Gillyware\Gatekeeper\Http\Controllers\PermissionController;
@@ -71,6 +72,37 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
             Route::patch('{role}/reactivate', 'reactivate')->name('reactivate');
 
             Route::delete('{role}', 'delete')->name('delete');
+
+        });
+
+    });
+
+    /**
+     * ******************************************************************
+     * Features
+     * ******************************************************************
+     */
+    Route::prefix('features')->name('features.')->controller(FeatureController::class)->group(function () {
+
+        Route::get('/', 'index')->name('index');
+
+        Route::get('{feature}', 'show')->name('show');
+
+        Route::middleware('has_permission:'.GatekeeperPermission::Manage->value)->group(function () {
+
+            Route::post('/', 'store')->name('store');
+
+            Route::put('{feature}', 'update')->name('update');
+
+            Route::patch('{feature}/default-off', 'turnOffByDefault')->name('default-off');
+
+            Route::patch('{feature}/default-on', 'turnOnByDefault')->name('default-on');
+
+            Route::patch('{feature}/deactivate', 'deactivate')->name('deactivate');
+
+            Route::patch('{feature}/reactivate', 'reactivate')->name('reactivate');
+
+            Route::delete('{feature}', 'delete')->name('delete');
 
         });
 
