@@ -8,6 +8,7 @@ use Gillyware\Gatekeeper\Exceptions\Feature\FeatureNotFoundException;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class FeatureRepository implements FeatureRepositoryInterface
 {
+    use EnforcesForGatekeeper;
+
     public function __construct(
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
@@ -224,6 +227,10 @@ class FeatureRepository implements FeatureRepositoryInterface
 
         if ($allFeatureNames) {
             return $allFeatureNames;
+        }
+
+        if (! $this->modelInteractsWithFeatures($model)) {
+            return collect();
         }
 
         $featuresTable = Config::get('gatekeeper.tables.features', GatekeeperConfigDefault::TABLES_FEATURES);
