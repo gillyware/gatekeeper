@@ -42,28 +42,52 @@ class HasRolesTest extends TestCase
         $user->assignAllRoles($roles);
     }
 
-    public function test_revoke_role_delegates_to_facade()
+    public function test_unassign_role_delegates_to_facade()
     {
         $user = User::factory()->create();
         $role = 'edit-posts';
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokeRoleFromModel')->with($user, $role)->once();
+        Gatekeeper::shouldReceive('unassignRoleFromModel')->with($user, $role)->once();
 
-        $user->revokeRole($role);
+        $user->unassignRole($role);
     }
 
-    public function test_revoke_roles_delegates_to_facade()
+    public function test_unassign_roles_delegates_to_facade()
     {
         $user = User::factory()->create();
         $roles = ['edit-posts', 'delete-posts'];
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokeAllRolesFromModel')->with($user, $roles)->once();
+        Gatekeeper::shouldReceive('unassignAllRolesFromModel')->with($user, $roles)->once();
 
-        $user->revokeAllRoles($roles);
+        $user->unassignAllRoles($roles);
+    }
+
+    public function test_deny_role_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $role = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyRoleFromModel')->with($user, $role)->once();
+
+        $user->denyRole($role);
+    }
+
+    public function test_deny_roles_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $roles = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyAllRolesFromModel')->with($user, $roles)->once();
+
+        $user->denyAllRoles($roles);
     }
 
     public function test_has_role_delegates_to_facade()

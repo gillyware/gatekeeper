@@ -101,14 +101,14 @@ class PermissionRepositoryTest extends TestCase
         $this->assertTrue($this->repository->exists($name));
     }
 
-    public function test_update_permission_updates_name_and_clears_cache()
+    public function test_update_permission_name_updates_name_and_clears_cache()
     {
         $permission = Permission::factory()->create();
         $newName = fake()->unique()->word();
 
         $this->cacheService->expects($this->once())->method('clear');
 
-        $updatedPermission = $this->repository->update($permission, $newName);
+        $updatedPermission = $this->repository->updateName($permission, $newName);
 
         $this->assertEquals($newName, $updatedPermission->name);
     }
@@ -181,170 +181,26 @@ class PermissionRepositoryTest extends TestCase
         );
     }
 
-    public function test_active_returns_only_active_permissions()
-    {
-        $inactive = Permission::factory()->count(2)->inactive()->create();
-        $active = Permission::factory()->count(2)->create();
-
-        $all = $inactive->concat($active);
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn($all);
-
-        $result = $this->repository->active();
-
-        $this->assertEqualsCanonicalizing(
-            $active->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_permissions()
-    {
-        $permissions = Permission::factory()->count(3)->create();
-        $names = $permissions->pluck('name');
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn($permissions);
-
-        $result = $this->repository->whereNameIn($names);
-
-        $this->assertCount(3, $result);
-        $this->assertEqualsCanonicalizing(
-            $permissions->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_empty_collection_when_no_matches()
-    {
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect());
-
-        $result = $this->repository->whereNameIn(['nonexistent']);
-
-        $this->assertCount(0, $result);
-    }
-
-    public function test_get_all_permission_names_for_model_caches_result()
+    public function test_get_assigned_permissions_for_model_caches_result()
     {
         $user = User::factory()->create();
         $permission = Permission::factory()->create();
         $user->permissions()->attach($permission);
 
         $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
+            ->method('getModelPermissionLinks')
             ->with($user)
             ->willReturn(null);
 
         $this->cacheService->expects($this->once())
-            ->method('putModelPermissionNames')
-            ->with($user, collect([$permission->name]));
+            ->method('putModelPermissionLinks')
+            ->with($user, collect([[
+                'name' => $permission->name,
+                'denied' => 0,
+            ]]));
 
-        $names = $this->repository->namesForModel($user);
+        $permissions = $this->repository->assignedToModel($user);
 
-        $this->assertContains($permission->name, $names->toArray());
-    }
-
-    public function test_get_all_permissions_for_model_returns_permissions()
-    {
-        $user = User::factory()->create();
-        $permission = Permission::factory()->create();
-        $user->permissions()->attach($permission);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
-            ->with($user)
-            ->willReturn(collect([$permission->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect([$permission->name => $permission]));
-
-        $permissions = $this->repository->forModel($user);
-
-        $this->assertCount(1, $permissions);
-        $this->assertTrue($permissions->first()->is($permission));
-    }
-
-    public function test_get_all_permissions_for_model_returns_empty_when_no_permissions()
-    {
-        $user = User::factory()->create();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect());
-
-        $permissions = $this->repository->forModel($user);
-
-        $this->assertCount(0, $permissions);
-    }
-
-    public function test_active_for_model_returns_active_permissions()
-    {
-        $user = User::factory()->create();
-        $activePermission = Permission::factory()->create();
-        $inactivePermission = Permission::factory()->inactive()->create();
-
-        $user->permissions()->attach([$activePermission->id, $inactivePermission->id]);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
-            ->with($user)
-            ->willReturn(collect([$activePermission->name, $inactivePermission->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect([$activePermission, $inactivePermission]));
-
-        $permissions = $this->repository->activeForModel($user);
-
-        $this->assertCount(1, $permissions);
-        $this->assertTrue($permissions->first()->is($activePermission));
-    }
-
-    public function test_find_by_name_for_model_returns_permission()
-    {
-        $user = User::factory()->create();
-        $permission = Permission::factory()->create();
-        $user->permissions()->attach($permission);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
-            ->with($user)
-            ->willReturn(collect([$permission->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect([$permission->name => $permission]));
-
-        $result = $this->repository->findByNameForModel($user, $permission->name);
-        $this->assertTrue($result->is($permission));
-    }
-
-    public function test_find_by_name_for_model_returns_null_if_not_found()
-    {
-        $user = User::factory()->create();
-        $permissionName = fake()->unique()->word();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelPermissionNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllPermissions')
-            ->willReturn(collect());
-
-        $result = $this->repository->findByNameForModel($user, $permissionName);
-        $this->assertNull($result);
+        $this->assertEquals($permission->name, $permissions->first()->name);
     }
 }

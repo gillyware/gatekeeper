@@ -11,36 +11,29 @@ import {
 import { type GatekeeperError, type GatekeeperResponse } from '@/types/api';
 import { type AuditLogPageRequest, type AuditLogPageResponse } from '@/types/api/audit';
 import {
-    type DeactivateEntityRequest,
-    type DeactivateEntityResponse,
     type DeleteEntityRequest,
     type DeleteEntityResponse,
     type EntityPageRequest,
     type EntityPageResponse,
-    type ReactivateEntityRequest,
-    type ReactivateEntityResponse,
     type ShowEntityRequest,
     type ShowEntityResponse,
     type StoreEntityRequest,
     type StoreEntityResponse,
-    type TurnEntityOffByDefaultRequest,
-    type TurnEntityOffByDefaultResponse,
-    type TurnEntityOnByDefaultRequest,
-    type TurnEntityOnByDefaultResponse,
+    type UpdateEntityPayload,
     type UpdateEntityRequest,
     type UpdateEntityResponse,
 } from '@/types/api/entity';
 import {
-    type AssignEntityToModelResponse,
     type GetModelEntitiesPageRequest,
     type LookupModelResponse,
+    type ModelDeniedEntitiesPageResponse,
     type ModelEntityAssignmentsPageResponse,
     type ModelEntityRequest,
+    type ModelEntityResponse,
     type ModelPageRequest,
     type ModelPageResponse,
     type ModelRequest,
     type ModelUnassignedEntitiesPageResponse,
-    type RevokeEntityFromModelResponse,
 } from '@/types/api/model';
 import { type AxiosError, type AxiosResponse } from 'axios';
 import { useMemo } from 'react';
@@ -73,22 +66,39 @@ export function useApi() {
                 }) as Promise<StoreEntityResponse<GatekeeperPermission>>;
             },
 
-            updatePermission: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
+            updatePermissionName: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
-                    return axios.put(`/permissions/${data.id}`, { name: data.name });
+                    const payload: UpdateEntityPayload = { action: 'name', value: data.name as string };
+                    return axios.patch(`/permissions/${data.id}`, payload);
                 }) as Promise<UpdateEntityResponse<GatekeeperPermission>>;
             },
 
-            deactivatePermission: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperPermission>> => {
+            grantPermissionByDefault: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/permissions/${data.id}/deactivate`);
-                }) as Promise<DeactivateEntityResponse<GatekeeperPermission>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: true };
+                    return axios.patch(`/permissions/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperPermission>>;
             },
 
-            reactivatePermission: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperPermission>> => {
+            revokePermissionDefaultGrant: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/permissions/${data.id}/reactivate`);
-                }) as Promise<ReactivateEntityResponse<GatekeeperPermission>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: false };
+                    return axios.patch(`/permissions/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperPermission>>;
+            },
+
+            deactivatePermission: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: false };
+                    return axios.patch(`/permissions/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperPermission>>;
+            },
+
+            reactivatePermission: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperPermission>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: true };
+                    return axios.patch(`/permissions/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperPermission>>;
             },
 
             deletePermission: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
@@ -115,22 +125,39 @@ export function useApi() {
                 }) as Promise<StoreEntityResponse<GatekeeperRole>>;
             },
 
-            updateRole: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
+            updateRoleName: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
-                    return axios.put(`/roles/${data.id}`, { name: data.name });
+                    const payload: UpdateEntityPayload = { action: 'name', value: data.name as string };
+                    return axios.patch(`/roles/${data.id}`, payload);
                 }) as Promise<UpdateEntityResponse<GatekeeperRole>>;
             },
 
-            deactivateRole: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperRole>> => {
+            grantRoleByDefault: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/roles/${data.id}/deactivate`);
-                }) as Promise<DeactivateEntityResponse<GatekeeperRole>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: true };
+                    return axios.patch(`/roles/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperRole>>;
             },
 
-            reactivateRole: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperRole>> => {
+            revokeRoleDefaultGrant: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/roles/${data.id}/reactivate`);
-                }) as Promise<ReactivateEntityResponse<GatekeeperRole>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: false };
+                    return axios.patch(`/roles/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperRole>>;
+            },
+
+            deactivateRole: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: false };
+                    return axios.patch(`/roles/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperRole>>;
+            },
+
+            reactivateRole: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperRole>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: true };
+                    return axios.patch(`/roles/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperRole>>;
             },
 
             deleteRole: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
@@ -157,34 +184,39 @@ export function useApi() {
                 }) as Promise<StoreEntityResponse<GatekeeperFeature>>;
             },
 
-            updateFeature: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
+            updateFeatureName: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
                 return handleResponse(() => {
-                    return axios.put(`/features/${data.id}`, { name: data.name });
+                    const payload: UpdateEntityPayload = { action: 'name', value: data.name as string };
+                    return axios.patch(`/features/${data.id}`, payload);
                 }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
             },
 
-            turnFeatureOffByDefault: async (data: TurnEntityOffByDefaultRequest): Promise<TurnEntityOffByDefaultResponse<GatekeeperFeature>> => {
+            grantFeatureByDefault: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/features/${data.id}/default-off`);
-                }) as Promise<TurnEntityOffByDefaultResponse<GatekeeperFeature>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: true };
+                    return axios.patch(`/features/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
             },
 
-            turnFeatureOnByDefault: async (data: TurnEntityOnByDefaultRequest): Promise<TurnEntityOnByDefaultResponse<GatekeeperFeature>> => {
+            revokeFeatureDefaultGrant: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/features/${data.id}/default-on`);
-                }) as Promise<TurnEntityOnByDefaultResponse<GatekeeperFeature>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: false };
+                    return axios.patch(`/features/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
             },
 
-            deactivateFeature: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperFeature>> => {
+            deactivateFeature: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/features/${data.id}/deactivate`);
-                }) as Promise<DeactivateEntityResponse<GatekeeperFeature>>;
+                    const payload: UpdateEntityPayload = { action: 'status', value: false };
+                    return axios.patch(`/features/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
             },
 
-            reactivateFeature: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperFeature>> => {
+            reactivateFeature: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperFeature>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/features/${data.id}/reactivate`);
-                }) as Promise<ReactivateEntityResponse<GatekeeperFeature>>;
+                    const payload: UpdateEntityPayload = { action: 'status', value: true };
+                    return axios.patch(`/features/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperFeature>>;
             },
 
             deleteFeature: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
@@ -211,22 +243,39 @@ export function useApi() {
                 }) as Promise<StoreEntityResponse<GatekeeperTeam>>;
             },
 
-            updateTeam: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
+            updateTeamName: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
-                    return axios.put(`/teams/${data.id}`, { name: data.name });
+                    const payload: UpdateEntityPayload = { action: 'name', value: data.name as string };
+                    return axios.patch(`/teams/${data.id}`, payload);
                 }) as Promise<UpdateEntityResponse<GatekeeperTeam>>;
             },
 
-            deactivateTeam: async (data: DeactivateEntityRequest): Promise<DeactivateEntityResponse<GatekeeperTeam>> => {
+            grantTeamByDefault: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/teams/${data.id}/deactivate`);
-                }) as Promise<DeactivateEntityResponse<GatekeeperTeam>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: true };
+                    return axios.patch(`/teams/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperTeam>>;
             },
 
-            reactivateTeam: async (data: ReactivateEntityRequest): Promise<ReactivateEntityResponse<GatekeeperTeam>> => {
+            revokeTeamDefaultGrant: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
                 return handleResponse(() => {
-                    return axios.patch(`/teams/${data.id}/reactivate`);
-                }) as Promise<ReactivateEntityResponse<GatekeeperTeam>>;
+                    const payload: UpdateEntityPayload = { action: 'default_grant', value: false };
+                    return axios.patch(`/teams/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperTeam>>;
+            },
+
+            deactivateTeam: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: false };
+                    return axios.patch(`/teams/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperTeam>>;
+            },
+
+            reactivateTeam: async (data: UpdateEntityRequest): Promise<UpdateEntityResponse<GatekeeperTeam>> => {
+                return handleResponse(() => {
+                    const payload: UpdateEntityPayload = { action: 'status', value: true };
+                    return axios.patch(`/teams/${data.id}`, payload);
+                }) as Promise<UpdateEntityResponse<GatekeeperTeam>>;
             },
 
             deleteTeam: async (data: DeleteEntityRequest): Promise<DeleteEntityResponse> => {
@@ -269,20 +318,48 @@ export function useApi() {
                 }) as Promise<ModelUnassignedEntitiesPageResponse<E>>;
             },
 
-            assignToModel: async (data: ModelEntityRequest): Promise<AssignEntityToModelResponse> => {
+            getDeniedEntitiesForModel: async <E extends GatekeeperEntity>(
+                params: GetModelEntitiesPageRequest,
+            ): Promise<ModelDeniedEntitiesPageResponse<E>> => {
+                const { model_label, model_pk, entity, ...filterParams } = params;
+
+                return handleResponse(() => {
+                    return axios.get(`/models/${model_label}/${model_pk}/entities/${entity}/denied`, {
+                        params: filterParams,
+                    });
+                }) as Promise<ModelDeniedEntitiesPageResponse<E>>;
+            },
+
+            assignToModel: async (data: ModelEntityRequest): Promise<ModelEntityResponse> => {
                 const { entity_name } = data;
 
                 return handleResponse(() => {
                     return axios.post(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/assign`, { entity_name });
-                }) as Promise<AssignEntityToModelResponse>;
+                }) as Promise<ModelEntityResponse>;
             },
 
-            revokeFromModel: async (data: ModelEntityRequest): Promise<RevokeEntityFromModelResponse> => {
+            unassignFromModel: async (data: ModelEntityRequest): Promise<ModelEntityResponse> => {
                 const { entity_name } = data;
 
                 return handleResponse(() => {
-                    return axios.delete(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/revoke`, { data: { entity_name } });
-                }) as Promise<RevokeEntityFromModelResponse>;
+                    return axios.delete(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/unassign`, { data: { entity_name } });
+                }) as Promise<ModelEntityResponse>;
+            },
+
+            denyFromModel: async (data: ModelEntityRequest): Promise<ModelEntityResponse> => {
+                const { entity_name } = data;
+
+                return handleResponse(() => {
+                    return axios.post(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/deny`, { entity_name });
+                }) as Promise<ModelEntityResponse>;
+            },
+
+            undenyFromModel: async (data: ModelEntityRequest): Promise<ModelEntityResponse> => {
+                const { entity_name } = data;
+
+                return handleResponse(() => {
+                    return axios.delete(`/models/${data.model_label}/${data.model_pk}/entities/${data.entity}/undeny`, { data: { entity_name } });
+                }) as Promise<ModelEntityResponse>;
             },
 
             getAuditLog: async (params: AuditLogPageRequest): Promise<AuditLogPageResponse> => {

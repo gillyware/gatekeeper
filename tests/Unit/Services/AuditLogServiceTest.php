@@ -36,10 +36,10 @@ class AuditLogServiceTest extends TestCase
         $this->assertStringContainsString('edit-users', $msg);
     }
 
-    public function test_update_message()
+    public function test_update_name_message()
     {
         $log = new AuditLog([
-            'action' => AuditLogAction::UpdatePermission->value,
+            'action' => AuditLogAction::UpdatePermissionName->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 2,
             'action_to_model_type' => Permission::class,
@@ -118,10 +118,10 @@ class AuditLogServiceTest extends TestCase
         $this->assertStringContainsString('User#10', $msg);
     }
 
-    public function test_revoke_message()
+    public function test_unassign_message()
     {
         $log = new AuditLog([
-            'action' => AuditLogAction::RevokeRole->value,
+            'action' => AuditLogAction::UnassignRole->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 7,
             'action_to_model_type' => User::class,
@@ -130,7 +130,7 @@ class AuditLogServiceTest extends TestCase
         ]);
 
         $msg = $this->service->getMessageForAuditLog($log);
-        $this->assertStringContainsString('revoked', $msg);
+        $this->assertStringContainsString('unassigned', $msg);
         $this->assertStringContainsString('admin-role', $msg);
         $this->assertStringContainsString('User#11', $msg);
     }

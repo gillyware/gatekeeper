@@ -92,7 +92,7 @@ class RoleRepositoryTest extends TestCase
 
     public function test_create_stores_role_and_forgets_cache()
     {
-        $this->cacheService->expects($this->once())->method('invalidateCacheForAllRoles');
+        $this->cacheService->expects($this->once())->method('invalidateCacheForAllLinks');
 
         $name = fake()->unique()->word();
         $role = $this->repository->create($name);
@@ -101,14 +101,14 @@ class RoleRepositoryTest extends TestCase
         $this->assertTrue($this->repository->exists($name));
     }
 
-    public function test_update_role_updates_name_and_clears_cache()
+    public function test_update_role_name_updates_name_and_clears_cache()
     {
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
 
         $this->cacheService->expects($this->once())->method('clear');
 
-        $updatedRole = $this->repository->update($role, $newName);
+        $updatedRole = $this->repository->updateName($role, $newName);
 
         $this->assertEquals($newName, $updatedRole->name);
     }
@@ -181,170 +181,26 @@ class RoleRepositoryTest extends TestCase
         );
     }
 
-    public function test_active_returns_only_active_roles()
-    {
-        $inactive = Role::factory()->count(2)->inactive()->create();
-        $active = Role::factory()->count(2)->create();
-
-        $all = $inactive->concat($active);
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn($all);
-
-        $result = $this->repository->active();
-
-        $this->assertEqualsCanonicalizing(
-            $active->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_roles()
-    {
-        $roles = Role::factory()->count(3)->create();
-        $names = $roles->pluck('name');
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn($roles);
-
-        $result = $this->repository->whereNameIn($names);
-
-        $this->assertCount(3, $result);
-        $this->assertEqualsCanonicalizing(
-            $roles->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_empty_collection_when_no_matches()
-    {
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect());
-
-        $result = $this->repository->whereNameIn(['nonexistent']);
-
-        $this->assertCount(0, $result);
-    }
-
-    public function test_get_all_role_names_for_model_caches_result()
+    public function test_get_assigned_roles_for_model_caches_result()
     {
         $user = User::factory()->create();
         $role = Role::factory()->create();
         $user->roles()->attach($role);
 
         $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
+            ->method('getModelRoleLinks')
             ->with($user)
             ->willReturn(null);
 
         $this->cacheService->expects($this->once())
-            ->method('putModelRoleNames')
-            ->with($user, collect([$role->name]));
+            ->method('putModelRoleLinks')
+            ->with($user, collect([[
+                'name' => $role->name,
+                'denied' => 0,
+            ]]));
 
-        $names = $this->repository->namesForModel($user);
+        $roles = $this->repository->assignedToModel($user);
 
-        $this->assertContains($role->name, $names->toArray());
-    }
-
-    public function test_get_all_roles_for_model_returns_roles()
-    {
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
-        $user->roles()->attach($role);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
-            ->with($user)
-            ->willReturn(collect([$role->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect([$role->name => $role]));
-
-        $roles = $this->repository->forModel($user);
-
-        $this->assertCount(1, $roles);
-        $this->assertTrue($roles->first()->is($role));
-    }
-
-    public function test_get_all_roles_for_model_returns_empty_when_no_roles()
-    {
-        $user = User::factory()->create();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect());
-
-        $roles = $this->repository->forModel($user);
-
-        $this->assertCount(0, $roles);
-    }
-
-    public function test_active_for_model_returns_active_roles()
-    {
-        $user = User::factory()->create();
-        $activeRole = Role::factory()->create();
-        $inactiveRole = Role::factory()->inactive()->create();
-
-        $user->roles()->attach([$activeRole->id, $inactiveRole->id]);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
-            ->with($user)
-            ->willReturn(collect([$activeRole->name, $inactiveRole->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect([$activeRole, $inactiveRole]));
-
-        $roles = $this->repository->activeForModel($user);
-
-        $this->assertCount(1, $roles);
-        $this->assertTrue($roles->first()->is($activeRole));
-    }
-
-    public function test_find_by_name_for_model_returns_role()
-    {
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
-        $user->roles()->attach($role);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
-            ->with($user)
-            ->willReturn(collect([$role->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect([$role->name => $role]));
-
-        $result = $this->repository->findByNameForModel($user, $role->name);
-        $this->assertTrue($result->is($role));
-    }
-
-    public function test_find_by_name_for_model_returns_null_if_not_found()
-    {
-        $user = User::factory()->create();
-        $roleName = fake()->unique()->word();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelRoleNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllRoles')
-            ->willReturn(collect());
-
-        $result = $this->repository->findByNameForModel($user, $roleName);
-        $this->assertNull($result);
+        $this->assertEquals($role->name, $roles->first()->name);
     }
 }

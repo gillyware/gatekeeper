@@ -25,9 +25,9 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('turnFeatureOnForModel')->with($user, $feature)->once();
+        Gatekeeper::shouldReceive('assignFeatureForModel')->with($user, $feature)->once();
 
-        $user->turnFeatureOn($feature);
+        $user->assignFeature($feature);
     }
 
     public function test_assign_features_delegates_to_facade()
@@ -37,33 +37,57 @@ class HasFeaturesTest extends TestCase
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('turnAllFeaturesOnForModel')->with($user, $features)->once();
+        Gatekeeper::shouldReceive('assignAllFeaturesForModel')->with($user, $features)->once();
 
-        $user->turnAllFeaturesOn($features);
+        $user->assignAllFeatures($features);
     }
 
-    public function test_revoke_feature_delegates_to_facade()
+    public function test_unassign_feature_delegates_to_facade()
     {
         $user = User::factory()->create();
         $feature = 'edit-posts';
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('turnFeatureOffForModel')->with($user, $feature)->once();
+        Gatekeeper::shouldReceive('unassignFeatureForModel')->with($user, $feature)->once();
 
-        $user->turnFeatureOff($feature);
+        $user->unassignFeature($feature);
     }
 
-    public function test_revoke_features_delegates_to_facade()
+    public function test_unassign_features_delegates_to_facade()
     {
         $user = User::factory()->create();
         $features = ['edit-posts', 'delete-posts'];
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('turnAllFeaturesOffForModel')->with($user, $features)->once();
+        Gatekeeper::shouldReceive('denyAllFeaturesFromModel')->with($user, $features)->once();
 
-        $user->turnAllFeaturesOff($features);
+        $user->denyAllFeatures($features);
+    }
+
+    public function test_deny_feature_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $feature = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyFeatureFromModel')->with($user, $feature)->once();
+
+        $user->denyFeature($feature);
+    }
+
+    public function test_deny_features_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $features = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('unassignAllFeaturesForModel')->with($user, $features)->once();
+
+        $user->unassignAllFeatures($features);
     }
 
     public function test_has_feature_delegates_to_facade()

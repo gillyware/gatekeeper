@@ -50,17 +50,49 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokePermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
+    public function unassignPermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
     {
-        return Gatekeeper::revokePermissionFromModel($this->model, $permission);
+        return Gatekeeper::unassignPermissionFromModel($this->model, $permission);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function revokeAllPermissions(array|Arrayable $permissions): bool
+    public function unassignAllPermissions(array|Arrayable $permissions): bool
     {
-        return Gatekeeper::revokeAllPermissionsFromModel($this->model, $permissions);
+        return Gatekeeper::unassignAllPermissionsFromModel($this->model, $permissions);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyPermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
+    {
+        return Gatekeeper::denyPermissionFromModel($this->model, $permission);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyAllPermissions(array|Arrayable $permissions): bool
+    {
+        return Gatekeeper::denyAllPermissionsFromModel($this->model, $permissions);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyPermission(Permission|PermissionPacket|string|UnitEnum $permission): bool
+    {
+        return Gatekeeper::undenyPermissionFromModel($this->model, $permission);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyAllPermissions(array|Arrayable $permissions): bool
+    {
+        return Gatekeeper::undenyAllPermissionsFromModel($this->model, $permissions);
     }
 
     /**
@@ -130,17 +162,49 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function revokeRole(Role|RolePacket|string|UnitEnum $role): bool
+    public function unassignRole(Role|RolePacket|string|UnitEnum $role): bool
     {
-        return Gatekeeper::revokeRoleFromModel($this->model, $role);
+        return Gatekeeper::unassignRoleFromModel($this->model, $role);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function revokeAllRoles(array|Arrayable $roles): bool
+    public function unassignAllRoles(array|Arrayable $roles): bool
     {
-        return Gatekeeper::revokeAllRolesFromModel($this->model, $roles);
+        return Gatekeeper::unassignAllRolesFromModel($this->model, $roles);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyRole(Role|RolePacket|string|UnitEnum $role): bool
+    {
+        return Gatekeeper::denyRoleFromModel($this->model, $role);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyAllRoles(array|Arrayable $roles): bool
+    {
+        return Gatekeeper::denyAllRolesFromModel($this->model, $roles);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyRole(Role|RolePacket|string|UnitEnum $role): bool
+    {
+        return Gatekeeper::undenyRoleFromModel($this->model, $role);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyAllRoles(array|Arrayable $roles): bool
+    {
+        return Gatekeeper::undenyAllRolesFromModel($this->model, $roles);
     }
 
     /**
@@ -194,33 +258,65 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function turnFeatureOn(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function assignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::turnFeatureOnForModel($this->model, $feature);
+        return Gatekeeper::assignFeatureForModel($this->model, $feature);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function turnAllFeaturesOn(array|Arrayable $features): bool
+    public function assignAllFeatures(array|Arrayable $features): bool
     {
-        return Gatekeeper::turnAllFeaturesOnForModel($this->model, $features);
+        return Gatekeeper::assignAllFeaturesForModel($this->model, $features);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function turnFeatureOff(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    public function unassignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::turnFeatureOffForModel($this->model, $feature);
+        return Gatekeeper::unassignFeatureForModel($this->model, $feature);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function turnAllFeaturesOff(array|Arrayable $features): bool
+    public function unassignAllFeatures(array|Arrayable $features): bool
     {
-        return Gatekeeper::turnAllFeaturesOffForModel($this->model, $features);
+        return Gatekeeper::unassignAllFeaturesForModel($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::denyFeatureFromModel($this->model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyAllFeatures(array|Arrayable $features): bool
+    {
+        return Gatekeeper::denyAllFeaturesFromModel($this->model, $features);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::undenyFeatureFromModel($this->model, $feature);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyAllFeatures(array|Arrayable $features): bool
+    {
+        return Gatekeeper::undenyAllFeaturesFromModel($this->model, $features);
     }
 
     /**
@@ -306,6 +402,38 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function denyTeam(Team|TeamPacket|string|UnitEnum $team): bool
+    {
+        return Gatekeeper::denyTeamFromModel($this->model, $team);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function denyAllTeams(array|Arrayable $teams): bool
+    {
+        return Gatekeeper::denyAllTeamsFromModel($this->model, $teams);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyTeam(Team|TeamPacket|string|UnitEnum $team): bool
+    {
+        return Gatekeeper::undenyTeamFromModel($this->model, $team);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function undenyAllTeams(array|Arrayable $teams): bool
+    {
+        return Gatekeeper::undenyAllTeamsFromModel($this->model, $teams);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function onTeam(Team|TeamPacket|string|UnitEnum $team): bool
     {
         return Gatekeeper::modelOnTeam($this->model, $team);
@@ -330,8 +458,24 @@ class GatekeeperForModelService implements GatekeeperForModelServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function getTeams(): Collection
+    public function getDirectTeams(): Collection
     {
-        return Gatekeeper::getTeamsForModel($this->model);
+        return Gatekeeper::getDirectTeamsForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEffectiveTeams(): Collection
+    {
+        return Gatekeeper::getEffectiveTeamsForModel($this->model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getVerboseTeams(): Collection
+    {
+        return Gatekeeper::getVerboseTeamsForModel($this->model);
     }
 }

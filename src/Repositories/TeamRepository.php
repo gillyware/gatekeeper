@@ -2,9 +2,9 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
+use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -12,7 +12,6 @@ use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -26,6 +25,7 @@ class TeamRepository implements EntityRepositoryInterface
         private readonly CacheService $cacheService,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
         private readonly ModelHasRoleRepository $modelHasRoleRepository,
+        private readonly ModelHasFeatureRepository $modelHasFeatureRepository,
     ) {}
 
     /**
@@ -33,7 +33,7 @@ class TeamRepository implements EntityRepositoryInterface
      */
     public function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS));
+        return Schema::hasTable((new Team)->getTable());
     }
 
     /**
@@ -45,19 +45,31 @@ class TeamRepository implements EntityRepositoryInterface
     }
 
     /**
+     * Get all teams.
+     *
+     * @return Collection<string, Team>
+     */
+    public function all(): Collection
+    {
+        $teams = $this->cacheService->getAllTeams();
+
+        if ($teams) {
+            return $teams;
+        }
+
+        $teams = Team::all()->mapWithKeys(fn (Team $team) => [$team->name => $team]);
+
+        $this->cacheService->putAllTeams($teams);
+
+        return $teams;
+    }
+
+    /**
      * Find a team by its name.
      */
     public function findByName(string $teamName): ?Team
     {
         return $this->all()->get($teamName);
-    }
-
-    /**
-     * Find a team by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $teamName): ?Team
-    {
-        return $this->forModel($model)->get($teamName);
     }
 
     /**
@@ -89,13 +101,41 @@ class TeamRepository implements EntityRepositoryInterface
     }
 
     /**
-     * Update an existing team.
+     * Update an existing team name.
      *
      * @param  Team  $team
      */
-    public function update($team, string $newTeamName): Team
+    public function updateName($team, string $newTeamName): Team
     {
         if ($team->update(['name' => $newTeamName])) {
+            $this->cacheService->clear();
+        }
+
+        return $team;
+    }
+
+    /**
+     * Grant a team to all models that are not explicitly denying it.
+     *
+     * @param  Team  $team
+     */
+    public function grantByDefault($team): Team
+    {
+        if ($team->update(['grant_by_default' => true])) {
+            $this->cacheService->clear();
+        }
+
+        return $team;
+    }
+
+    /**
+     * Revoke a team's default grant.
+     *
+     * @param  Team  $team
+     */
+    public function revokeDefaultGrant($team): Team
+    {
+        if ($team->update(['grant_by_default' => false])) {
             $this->cacheService->clear();
         }
 
@@ -137,9 +177,10 @@ class TeamRepository implements EntityRepositoryInterface
      */
     public function delete($team): bool
     {
-        // Unassign all permissions and roles from the team (without audit logging).
+        // Unassign all permissions, roles, and features from the team (without audit logging).
         $this->modelHasPermissionRepository->deleteForModel($team);
         $this->modelHasRoleRepository->deleteForModel($team);
+        $this->modelHasFeatureRepository->deleteForModel($team);
 
         $deleted = $team->delete();
 
@@ -151,97 +192,27 @@ class TeamRepository implements EntityRepositoryInterface
     }
 
     /**
-     * Get all teams.
+     * Get all teams a specific model is on.
      *
-     * @return Collection<Team>
+     * @return Collection<string, Team>
      */
-    public function all(): Collection
-    {
-        $teams = $this->cacheService->getAllTeams();
-
-        if ($teams) {
-            return $teams;
-        }
-
-        $teams = Team::all()->mapWithKeys(fn (Team $t) => [$t->name => $t]);
-
-        $this->cacheService->putAllTeams($teams);
-
-        return $teams;
-    }
-
-    /**
-     * Get all active teams.
-     *
-     * @return Collection<Team>
-     */
-    public function active(): Collection
-    {
-        return $this->all()->filter(fn (Team $team) => $team->is_active);
-    }
-
-    /**
-     * Get all teams where the name is in the provided array or collection.
-     *
-     * @return Collection<Team>
-     */
-    public function whereNameIn(array|Collection $teamNames): Collection
-    {
-        return $this->all()->whereIn('name', $teamNames);
-    }
-
-    /**
-     * Get all team names for a specific model.
-     *
-     * @return Collection<string>
-     */
-    public function namesForModel(Model $model): Collection
-    {
-        $allTeamNames = $this->cacheService->getModelTeamNames($model);
-
-        if ($allTeamNames) {
-            return $allTeamNames;
-        }
-
-        if (! $this->modelInteractsWithTeams($model)) {
-            return collect();
-        }
-
-        $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
-        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
-
-        $allTeamNames = $model->teams()
-            ->select("$teamsTable.*")
-            ->whereNull("$modelHasTeamsTable.deleted_at")
-            ->pluck("$teamsTable.name")
-            ->values();
-
-        $this->cacheService->putModelTeamNames($model, $allTeamNames);
-
-        return $allTeamNames;
-    }
-
-    /**
-     * Get all teams for a specific model.
-     *
-     * @return Collection<Team>
-     */
-    public function forModel(Model $model): Collection
-    {
-        $namesForModel = $this->namesForModel($model);
-
-        return $this->whereNameIn($namesForModel);
-    }
-
-    /**
-     * Get all active teams for a specific model.
-     *
-     * @return Collection<Team>
-     */
-    public function activeForModel(Model $model): Collection
+    public function assignedToModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Team $team) => $team->is_active);
+            ->filter(fn (array $link) => ! $link['denied'])
+            ->map(fn (array $link) => $link['team']);
+    }
+
+    /**
+     * Get all teams denied from a specific model.
+     *
+     * @return Collection<string, Team>
+     */
+    public function deniedFromModel(Model $model): Collection
+    {
+        return $this->forModel($model)
+            ->filter(fn (array $link) => $link['denied'])
+            ->map(fn (array $link) => $link['team']);
     }
 
     /**
@@ -251,16 +222,73 @@ class TeamRepository implements EntityRepositoryInterface
     {
         $query = Team::query()->whereLike('name', "%{$packet->searchTerm}%");
 
-        if ($packet->prioritizedAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $packet->isActiveOrder)
-                ->orderBy('name', $packet->nameOrder);
-        } else {
-            $query = $query
+        $query = match ($packet->prioritizedAttribute) {
+            'name' => $query
                 ->orderBy('name', $packet->nameOrder)
-                ->orderBy('is_active', $packet->isActiveOrder);
-        }
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            'grant_by_default' => $query
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('is_active', $packet->isActiveOrder),
+            'is_active' => $query
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            default => $query,
+        };
 
         return $query->paginate(10, ['*'], 'page', $packet->page);
+    }
+
+    /**
+     * Get all teams for a specific model.
+     *
+     * @return Collection<string, array{team: Team, denied: bool}>
+     */
+    private function forModel(Model $model): Collection
+    {
+        return $this->linksForModel($model)
+            ->mapWithKeys(function (array $link) {
+                [$name, $denied] = [$link['name'], $link['denied']];
+
+                return [
+                    $name => [
+                        'team' => $this->findByName($name),
+                        'denied' => $denied,
+                    ],
+                ];
+            });
+    }
+
+    /**
+     * Get all team names for a specific model.
+     *
+     * @return Collection<int, array{name: string, denied: bool}>
+     */
+    private function linksForModel(Model $model): Collection
+    {
+        $allTeamLinks = $this->cacheService->getModelTeamLinks($model);
+
+        if ($allTeamLinks) {
+            return $allTeamLinks;
+        }
+
+        if (! $this->modelInteractsWithTeams($model)) {
+            return collect();
+        }
+
+        $allTeamLinks = $model->teams()
+            ->select([
+                'name' => (new Team)->qualifyColumn('name'),
+                'denied' => (new ModelHasTeam)->qualifyColumn('denied'),
+            ])
+            ->whereNull((new ModelHasTeam)->qualifyColumn('deleted_at'))
+            ->get(['name', 'denied'])
+            ->map(fn (Team $team) => $team->only(['name', 'denied']));
+
+        $this->cacheService->putModelTeamLinks($model, $allTeamLinks);
+
+        return $allTeamLinks;
     }
 }

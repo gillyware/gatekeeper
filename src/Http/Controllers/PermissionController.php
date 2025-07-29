@@ -52,38 +52,10 @@ class PermissionController extends AbstractBaseController
     /**
      * Update an existing permission.
      */
-    public function update(UpdatePermissionPacket $packet, Permission $permission): HttpFoundationResponse
+    public function update(Permission $permission, UpdatePermissionPacket $packet): HttpFoundationResponse
     {
         try {
-            $permission = $this->permissionService->update($permission, $packet->name);
-
-            return Response::json($permission);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Deactivate a permission.
-     */
-    public function deactivate(Permission $permission): HttpFoundationResponse
-    {
-        try {
-            $permission = $this->permissionService->deactivate($permission);
-
-            return Response::json($permission);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Reactivate a permission.
-     */
-    public function reactivate(Permission $permission): HttpFoundationResponse
-    {
-        try {
-            $permission = $this->permissionService->reactivate($permission);
+            $permission = $this->permissionService->update($permission, $packet);
 
             return Response::json($permission);
         } catch (GatekeeperException $e) {

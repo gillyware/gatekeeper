@@ -4,10 +4,10 @@
 - [What Is Logged](#what-is-logged)
 - [Next Steps](#next-steps)
 
-Gatekeeper can optionally track actions taken on permissions, roles, and teams to provide a full audit trail of changes made through the dashboard, Artisan commands, and your application.
+Gatekeeper can optionally track actions taken on permissions, roles, features, and teams to provide a full audit trail of changes made through the dashboard, Artisan commands, and your application.
 
 > [!WARNING]
-> Audit logging must be explicitly enabled in your configuration. See the `features.audit` setting in your [configuration file](../configuration.md#feature-flags).
+> Audit logging must be explicitly enabled in your configuration. See the `features.audit.enabled` setting in your [configuration file](../configuration.md#feature-flags).
 
 <a name="setting-the-actor"></a>
 ## Setting the Actor
@@ -52,18 +52,23 @@ When audit logging is enabled, the following actions are recorded:
 
 ### Permissions
 
-- Create / Update / Deactivate / Reactivate / Delete
-- Assign / Revoke (individual or multiple) to/from models
+- Create / Update Name / Grant by Default / Revoke Default Grant / Deactivate / Reactivate / Delete
+- Assign / Unassign / Deny / Undeny
 
 ### Roles
 
-- Create / Update / Deactivate / Reactivate / Delete
-- Assign / Revoke (individual or multiple) to/from models
+- Create / Update Name / Grant by Default / Revoke Default Grant / Deactivate / Reactivate / Delete
+- Assign / Unassign / Deny / Undeny
+
+### Features
+
+- Create / Update Name / Grant by Default / Revoke Default Grant / Deactivate / Reactivate / Delete
+- Assign / Unassign / Deny / Undeny
 
 ### Teams
 
-- Create / Update / Deactivate / Reactivate / Delete
-- Add / Remove (individual or multiple) models to/from teams
+- Create / Update Name / Grant by Default / Revoke Default Grant / Deactivate / Reactivate / Delete
+- Add / Remove / Deny / Undeny
 
 <a name="next-steps"></a>
 ## Next Steps

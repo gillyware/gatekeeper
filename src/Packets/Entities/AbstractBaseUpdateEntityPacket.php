@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Packets\Entities;
 
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Postal\Attributes\Rule;
 use Gillyware\Postal\Packet;
 use Illuminate\Contracts\Validation\Validator;
@@ -11,8 +12,11 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 abstract class AbstractBaseUpdateEntityPacket extends Packet
 {
     public function __construct(
-        #[Rule(['required', 'string', 'max:255'])]
-        public readonly string $name,
+        #[Rule(['string', 'max:255'])]
+        public readonly string $action,
+
+        #[Rule('required')]
+        public readonly string|bool $value,
     ) {}
 
     protected static function failedValidation(Validator $validator): void
@@ -22,10 +26,19 @@ abstract class AbstractBaseUpdateEntityPacket extends Packet
 
     protected static function explicitRules(): array
     {
+        $allowedActions = array_column(EntityUpdateAction::cases(), 'value');
+        $action = request('action');
+
         return [
-            'name' => [
-                ValidationRule::unique(static::getTableName(), 'name')->withoutTrashed()->ignore(static::getEntityId()),
-            ],
+            'action' => [ValidationRule::in($allowedActions)],
+            'value' => match ($action) {
+                EntityUpdateAction::Name->value => [
+                    ValidationRule::unique(static::getTableName(), 'name')->withoutTrashed()->ignore(static::getEntityId()),
+                ],
+                EntityUpdateAction::Status->value, EntityUpdateAction::DefaultGrant->value => ['boolean'],
+                default => [],
+            },
+
         ];
     }
 

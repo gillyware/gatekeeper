@@ -2,9 +2,9 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
+use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -12,7 +12,6 @@ use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -29,7 +28,7 @@ class PermissionRepository implements EntityRepositoryInterface
      */
     public function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS));
+        return Schema::hasTable((new Permission)->getTable());
     }
 
     /**
@@ -41,19 +40,31 @@ class PermissionRepository implements EntityRepositoryInterface
     }
 
     /**
+     * Get all permissions.
+     *
+     * @return Collection<string, Permission>
+     */
+    public function all(): Collection
+    {
+        $permissions = $this->cacheService->getAllPermissions();
+
+        if ($permissions) {
+            return $permissions;
+        }
+
+        $permissions = Permission::all()->mapWithKeys(fn (Permission $permission) => [$permission->name => $permission]);
+
+        $this->cacheService->putAllPermissions($permissions);
+
+        return $permissions;
+    }
+
+    /**
      * Find a permission by its name.
      */
     public function findByName(string $permissionName): ?Permission
     {
         return $this->all()->get($permissionName);
-    }
-
-    /**
-     * Find a permission by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $permissionName): ?Permission
-    {
-        return $this->forModel($model)->get($permissionName);
     }
 
     /**
@@ -85,13 +96,41 @@ class PermissionRepository implements EntityRepositoryInterface
     }
 
     /**
-     * Update an existing permission.
+     * Update an existing permission name.
      *
      * @param  Permission  $permission
      */
-    public function update($permission, string $newPermissionName): Permission
+    public function updateName($permission, string $newPermissionName): Permission
     {
         if ($permission->update(['name' => $newPermissionName])) {
+            $this->cacheService->clear();
+        }
+
+        return $permission;
+    }
+
+    /**
+     * Grant a permission to all models that are not explicitly denying it.
+     *
+     * @param  Permission  $permission
+     */
+    public function grantByDefault($permission): Permission
+    {
+        if ($permission->update(['grant_by_default' => true])) {
+            $this->cacheService->clear();
+        }
+
+        return $permission;
+    }
+
+    /**
+     * Revoke a permission's default grant.
+     *
+     * @param  Permission  $permission
+     */
+    public function revokeDefaultGrant($permission): Permission
+    {
+        if ($permission->update(['grant_by_default' => false])) {
             $this->cacheService->clear();
         }
 
@@ -143,97 +182,27 @@ class PermissionRepository implements EntityRepositoryInterface
     }
 
     /**
-     * Get all permissions.
+     * Get all permissions assigned to a specific model.
      *
-     * @return Collection<Permission>
+     * @return Collection<string, Permission>
      */
-    public function all(): Collection
-    {
-        $permissions = $this->cacheService->getAllPermissions();
-
-        if ($permissions) {
-            return $permissions;
-        }
-
-        $permissions = Permission::all()->mapWithKeys(fn (Permission $p) => [$p->name => $p]);
-
-        $this->cacheService->putAllPermissions($permissions);
-
-        return $permissions;
-    }
-
-    /**
-     * Get all active permissions.
-     *
-     * @return Collection<Permission>
-     */
-    public function active(): Collection
-    {
-        return $this->all()->filter(fn (Permission $permission) => $permission->is_active);
-    }
-
-    /**
-     * Get all permissions where the name is in the provided array or collection.
-     *
-     * @return Collection<Permission>
-     */
-    public function whereNameIn(array|Collection $permissionNames): Collection
-    {
-        return $this->all()->whereIn('name', $permissionNames);
-    }
-
-    /**
-     * Get all permission names for a specific model.
-     *
-     * @return Collection<string>
-     */
-    public function namesForModel(Model $model): Collection
-    {
-        $allPermissionNames = $this->cacheService->getModelPermissionNames($model);
-
-        if ($allPermissionNames) {
-            return $allPermissionNames;
-        }
-
-        if (! $this->modelInteractsWithPermissions($model)) {
-            return collect();
-        }
-
-        $permissionsTable = Config::get('gatekeeper.tables.permissions', GatekeeperConfigDefault::TABLES_PERMISSIONS);
-        $modelHasPermissionsTable = Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS);
-
-        $allPermissionNames = $model->permissions()
-            ->select("$permissionsTable.*")
-            ->whereNull("$modelHasPermissionsTable.deleted_at")
-            ->pluck("$permissionsTable.name")
-            ->values();
-
-        $this->cacheService->putModelPermissionNames($model, $allPermissionNames);
-
-        return $allPermissionNames;
-    }
-
-    /**
-     * Get all permissions for a specific model.
-     *
-     * @return Collection<Permission>
-     */
-    public function forModel(Model $model): Collection
-    {
-        $namesForModel = $this->namesForModel($model);
-
-        return $this->whereNameIn($namesForModel);
-    }
-
-    /**
-     * Get all active permissions for a specific model.
-     *
-     * @return Collection<Permission>
-     */
-    public function activeForModel(Model $model): Collection
+    public function assignedToModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Permission $permission) => $permission->is_active);
+            ->filter(fn (array $link) => ! $link['denied'])
+            ->map(fn (array $link) => $link['permission']);
+    }
+
+    /**
+     * Get all permissions denied from a specific model.
+     *
+     * @return Collection<string, Permission>
+     */
+    public function deniedFromModel(Model $model): Collection
+    {
+        return $this->forModel($model)
+            ->filter(fn (array $link) => $link['denied'])
+            ->map(fn (array $link) => $link['permission']);
     }
 
     /**
@@ -243,16 +212,73 @@ class PermissionRepository implements EntityRepositoryInterface
     {
         $query = Permission::query()->whereLike('name', "%{$packet->searchTerm}%");
 
-        if ($packet->prioritizedAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $packet->isActiveOrder)
-                ->orderBy('name', $packet->nameOrder);
-        } else {
-            $query = $query
+        $query = match ($packet->prioritizedAttribute) {
+            'name' => $query
                 ->orderBy('name', $packet->nameOrder)
-                ->orderBy('is_active', $packet->isActiveOrder);
-        }
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            'grant_by_default' => $query
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('is_active', $packet->isActiveOrder),
+            'is_active' => $query
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            default => $query,
+        };
 
         return $query->paginate(10, ['*'], 'page', $packet->page);
+    }
+
+    /**
+     * Get all permissions for a specific model.
+     *
+     * @return Collection<string, array{permission: Permission, denied: bool}>
+     */
+    private function forModel(Model $model): Collection
+    {
+        return $this->linksForModel($model)
+            ->mapWithKeys(function (array $link) {
+                [$name, $denied] = [$link['name'], $link['denied']];
+
+                return [
+                    $name => [
+                        'permission' => $this->findByName($name),
+                        'denied' => $denied,
+                    ],
+                ];
+            });
+    }
+
+    /**
+     * Get all permission links for a specific model.
+     *
+     * @return Collection<int, array{name: string, denied: bool}>
+     */
+    private function linksForModel(Model $model): Collection
+    {
+        $allPermissionLinks = $this->cacheService->getModelPermissionLinks($model);
+
+        if ($allPermissionLinks) {
+            return $allPermissionLinks;
+        }
+
+        if (! $this->modelInteractsWithPermissions($model)) {
+            return collect();
+        }
+
+        $allPermissionLinks = $model->permissions()
+            ->select([
+                'name' => (new Permission)->qualifyColumn('name'),
+                'denied' => (new ModelHasPermission)->qualifyColumn('denied'),
+            ])
+            ->whereNull((new ModelHasPermission)->qualifyColumn('deleted_at'))
+            ->get(['name', 'denied'])
+            ->map(fn (Permission $permission) => $permission->only(['name', 'denied']));
+
+        $this->cacheService->putModelPermissionLinks($model, $allPermissionLinks);
+
+        return $allPermissionLinks;
     }
 }

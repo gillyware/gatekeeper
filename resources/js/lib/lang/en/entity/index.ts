@@ -9,9 +9,12 @@ export interface EntityIndexText {
 export interface EntityTableText {
     searchInputPlaceholder: string;
     nameColumn: string;
+    grantedByDefaultColumn: string;
     statusColumn: string;
     active: string;
     inactive: string;
+    granted: string;
+    notGranted: string;
     empty: string;
     errorFallback: string;
     pagination: (from: number, to: number, total: number) => string;
@@ -26,9 +29,12 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         entityTableText: {
             searchInputPlaceholder: 'Search by permission name',
             nameColumn: 'Name',
+            grantedByDefaultColumn: 'Default',
             statusColumn: 'Status',
             active: 'Active',
             inactive: 'Inactive',
+            granted: 'On',
+            notGranted: 'Off',
             empty: 'No permissions found.',
             errorFallback: 'Failed to load permissions.',
             pagination: (from, to, total) => `${from} to ${to} of ${total}`,
@@ -42,9 +48,12 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         entityTableText: {
             searchInputPlaceholder: 'Search by role name',
             nameColumn: 'Name',
+            grantedByDefaultColumn: 'Default',
             statusColumn: 'Status',
             active: 'Active',
             inactive: 'Inactive',
+            granted: 'On',
+            notGranted: 'Off',
             empty: 'No roles found.',
             errorFallback: 'Failed to load roles.',
             pagination: (from, to, total) => `${from} to ${to} of ${total}`,
@@ -58,9 +67,12 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         entityTableText: {
             searchInputPlaceholder: 'Search by feature name',
             nameColumn: 'Name',
+            grantedByDefaultColumn: 'Default',
             statusColumn: 'Status',
             active: 'Active',
             inactive: 'Inactive',
+            granted: 'On',
+            notGranted: 'Off',
             empty: 'No features found.',
             errorFallback: 'Failed to load features.',
             pagination: (from, to, total) => `${from} to ${to} of ${total}`,
@@ -74,9 +86,12 @@ export const entityIndexText: Record<GatekeeperEntity, EntityIndexText> = {
         entityTableText: {
             searchInputPlaceholder: 'Search by team name',
             nameColumn: 'Name',
+            grantedByDefaultColumn: 'Default',
             statusColumn: 'Status',
             active: 'Active',
             inactive: 'Inactive',
+            granted: 'On',
+            notGranted: 'Off',
             empty: 'No teams found.',
             errorFallback: 'Failed to load teams.',
             pagination: (from, to, total) => `${from} to ${to} of ${total}`,

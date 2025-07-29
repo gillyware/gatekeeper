@@ -68,7 +68,7 @@ class BladeDirectivesTest extends TestCase
         Feature::factory()->withName($featureName1)->create();
         Feature::factory()->withName($featureName2)->create();
 
-        $this->user->turnFeatureOn($featureName1);
+        $this->user->assignFeature($featureName1);
 
         $this->assertEquals('YES', $this->renderBladeString("@hasFeature('$featureName1') YES @endhasFeature"));
         $this->assertEquals('YES', $this->renderBladeString("@hasFeature(\$user, '$featureName1') YES @endhasFeature", ['user' => $this->user]));

@@ -1,8 +1,9 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
+namespace Gillyware\Gatekeeper\Tests\Permission\Controllers;
 
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
@@ -38,6 +39,7 @@ class PermissionControllerTest extends TestCase
             'search_term' => '',
             'prioritized_attribute' => 'name',
             'name_order' => 'asc',
+            'grant_by_default_order' => 'asc',
             'is_active_order' => 'desc',
         ]))
             ->assertStatus(Response::HTTP_OK)
@@ -76,15 +78,46 @@ class PermissionControllerTest extends TestCase
             ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function test_update_permission()
+    public function test_update_permission_name()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $permission = Permission::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
-        $this->putJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), ['name' => 'new.name'])
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), [
+            'action' => EntityUpdateAction::Name->value,
+            'value' => 'new.name',
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['name' => 'new.name']);
+    }
+
+    public function test_grant_permission_by_default()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $permission = Permission::factory()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => true,
+        ])
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['grant_by_default' => true]);
+    }
+
+    public function test_revoke_permission_default_grant()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $permission = Permission::factory()->grantByDefault()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => false,
+        ])
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['grant_by_default' => false]);
     }
 
     public function test_deactivate_permission()
@@ -93,7 +126,10 @@ class PermissionControllerTest extends TestCase
         $permission = Permission::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.permissions.deactivate', ['permission' => $permission]))
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => false,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => false]);
     }
@@ -104,7 +140,10 @@ class PermissionControllerTest extends TestCase
         $permission = Permission::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.permissions.reactivate', ['permission' => $permission]))
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => true,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => true]);
     }
@@ -127,9 +166,7 @@ class PermissionControllerTest extends TestCase
         $this->cacheRepository->clear();
 
         $this->postJson(route('gatekeeper.api.permissions.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->putJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.permissions.deactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.permissions.reactivate', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.permissions.update', ['permission' => $permission]), ['action' => EntityUpdateAction::Name->value, 'value' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
         $this->deleteJson(route('gatekeeper.api.permissions.delete', ['permission' => $permission]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

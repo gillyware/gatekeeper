@@ -5,7 +5,7 @@
 - [Handling Access Denials](#handling-access-denials)
 - [Next Steps](#next-steps)
 
-Gatekeeper provides a set of route middleware aliases to enforce access control at the HTTP layer based on a model’s permissions, roles, or team memberships.
+Gatekeeper provides a set of route middleware aliases to enforce access control at the HTTP layer based on a model’s permissions, roles, features, or team memberships.
 
 > [!NOTE]
 > The access checking within these middleware relies on the authenticated user being accessible via `Auth::user()`.
@@ -21,6 +21,9 @@ Gatekeeper provides a set of route middleware aliases to enforce access control 
 | `has_role`              | Checks if the user has a specific role                |
 | `has_any_role`          | Checks if the user has *any* of the given roles       |
 | `has_all_roles`         | Checks if the user has *all* of the given roles       |
+| `has_feature`           | Checks if the user has a specific feature             |
+| `has_any_feature`       | Checks if the user has *any* of the given features    |
+| `has_all_featuress`     | Checks if the user has *all* of the given features    |
 | `on_team`               | Checks if the user is on a specific team              |
 | `on_any_team`           | Checks if the user is on *any* of the given teams     |
 | `on_all_teams`          | Checks if the user is on *all* of the given teams     |
@@ -79,4 +82,4 @@ Manage Entities and Assignments:
 - [Artisan Commands](artisan-commands.md)
 
 Track Entity and Entity Assignment Changes:
-- [Audit Logging]('audit-logging.md')
+- [Audit Logging](audit-logging.md)

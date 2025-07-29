@@ -8,7 +8,7 @@ import { type Pagination } from '@/types/api';
 import { EntityPageRequest } from '@/types/api/entity';
 import { Button } from '@components/ui/button';
 import { DebouncedInput } from '@components/ui/debounced-input';
-import { ArrowUpDown, CheckCircle, Loader, PauseCircle } from 'lucide-react';
+import { ArrowUpDown, Ban, CheckCircle, Loader, PauseCircle } from 'lucide-react';
 import { type SetStateAction, useEffect, useMemo, useState } from 'react';
 import { type NavigateFunction, useNavigate } from 'react-router-dom';
 
@@ -47,6 +47,7 @@ export default function EntitiesTable<E extends GatekeeperEntity>({ entity }: En
             search_term: '',
             prioritized_attribute: 'is_active',
             name_order: 'asc',
+            grant_by_default_order: 'asc',
             is_active_order: 'desc',
         }),
         [entity],
@@ -98,19 +99,19 @@ export default function EntitiesTable<E extends GatekeeperEntity>({ entity }: En
                     <tbody>
                         {loadingEntities ? (
                             <tr>
-                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={3} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     <Loader className="mx-auto h-5 w-5 animate-spin text-gray-500 dark:text-gray-400" />
                                 </td>
                             </tr>
                         ) : errorLoadingEntities ? (
                             <tr>
-                                <td colSpan={2} className="px-4 py-6 text-center text-red-500">
+                                <td colSpan={3} className="px-2 py-6 text-center text-red-500 sm:px-4">
                                     {errorLoadingEntities}
                                 </td>
                             </tr>
                         ) : (entities?.data?.length || 0) === 0 ? (
                             <tr>
-                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={3} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     {language.empty}
                                 </td>
                             </tr>
@@ -139,7 +140,7 @@ function EntitiesTableHeader({ language, setPageRequest }: EntitiesTableHeaderPr
     return (
         <thead className="bg-muted">
             <tr>
-                <th className="px-4 py-2 text-left font-semibold">
+                <th className="px-2 py-2 text-left font-semibold sm:px-4">
                     <span className="inline-flex items-center gap-1">
                         {language.nameColumn}
                         <ArrowUpDown
@@ -155,7 +156,23 @@ function EntitiesTableHeader({ language, setPageRequest }: EntitiesTableHeaderPr
                         />
                     </span>
                 </th>
-                <th className="px-4 py-2 text-left font-semibold">
+                <th className="px-2 py-2 text-left font-semibold sm:px-4">
+                    <span className="inline-flex items-center gap-1">
+                        {language.grantedByDefaultColumn}
+                        <ArrowUpDown
+                            className="h-4 w-4 cursor-pointer opacity-50"
+                            onClick={() => {
+                                setPageRequest((prev) => ({
+                                    ...prev,
+                                    page: 1,
+                                    prioritized_attribute: 'grant_by_default',
+                                    grant_by_default_order: swapOrder(prev.grant_by_default_order),
+                                }));
+                            }}
+                        />
+                    </span>
+                </th>
+                <th className="px-2 py-2 text-left font-semibold sm:px-4">
                     <span className="inline-flex items-center gap-1">
                         {language.statusColumn}
                         <ArrowUpDown
@@ -193,17 +210,30 @@ function EntitiesTableRow<E extends GatekeeperEntity>({ user, navigate, entity, 
             }}
             className="cursor-pointer border-t transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
         >
-            <td className="px-4 py-2">{entityModel.name}</td>
-            <td className="px-4 py-2">
+            <td className="px-2 py-2 sm:px-4">{entityModel.name}</td>
+            <td className="px-2 py-2 sm:px-4">
+                {entityModel.grant_by_default ? (
+                    <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <span className="hidden text-green-700 sm:inline-flex dark:text-green-300">{language.granted}</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Ban className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <span className="hidden text-red-600 sm:inline-flex dark:text-red-400">{language.notGranted}</span>
+                    </div>
+                )}
+            </td>
+            <td className="px-2 py-2 sm:px-4">
                 {entityModel.is_active ? (
                     <div className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        <span className="text-green-700 dark:text-green-300">{language.active}</span>
+                        <span className="hidden text-green-700 sm:inline-flex dark:text-green-300">{language.active}</span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-2">
                         <PauseCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                        <span className="text-yellow-700 dark:text-yellow-300">{language.inactive}</span>
+                        <span className="hidden text-yellow-700 sm:inline-flex dark:text-yellow-300">{language.inactive}</span>
                     </div>
                 )}
             </td>

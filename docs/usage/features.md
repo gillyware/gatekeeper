@@ -3,19 +3,23 @@
 - [Feature Entities](#feature-entities)
     - [Check Feature Existence](#check-feature-existence)
     - [Create Feature](#create-feature)
-    - [Update Feature](#update-feature)
-    - [Turn Feature Off by Default](#turn-feature-off-by-default)
-    - [Turn Feature On by Default](#turn-feature-on-by-default)
+    - [Update Feature Name](#update-feature-name)
+    - [Grant Feature by Default](#grant-feature-by-default)
+    - [Revoke Feature Default Grant](#revoke-feature-default-grant)
     - [Deactivate Feature](#deactivate-feature)
     - [Reactivate Feature](#reactivate-feature)
     - [Delete Feature](#delete-feature)
     - [Find Feature by Name](#find-feature-by-name)
     - [Get All Features](#get-all-features)
-- [Model Feature Assignments](#model-feature-assignments)
-    - [Turn Feature On for Model](#turn-feature-on-for-model)
-    - [Turn Multiple Features On for Model](#turn-multiple-features-on-for-model)
-    - [Turn Feature Off for Model](#turn-feature-off-for-model)
-    - [Turn Multiple Features Off for Model](#turn-multiple-features-off-for-model)
+- [Model Feature Relationships](#model-feature-relationships)
+    - [Assign Feature to Model](#assign-feature-to-model)
+    - [Assign Multiple Features to Model](#assign-multiple-features-to-model)
+    - [Unassign Feature from Model](#unassign-feature-from-model)
+    - [Unassign Multiple Features from Model](#unassign-multiple-features-from-model)
+    - [Deny Feature from Model](#deny-feature-from-model)
+    - [Deny Multiple Features from Model](#deny-multiple-features-from-model)
+    - [Undeny Feature from Model](#undeny-feature-from-model)
+    - [Undeny Multiple Features from Model](#undeny-multiple-features-from-model)
     - [Check Model Has Feature](#check-model-has-feature)
     - [Check Model Has Any Feature](#check-model-has-any-feature)
     - [Check Model Has All Features](#check-model-has-all-features)
@@ -24,7 +28,11 @@
     - [Get Verbose Features for Model](#get-verbose-features-for-model)
 - [Next Steps](#next-steps)
 
-A feature is a block of functionality within your application that you may want a subset of users to access. In Gatekeeper features may be directly assigned to any (configured) model and to any team. You may also set features on by default, which would allow all models to access the feature without needing to allow access via assignments. A model's effective features include those from features assigned to it directly, from features attached to its teams, and from features that are on by default.
+A feature is a named grouping of permissions. You can assign features directly to any (configured) model and any team.
+
+By default, created features are active and not granted by default. 'Active' means the feature is actively granting access, and 'not granted by default' means a feature must be explicitly assigned to models, either directly or through another entity directly assigned to the model.
+
+A model’s effective features are the union of its features granted by default, direct features, and those inherited through its teams, excluding the features directly denied from the model. Keep in mind, a model will effectively have no features (granted by default, direct, or inherited) if the model is not using the `HasFeatures` trait.
 
 Gatekeeper exposes a variety of feature-related methods through its facade and `HasFeatures` trait. This section documents each of them with accompanying code examples.
 
@@ -75,18 +83,18 @@ $feature = Gatekeeper::createFeature('feeding_tracking');
 // or using an enum...
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'feeding_tracking';
 }
 
-$feature = Gatekeeper::createFeature(Feature::FeedingTracking);
+$feature = Gatekeeper::createFeature(Feature::SleepingTracking);
 ```
 
-<a name="update-feature"></a>
-### Update Feature
+<a name="update-feature-name"></a>
+### Update Feature Name
 
 You may update the name of an existing feature.
 
-The `updateFeature` method accepts a `FeaturePacket` instance, a string, or a string-backed enum as the first argument (the existing feature), and a string or string-backed enum as the second argument (the new name).
+The `updateFeatureName` method accepts a `FeaturePacket` instance, a string, or a string-backed enum as the first argument (the existing feature), and a string or string-backed enum as the second argument (the new name).
 
 If the feature does not exist, a `FeatureNotFoundException` will be thrown.
 
@@ -97,37 +105,35 @@ If a feature with the new name already exists, a `FeatureAlreadyExistsException`
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$updatedFeature = Gatekeeper::updateFeature('feeding_tracking', 'eating_tracking');
+$updatedFeature = Gatekeeper::updateFeatureName('feeding_tracking', 'eating_tracking');
 
 // or using enums...
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'feeding_tracking';
     case EatingTracking = 'eating_tracking';
 }
 
-$updatedFeature = Gatekeeper::updateFeature(Feature::FeedingTracking, Feature::EatingTracking);
+$updatedFeature = Gatekeeper::updateFeatureName(Feature::SleepingTracking, Feature::EatingTracking);
 ```
 
-<a name="turn-feature-off-by-default"></a>
-### Turn Feature Off by Default
+<a name="grant-feature-by-default"></a>
+### Grant Feature by Default
 
-Off by default is the default behavior for features. This means that models may only access a feature if it is directly turned on for them or turned on for a team the model is on.
+You may want a feature that most, if not all, models should have by default. Granting the feature by default effectively assigns it to all models that are not denying it.
 
-If a feature is turned on by default, it may be changed to off by default.
-
-The `turnFeatureOffByDefault` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
+The `grantFeatureByDefault` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
 If the feature does not exist, a `FeatureNotFoundException` will be thrown.
 
-If the feature is already turned off by default, it will simply be returned without raising an exception.
+If the feature is already granted by default, it will simply be returned without raising an exception.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$defaultOffFeature = Gatekeeper::turnFeatureOffByDefault('sleeping_tracking');
+$grantedByDefaultFeature = Gatekeeper::grantFeatureByDefault('sleeping_tracking');
 
 // or using an enum...
 
@@ -135,41 +141,40 @@ enum Feature: string {
     case SleepingTracking = 'sleeping_tracking';
 }
 
-$defaultOffFeature = Gatekeeper::turnFeatureOffByDefault(Feature::SleepingTracking);
+$grantedByDefaultFeature = Gatekeeper::grantFeatureByDefault(Feature::SleepingTracking);
 ```
 
-<a name="turn-feature-on-by-default"></a>
-### Turn Feature On by Default
+<a name="revoke-feature-default-grant"></a>
+### Revoke Feature Default Grant
 
-You may want a feature to be accessible by all models without needing to explicitly assign it.
+You may decide that a feature should not be [granted by default](#grant-feature-by-default). You can easily revoke a feature's default grant.
 
-The `turnFeatureOnByDefault` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
+The `revokeFeatureDefaultGrant` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
 If the feature does not exist, a `FeatureNotFoundException` will be thrown.
 
-If the feature is already on by default, it will simply be returned without raising an exception.
+If the feature is not granted by default, it will simply be returned without raising an exception.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$defaultOnFeature = Gatekeeper::turnFeatureOnByDefault('pumping_tracking');
+$nonGrantedByDefaultFeature = Gatekeeper::revokeFeatureDefaultGrant('sleeping_tracking');
 
 // or using an enum...
 
 enum Feature: string {
-    case PumpingTracking = 'pumping_tracking';
+    case SleepingTracking = 'sleeping_tracking';
 }
 
-$defaultOnFeature = Gatekeeper::turnFeatureOnByDefault(Feature::PumpingTracking);
+$nonGrantedByDefaultFeature = Gatekeeper::revokeFeatureDefaultGrant(Feature::SleepingTracking);
 ```
-
 
 <a name="deactivate-feature"></a>
 ### Deactivate Feature
 
-You may temporarily deactivate a feature if you want it to stop granting access without revoking it from models.
+You may temporarily deactivate a feature if you want it to stop granting access without unassigning it from models.
 
 Deactivated features remain in the database but are ignored by feature checks until reactivated. The permissions attached to features will also be ignored until the feature is reactivated.
 
@@ -232,8 +237,6 @@ You may delete a feature to remove it from your application.
 
 The `deleteFeature` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
-
 If the feature is already deleted, the method will return `true` without raising an exception.
 
 **Returns:** `bool`
@@ -282,7 +285,7 @@ You may retrieve a collection of all features defined in your application, regar
 
 The `getAllFeatures` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -290,32 +293,30 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 $features = Gatekeeper::getAllFeatures();
 ```
 
-<a name="model-feature-assignments"></a>
-## Model Feature Assignments
+<a name="model-feature-relationships"></a>
+## Model Feature Relationships
 
-The following methods allow you to turn on, turn off, and inspect features for models.
+The following methods allow you to assign, unassign, deny, undeny, and inspect features for models.
 
 > [!NOTE]
 > Models passed to Gatekeeper must use the `\Gillyware\Gatekeeper\Traits\HasFeatures` trait to enable the methods described below.
 
-<a name="turn-feature-on-for-model"></a>
-### Turn Feature On for Model
+<a name="assign-feature-to-model"></a>
+### Assign Feature to Model
 
-You may turn on a feature for a model using one of the following approaches:
+You may assign a feature to a model using one of the following approaches:
 
-- Using the static `Gatekeeper::turnFeatureOnForModel($model, $feature)` method
-- Using the fluent `Gatekeeper::for($model)->turnFeatureOn($feature)` chain
-- Calling `$model->turnFeatureOn($feature)` directly (available via the `HasFeatures` trait)
+- Using the static `Gatekeeper::assignFeatureToModel($model, $feature)` method
+- Using the fluent `Gatekeeper::for($model)->assignFeature($feature)` chain
+- Calling `$model->assignFeature($feature)` directly (available via the `HasFeatures` trait)
 
-The `$feature` argument can be a:
-
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
 If the feature does not exist, a `FeatureNotFoundException` will be thrown.
 
-**Returns:** `bool` – `true` if the feature was newly turned on or already on
+If the feature is denied from a model, the denial will be removed before assigning.
+
+**Returns:** `bool` – `true` if the feature is assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -326,83 +327,79 @@ enum Feature: string {
 
 $user = User::query()->findOrFail(1);
 
-$featureTurnedOn = Gatekeeper::turnFeatureOnForModel($user, Feature::SleepingTracking);
+$featureAssigned = Gatekeeper::assignFeatureToModel($user, Feature::SleepingTracking);
 
 // or fluently...
 
-$featureTurnedOn = Gatekeeper::for($user)->turnFeatureOn(Feature::SleepingTracking);
+$featureAssigned = Gatekeeper::for($user)->assignFeature(Feature::SleepingTracking);
 
 // or via the trait method...
 
-$featureTurnedOn = $user->turnFeatureOn(Feature::SleepingTracking);
+$featureAssigned = $user->assignFeature(Feature::SleepingTracking);
 ```
 
-<a name="turn-multiple-features-on-for-model"></a>
-### Turn Multiple Features On for Model
+<a name="assign-multiple-features-to-model"></a>
+### Assign Multiple Features to Model
 
-You may turn on multiple features at once for a model using one of the following approaches:
+You may assign multiple features to a model using one of the following approaches:
 
-- Using the static `Gatekeeper::turnAllFeaturesOnForModel($model, $features)` method
-- Using the fluent `Gatekeeper::for($model)->turnAllFeaturesOn($features)` chain
-- Calling `$model->turnAllFeaturesOn($features)` directly (available via the `HasFeatures` trait)
+- Using the static `Gatekeeper::assignAllFeaturesToModel($model, $features)` method
+- Using the fluent `Gatekeeper::for($model)->assignAllFeatures($features)` chain
+- Calling `$model->assignAllFeatures($features)` directly (available via the `HasFeatures` trait)
 
-The `$features` argument must be an array or Arrayable containing any combination of:
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
 
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
-
-If a feature is already on, it will be skipped without raising an exception.
+If a feature is already assigned, it will be skipped without raising an exception.
 
 If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+
+If a feature is denied from a model, the denial will be removed before assigning.
 
 > [!NOTE]
 > This method stops on the first failure.
 
-**Returns:** `bool` – `true` if all features were successfully turned on or already on
+**Returns:** `bool` – `true` if all the features are assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'sleeping_tracking';
     case EatingTracking = 'eating_tracking';
     case PumpingTracking = 'pumping_tracking';
 }
 
-$features = [Feature::FeedingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
 
 $user = User::query()->findOrFail(1);
 
-$featuresTurnedOn = Gatekeeper::turnAllFeaturesOnForModel($user, $features);
+$featuresAssigned = Gatekeeper::assignAllFeaturesToModel($user, $features);
 
 // or fluently...
 
-$featuresTurnedOn = Gatekeeper::for($user)->turnAllFeaturesOn($features);
+$featuresAssigned = Gatekeeper::for($user)->assignAllFeatures($features);
 
 // or via the trait method...
 
-$featuresTurnedOn = $user->turnAllFeaturesOn($features);
+$featuresAssigned = $user->assignAllFeatures($features);
 ```
 
-<a name="turn-feature-off-for-model"></a>
-### Turn Feature Off for Model
+<a name="unassign-feature-from-model"></a>
+### Unassign Feature from Model
 
-You may turn off a feature for a model using one of the following approaches:
+You may unassign a feature from a model using one of the following approaches:
 
-- Using the static `Gatekeeper::turnFeatureOffForModel($model, $feature)` method
-- Using the fluent `Gatekeeper::for($model)->turnFeatureOff($feature)` chain
-- Calling `$model->turnFeatureOff($feature)` directly (available via the `HasFeatures` trait)
+- Using the static `Gatekeeper::unassignFeatureFromModel($model, $feature)` method
+- Using the fluent `Gatekeeper::for($model)->unassignFeature($feature)` chain
+- Calling `$model->unassignFeature($feature)` directly (available via the `HasFeatures` trait)
 
-The `$feature` argument can be a:
-
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
 If the feature does not exist, a `FeatureNotFoundException` will be thrown.
 
-**Returns:** bool – `true` if the feature was turned off or was not previously on
+If the feature is denied from the model, the denial will remain intact.
+
+**Returns:** bool – `true` if the feature is not assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -413,69 +410,233 @@ enum Feature: string {
 
 $user = User::query()->findOrFail(1);
 
-$featureTurnedOff = Gatekeeper::turnFeatureOffForModel($user, Feature::PumpingTracking);
+$featureUnassigned = Gatekeeper::unassignFeatureFromModel($user, Feature::PumpingTracking);
 
 // or fluently...
 
-$featureTurnedOff = Gatekeeper::for($user)->turnFeatureOff(Feature::PumpingTracking);
+$featureUnassigned = Gatekeeper::for($user)->unassignFeature(Feature::PumpingTracking);
 
 // or via the trait method...
 
-$featureTurnedOff = $user->turnFeatureOff(Feature::PumpingTracking);
+$featureUnassigned = $user->unassignFeature(Feature::PumpingTracking);
 ```
 
-<a name="turn-multiple-features-off-for-model"></a>
-### Turn Multiple Features Off for Model
+<a name="unassign-multiple-features-from-model"></a>
+### Unassign Multiple Features from Model
 
-You may turn multiple features off for a model at once using one of the following approaches:
+You may unassign multiple features from a model using one of the following approaches:
 
-- Using the static `Gatekeeper::turnAllFeaturesOffForModel($model, $features)` method
-- Using the fluent `Gatekeeper::for($model)->turnAllFeaturesOff($features)` chain
-- Calling `$model->turnAllFeaturesOff($features)` directly (available via the `HasFeatures` trait)
+- Using the static `Gatekeeper::unassignAllFeaturesFromModel($model, $features)` method
+- Using the fluent `Gatekeeper::for($model)->unassignAllFeatures($features)` chain
+- Calling `$model->unassignAllFeatures($features)` directly (available via the `HasFeatures` trait)
 
-The `$features` argument must be an array or Arrayable containing any combination of:
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
 
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+If a feature is already unassigned, it will be skipped without raising an exception.
 
-If a feature is already turned off, it will be skipped without raising an exception.
+If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+
+If the feature is denied from the model, the denial will remain intact.
+
+> [!NOTE]
+> This method stops on the first failure.
+
+**Returns:** bool – `true` if none of the features are assigned
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Feature: string {
+    case SleepingTracking = 'sleeping_tracking';
+    case EatingTracking = 'eating_tracking';
+    case PumpingTracking = 'pumping_tracking';
+}
+
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+
+$user = User::query()->findOrFail(1);
+
+$featuresUnassigned = Gatekeeper::unassignAllFeaturesFromModel($user, $features);
+
+// or fluently...
+
+$featuresUnassigned = Gatekeeper::for($user)->unassignAllFeatures($features);
+
+// or via the trait method...
+
+$featuresUnassigned = $user->unassignAllFeatures($features);
+```
+
+<a name="deny-feature-from-model"></a>
+### Deny Feature from Model
+
+To deny a feature from a model means to block access to a feature even if the feature is granted by default or inherited from a team.
+
+You may deny a feature from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::denyFeatureFromModel($model, $feature)` method
+- Using the fluent `Gatekeeper::for($model)->denyFeature($feature)` chain
+- Calling `$model->denyFeature($feature)` directly (available via the `HasFeatures` trait)
+
+The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
+
+If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+
+If the feature is assigned to the model, the feature will be unassigned from the model before denying.
+
+**Returns:** bool – `true` if the feature is denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Feature: string {
+    case PumpingTracking = 'pumping_tracking';
+}
+
+$user = User::query()->findOrFail(1);
+
+$featureDenied = Gatekeeper::denyFeatureFromModel($user, Feature::PumpingTracking);
+
+// or fluently...
+
+$featureDenied = Gatekeeper::for($user)->denyFeature(Feature::PumpingTracking);
+
+// or via the trait method...
+
+$featureDenied = $user->denyFeature(Feature::PumpingTracking);
+```
+
+<a name="deny-multiple-features-from-model"></a>
+### Deny Multiple Features from Model
+
+You may deny multiple features from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::denyAllFeaturesFromModel($model, $features)` method
+- Using the fluent `Gatekeeper::for($model)->denyAllFeatures($features)` chain
+- Calling `$model->denyAllFeatures($features)` directly (available via the `HasFeatures` trait)
+
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
+
+If a feature is already denied, it will be skipped without raising an exception.
+
+If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+
+If the feature is denied from the model, the denial will remain intact.
+
+> [!NOTE]
+> This method stops on the first failure.
+
+**Returns:** bool – `true` if all features are denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Feature: string {
+    case SleepingTracking = 'sleeping_tracking';
+    case EatingTracking = 'eating_tracking';
+    case PumpingTracking = 'pumping_tracking';
+}
+
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+
+$user = User::query()->findOrFail(1);
+
+$featuresDenied = Gatekeeper::denyAllFeaturesFromModel($user, $features);
+
+// or fluently...
+
+$featuresDenied = Gatekeeper::for($user)->denyAllFeatures($features);
+
+// or via the trait method...
+
+$featuresDenied = $user->denyAllFeatures($features);
+```
+
+<a name="undeny-feature-from-model"></a>
+### Undeny Feature from Model
+
+To undeny a feature from a model means to unblock access to a feature, allowing acces if the feature is granted by default, directly assigned, or inherited from a team.
+
+You may undeny a feature from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::undenyFeatureFromModel($model, $feature)` method
+- Using the fluent `Gatekeeper::for($model)->undenyFeature($feature)` chain
+- Calling `$model->undenyFeature($feature)` directly (available via the `HasFeatures` trait)
+
+The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
+
+If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+
+**Returns:** bool – `true` if the feature is not denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Feature: string {
+    case PumpingTracking = 'pumping_tracking';
+}
+
+$user = User::query()->findOrFail(1);
+
+$featureUndenied = Gatekeeper::undenyFeatureFromModel($user, Feature::PumpingTracking);
+
+// or fluently...
+
+$featureUndenied = Gatekeeper::for($user)->undenyFeature(Feature::PumpingTracking);
+
+// or via the trait method...
+
+$featureUndenied = $user->undenyFeature(Feature::PumpingTracking);
+```
+
+<a name="undeny-multiple-features-from-model"></a>
+### Undeny Multiple Features from Model
+
+You may undeny multiple features from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::undenyAllFeaturesFromModel($model, $features)` method
+- Using the fluent `Gatekeeper::for($model)->undenyAllFeatures($features)` chain
+- Calling `$model->undenyAllFeatures($features)` directly (available via the `HasFeatures` trait)
+
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
+
+If a feature is not denied, it will be skipped without raising an exception.
 
 If a feature does not exist, a `FeatureNotFoundException` will be thrown.
 
 > [!NOTE]
 > This method stops on the first failure.
 
-**Returns:** bool – `true` if all features were turned off or were not previously on
+**Returns:** bool – `true` if none of the features are denied
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'sleeping_tracking';
     case EatingTracking = 'eating_tracking';
     case PumpingTracking = 'pumping_tracking';
 }
 
-$features = [Feature::FeedingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
 
 $user = User::query()->findOrFail(1);
 
-$featuresTurnedOff = Gatekeeper::turnAllFeaturesOffForModel($user, $features);
+$featuresUndenied = Gatekeeper::undenyAllFeaturesFromModel($user, $features);
 
 // or fluently...
 
-$featuresTurnedOff = Gatekeeper::for($user)->turnAllFeaturesOff($features);
+$featuresUndenied = Gatekeeper::for($user)->undenyAllFeatures($features);
 
 // or via the trait method...
 
-$featuresTurnedOff = $user->turnAllFeaturesOff($features);
+$featuresUndenied = $user->undenyAllFeatures($features);
 ```
 
 <a name="check-model-has-feature"></a>
 ### Check Model Has Feature
 
-A model may have an active feature directly turned on, indirectly on through a team, or on by default. This method checks all sources to determine if the model has access to the feature.
+A model may have an undenied, active feature granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to the feature.
 
 You may check if a model has a feature using one of the following approaches:
 
@@ -483,15 +644,11 @@ You may check if a model has a feature using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->hasFeature($feature)` chain
 - Calling `$model->hasFeature($feature)` directly (available via the `HasFeatures` trait)
 
-The `$feature` argument can be a:
-
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
 If the feature does not exist, `false` will be returned.
 
-**Returns:** bool – `true` if the model has access to the given feature, `false` otherwise (including if the model is missing the `HasFeatures` trait, the feature does not exist, or the feature is inactive)
+**Returns:** bool – `true` if the model has access to the given feature
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -516,7 +673,7 @@ $hasFeature = $user->hasFeature(Feature::PumpingTracking);
 <a name="check-model-has-any-feature"></a>
 ### Check Model Has Any Feature
 
-A model may have an active feature directly turned on, indirectly on through a team, or on by default. This method checks all sources to determine if the model has access to any of the given features.
+A model may have an undenied, active feature granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to any of the given features.
 
 You may check if a model has any of a set of features using one of the following approaches:
 
@@ -524,26 +681,22 @@ You may check if a model has any of a set of features using one of the following
 - Using the fluent `Gatekeeper::for($model)->hasAnyFeature($features)` chain
 - Calling `$model->hasAnyFeature($features)` directly (available via the `HasFeatures` trait)
 
-The `$features` argument must be an array or Arrayable containing any combination of:
-
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
 
 If the feature does not exist, it will be skipped.
 
-**Returns:** bool – `true` if the model has access to any of the given features, `false` otherwise (including if none of the features exist, are active, or are assigned)
+**Returns:** bool – `true` if the model has access to any of the given features
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'sleeping_tracking';
     case EatingTracking = 'eating_tracking';
     case PumpingTracking = 'pumping_tracking';
 }
 
-$features = [Feature::FeedingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
 
 $user = User::query()->findOrFail(1);
 
@@ -561,7 +714,7 @@ $hasAnyFeature = $user->hasAnyFeature($features);
 <a name="check-model-has-all-features"></a>
 ### Check Model Has All Features
 
-A model may have an active feature directly turned on, indirectly on through a team, or on by default. This method checks all sources to determine if the model has access to all of the given features.
+A model may have an undenied, active feature granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to all of the given features.
 
 You may check if a model has all of a set of features using one of the following approaches:
 
@@ -569,26 +722,22 @@ You may check if a model has all of a set of features using one of the following
 - Using the fluent `Gatekeeper::for($model)->hasAllFeatures($features)` chain
 - Calling `$model->hasAllFeatures($features)` directly (available via the `HasFeatures` trait)
 
-The `$features` argument must be an array or Arrayable containing any combination of:
-
-- `FeaturePacket` instance
-- string (e.g. `'pumping_tracking'`)
-- string-backed enum value
+The `$features` argument must be an array or Arrayable containing any combination `FeaturePacket` instances, strings, or a string-backed enums.
 
 If the feature does not exist, `false` will be returned.
 
-**Returns:** bool – `true` if the model has access to all of the given features, `false` otherwise (including if any of the features do not exist, are inactive, or are unassigned)
+**Returns:** bool – `true` if the model has access to all of the given features
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Feature: string {
-    case FeedingTracking = 'feeding_tracking';
+    case SleepingTracking = 'sleeping_tracking';
     case EatingTracking = 'eating_tracking';
     case PumpingTracking = 'pumping_tracking';
 }
 
-$features = [Feature::FeedingTracking, Feature::EatingTracking, Feature::PumpingTracking];
+$features = [Feature::SleepingTracking, Feature::EatingTracking, Feature::PumpingTracking];
 
 $user = User::query()->findOrFail(1);
 
@@ -606,7 +755,7 @@ $hasAllFeatures = $user->hasAllFeatures($features);
 <a name="get-direct-features-for-model"></a>
 ### Get Direct Features for Model
 
-You may retrieve a collection of all features directly turned on for a given model, regardless of their active status. This does not include features inherited from teams or those features that are on by default.
+You may retrieve a collection of all features directly assigned to a given model, regardless of their active status. This does not include features inherited from teams.
 
 You may get a model's direct features using one of the following approaches:
 
@@ -614,7 +763,7 @@ You may get a model's direct features using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectFeatures()` chain
 - Calling `$model->getDirectFeatures()` directly (available via the `HasFeatures` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -635,7 +784,7 @@ $directFeatures = $user->getDirectFeatures();
 <a name="get-effective-features-for-model"></a>
 ### Get Effective Features for Model
 
-You may retrieve a collection of all active features effectively on for a given model, including those inherited from teams and those that are on by default.
+You may retrieve a collection of all active features effectively assigned to a given model, including those inherited from teams.
 
 You may get a model's effective features using one of the following approaches:
 
@@ -643,7 +792,7 @@ You may get a model's effective features using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getEffectiveFeatures()` chain
 - Calling `$model->getEffectiveFeatures()` directly (available via the `HasFeatures` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -664,7 +813,7 @@ $effectiveFeatures = $user->getEffectiveFeatures();
 <a name="get-verbose-features-for-model"></a>
 ### Get Verbose Features for Model
 
-You may retrieve a collection of all active features effectively assigned to a given model, along with the source(s) of each feature (e.g., direct, via team, or on by default).
+You may retrieve a collection of all active features effectively assigned to a given model, along with the source(s) of each feature (ex., direct or via team).
 
 You may get a model's verbose features using one of the following approaches:
 
@@ -672,7 +821,7 @@ You may get a model's verbose features using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getVerboseFeatures()` chain
 - Calling `$model->getVerboseFeatures()` directly (available via the `HasFeatures` trait)
 
-**Returns:** `\Illuminate\Support\Collection<array{name: string, sources: array}>`
+**Returns:** `\Illuminate\Support\Collection`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -706,4 +855,4 @@ Manage Entities and Assignments:
 - [Artisan Commands](artisan-commands.md)
 
 Track Entity and Entity Assignment Changes:
-- [Audit Logging]('audit-logging.md')
+- [Audit Logging](audit-logging.md)

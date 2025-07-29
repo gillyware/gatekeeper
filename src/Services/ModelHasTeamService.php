@@ -42,4 +42,19 @@ class ModelHasTeamService implements ModelHasEntityServiceInterface
         return $this->modelHasTeamRepository->searchUnassignedByEntityNameForModel($model, $packet)
             ->through(fn (Team $team) => $team->toPacket());
     }
+
+    /**
+     * Search denied teams by team name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        $paginator = $this->modelHasTeamRepository->searchDeniedByEntityNameForModel($model, $packet);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
+
+        return $paginator->through(function (ModelHasTeam $modelHasTeam) use ($displayTimezone) {
+            $modelHasTeam->offsetSet('denied_at', $modelHasTeam->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
+
+            return $modelHasTeam;
+        });
+    }
 }

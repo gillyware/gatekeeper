@@ -2,7 +2,6 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
@@ -11,7 +10,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Config;
 
 /**
  * @implements ModelHasEntityRepositoryInterface<Team, ModelHasTeam>
@@ -34,21 +32,77 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
     }
 
     /**
-     * Create a new model team assigment.
+     * Assign a team to a model.
      *
      * @param  Team  $team
      */
-    public function create(Model $model, $team): ModelHasTeam
+    public function assignToModel(Model $model, $team): ModelHasTeam
     {
-        $modelHasTeam = ModelHasTeam::create([
+        $modelHasTeam = ModelHasTeam::query()->updateOrCreate([
             'team_id' => $team->id,
             'model_type' => $model->getMorphClass(),
             'model_id' => $model->getKey(),
+        ], [
+            'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelTeamNames($model);
+        $this->cacheService->invalidateCacheForModelTeamLinks($model);
 
         return $modelHasTeam;
+    }
+
+    /**
+     * Delete all non-denied team assignments for a given model and team.
+     *
+     * @param  Team  $team
+     */
+    public function unassignFromModel(Model $model, $team): bool
+    {
+        ModelHasTeam::forModel($model)
+            ->where('team_id', $team->id)
+            ->where('denied', false)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+
+        return true;
+    }
+
+    /**
+     * Deny a team from a model.
+     *
+     * @param  Team  $team
+     */
+    public function denyFromModel(Model $model, $team): ModelHasTeam
+    {
+        $modelHasTeam = ModelHasTeam::query()->updateOrCreate([
+            'team_id' => $team->id,
+            'model_type' => $model->getMorphClass(),
+            'model_id' => $model->getKey(),
+        ], [
+            'denied' => true,
+        ]);
+
+        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+
+        return $modelHasTeam;
+    }
+
+    /**
+     * Delete all denied team assignments for a given model and team.
+     *
+     * @param  Team  $team
+     */
+    public function undenyFromModel(Model $model, $team): bool
+    {
+        ModelHasTeam::forModel($model)
+            ->where('team_id', $team->id)
+            ->where('denied', true)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+
+        return true;
     }
 
     /**
@@ -58,7 +112,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasTeam::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamNames($model);
+        $this->cacheService->invalidateCacheForModelTeamLinks($model);
 
         return true;
     }
@@ -77,23 +131,9 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
                 $modelHasTeam->delete();
 
                 if ($modelHasTeam->model) {
-                    $this->cacheService->invalidateCacheForModelTeamNames($modelHasTeam->model);
+                    $this->cacheService->invalidateCacheForModelTeamLinks($modelHasTeam->model);
                 }
             });
-
-        return true;
-    }
-
-    /**
-     * Delete all team assignments for a given model and team.
-     *
-     * @param  Team  $team
-     */
-    public function deleteForModelAndEntity(Model $model, $team): bool
-    {
-        ModelHasTeam::forModel($model)->where('team_id', $team->id)->delete();
-
-        $this->cacheService->invalidateCacheForModelTeamNames($model);
 
         return true;
     }
@@ -103,23 +143,20 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $teamsTable = Config::get('gatekeeper.tables.teams', GatekeeperConfigDefault::TABLES_TEAMS);
-        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
-
-        $query = ModelHasTeam::query()
-            ->select("$modelTeamsTable.*")
-            ->join($teamsTable, "$teamsTable.id", '=', "$modelTeamsTable.team_id")
+        return ModelHasTeam::query()
+            ->select((new ModelHasTeam)->qualifyColumn('*'))
+            ->join((new Team)->getTable(), (new Team)->qualifyColumn('id'), '=', (new ModelHasTeam)->qualifyColumn('team_id'))
             ->forModel($model)
-            ->whereIn('team_id', function ($sub) use ($teamsTable, $packet) {
+            ->where('denied', false)
+            ->whereIn('team_id', function ($sub) use ($packet) {
                 $sub->select('id')
-                    ->from($teamsTable)
+                    ->from((new Team)->getTable())
                     ->whereLike('name', "%{$packet->searchTerm}%");
             })
-            ->orderByDesc("$teamsTable.is_active")
-            ->orderBy("$teamsTable.name")
-            ->with('team:id,name,is_active');
-
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('team:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
@@ -127,20 +164,38 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $modelTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
-
-        $query = Team::query()
+        return Team::query()
             ->whereLike('name', "%{$packet->searchTerm}%")
-            ->whereNotIn('id', function ($subquery) use ($model, $modelTeamsTable) {
+            ->whereNotIn('id', function ($subquery) use ($model) {
                 $subquery->select('team_id')
-                    ->from($modelTeamsTable)
+                    ->from((new ModelHasTeam)->getTable())
                     ->where('model_type', $model->getMorphClass())
                     ->where('model_id', $model->getKey())
-                    ->whereNull("$modelTeamsTable.deleted_at");
+                    ->whereNull((new ModelHasTeam)->qualifyColumn('deleted_at'));
             })
             ->orderByDesc('is_active')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->paginate(10, ['*'], 'page', $packet->page);
+    }
 
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+    /**
+     * Search denied teams by team name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        return ModelHasTeam::query()
+            ->select((new ModelHasTeam)->qualifyColumn('*'))
+            ->join((new Team)->getTable(), (new Team)->qualifyColumn('id'), '=', (new ModelHasTeam)->qualifyColumn('team_id'))
+            ->forModel($model)
+            ->where('denied', true)
+            ->whereIn('team_id', function ($sub) use ($packet) {
+                $sub->select('id')
+                    ->from((new Team)->getTable())
+                    ->whereLike('name', "%{$packet->searchTerm}%");
+            })
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('team:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 }

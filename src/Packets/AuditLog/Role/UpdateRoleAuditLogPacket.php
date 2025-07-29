@@ -21,6 +21,6 @@ final class UpdateRoleAuditLogPacket extends AbstractBaseStoreAuditLogPacket
 
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::UpdateRole;
+        return AuditLogAction::UpdateRoleName;
     }
 }

@@ -12,9 +12,9 @@ use Gillyware\Gatekeeper\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
-Route::get(Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH), LandingController::class)->name('landing');
+Route::get(Config::get('gatekeeper.path', GatekeeperConfigDefault::PATH), LandingController::class)->name('gatekeeper.landing');
 
-Route::prefix('gatekeeper/api')->name('api.')->group(function () {
+Route::prefix('gatekeeper/api')->name('gatekeeper.api.')->group(function () {
 
     /**
      * ******************************************************************
@@ -38,11 +38,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
             Route::post('/', 'store')->name('store');
 
-            Route::put('{permission}', 'update')->name('update');
-
-            Route::patch('{permission}/deactivate', 'deactivate')->name('deactivate');
-
-            Route::patch('{permission}/reactivate', 'reactivate')->name('reactivate');
+            Route::patch('{permission}', 'update')->name('update');
 
             Route::delete('{permission}', 'delete')->name('delete');
 
@@ -65,11 +61,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
             Route::post('/', 'store')->name('store');
 
-            Route::put('{role}', 'update')->name('update');
-
-            Route::patch('{role}/deactivate', 'deactivate')->name('deactivate');
-
-            Route::patch('{role}/reactivate', 'reactivate')->name('reactivate');
+            Route::patch('{role}', 'update')->name('update');
 
             Route::delete('{role}', 'delete')->name('delete');
 
@@ -92,15 +84,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
             Route::post('/', 'store')->name('store');
 
-            Route::put('{feature}', 'update')->name('update');
-
-            Route::patch('{feature}/default-off', 'turnOffByDefault')->name('default-off');
-
-            Route::patch('{feature}/default-on', 'turnOnByDefault')->name('default-on');
-
-            Route::patch('{feature}/deactivate', 'deactivate')->name('deactivate');
-
-            Route::patch('{feature}/reactivate', 'reactivate')->name('reactivate');
+            Route::patch('{feature}', 'update')->name('update');
 
             Route::delete('{feature}', 'delete')->name('delete');
 
@@ -123,11 +107,7 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
             Route::post('/', 'store')->name('store');
 
-            Route::put('{team}', 'update')->name('update');
-
-            Route::patch('{team}/deactivate', 'deactivate')->name('deactivate');
-
-            Route::patch('{team}/reactivate', 'reactivate')->name('reactivate');
+            Route::patch('{team}', 'update')->name('update');
 
             Route::delete('{team}', 'delete')->name('delete');
 
@@ -150,11 +130,17 @@ Route::prefix('gatekeeper/api')->name('api.')->group(function () {
 
         Route::get('/{modelLabel}/{modelPk}/entities/{entity}/unassigned', 'searchUnassignedEntitiesForModel')->name('search-unassigned-entities');
 
+        Route::get('/{modelLabel}/{modelPk}/entities/{entity}/denied', 'searchDeniedEntitiesForModel')->name('search-denied-entities');
+
         Route::middleware('has_permission:'.GatekeeperPermission::Manage->value)->group(function () {
 
             Route::post('/{modelLabel}/{modelPk}/entities/{entity}/assign', 'assign')->name('assign');
 
-            Route::delete('/{modelLabel}/{modelPk}/entities/{entity}/revoke', 'revoke')->name('revoke');
+            Route::delete('/{modelLabel}/{modelPk}/entities/{entity}/unassign', 'unassign')->name('unassign');
+
+            Route::post('/{modelLabel}/{modelPk}/entities/{entity}/deny', 'deny')->name('deny');
+
+            Route::delete('/{modelLabel}/{modelPk}/entities/{entity}/undeny', 'undeny')->name('undeny');
 
         });
 

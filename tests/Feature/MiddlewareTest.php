@@ -148,7 +148,7 @@ class MiddlewareTest extends TestCase
         $featureName = fake()->unique()->word();
 
         Feature::factory()->withName($featureName)->create();
-        $user->turnFeatureOn($featureName);
+        $user->assignFeature($featureName);
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_feature:$featureName"))
@@ -179,7 +179,7 @@ class MiddlewareTest extends TestCase
 
         Feature::factory()->withName($r1)->create();
         Feature::factory()->withName($r2)->create();
-        $user->turnFeatureOn($r1);
+        $user->assignFeature($r1);
 
         $this->actingAs($user)
             ->get($this->registerTestRoute("has_any_feature:$r1,$r2"))

@@ -1,7 +1,7 @@
 import { useApi } from '@/lib/api';
-import { turnEntityOffByDefault } from '@/lib/entities';
-import { manageEntityText, type TurnEntityOffByDefaultText } from '@/lib/lang/en/entity/manage';
-import { type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
+import { grantEntityByDefault } from '@/lib/entities';
+import { type GrantEntityByDefaultText, manageEntityText } from '@/lib/lang/en/entity/manage';
+import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { Button } from '@components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@components/ui/dialog';
 import { Input } from '@components/ui/input';
@@ -9,30 +9,30 @@ import InputError from '@components/ui/input-error';
 import { Label } from '@components/ui/label';
 import { type FormEvent, useMemo, useState } from 'react';
 
-interface TurnOffByDefaultEntityProps<E extends GatekeeperFeature> {
-    entity: E;
+interface GrantEntityByDefaultProps<E extends GatekeeperEntity> {
+    entity: GatekeeperEntity;
     entityModel: GatekeeperEntityModelMap[E];
     updateEntity: (newEntity: GatekeeperEntityModelMap[E]) => void;
 }
 
-export default function TurnOffByDefaultEntity<E extends GatekeeperFeature>({ entity, entityModel, updateEntity }: TurnOffByDefaultEntityProps<E>) {
+export default function GrantEntityByDefault<E extends GatekeeperEntity>({ entity, entityModel, updateEntity }: GrantEntityByDefaultProps<E>) {
     const api = useApi();
     const [entityName, setEntityName] = useState<string>('');
     const [processing, setProcessing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const language: TurnEntityOffByDefaultText = useMemo(() => manageEntityText[entity].turnEntityOffByDefaultText, [entity]);
+    const language: GrantEntityByDefaultText = useMemo(() => manageEntityText[entity].grantEntityByDefaultText, [entity]);
 
-    const submitTurnEntityOffByDefault = async (e: FormEvent<HTMLFormElement>) => {
+    const submitGrantEntityByDefault = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (entityName !== entityModel.name) {
             return setError(language.mismatchError);
         }
 
-        turnEntityOffByDefault(api, entity, entityModel.id, updateEntity, setProcessing, setError);
+        grantEntityByDefault(api, entity, entityModel.id, updateEntity, setProcessing, setError);
     };
 
-    const closeDeactivationModal = () => {
+    const closeReactivationModal = () => {
         setEntityName('');
         setError(null);
         setProcessing(false);
@@ -40,20 +40,20 @@ export default function TurnOffByDefaultEntity<E extends GatekeeperFeature>({ en
 
     return (
         <div className="space-y-6">
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
+            <div className="space-y-4 rounded-lg border border-green-100 bg-green-50 p-4 dark:border-green-200/10 dark:bg-green-700/10">
+                <div className="relative space-y-0.5 text-green-600 dark:text-green-100">
                     <p className="font-medium">{language.title}</p>
                     <p className="text-sm">{language.description}</p>
                 </div>
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="destructive">{language.confirmButton}</Button>
+                        <Button variant="default">{language.confirmButton}</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogTitle>{language.confirmTitle}</DialogTitle>
                         <DialogDescription>{language.confirmDescription(entityModel.name)}</DialogDescription>
-                        <form className="space-y-6" onSubmit={submitTurnEntityOffByDefault}>
+                        <form className="space-y-6" onSubmit={submitGrantEntityByDefault}>
                             <div className="grid gap-2">
                                 <Label htmlFor="name" className="sr-only">
                                     {language.inputLabel}
@@ -75,12 +75,12 @@ export default function TurnOffByDefaultEntity<E extends GatekeeperFeature>({ en
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary" onClick={closeDeactivationModal}>
+                                    <Button variant="secondary" onClick={closeReactivationModal}>
                                         {language.cancelButton}
                                     </Button>
                                 </DialogClose>
 
-                                <Button variant="destructive" disabled={processing} asChild>
+                                <Button variant="default" disabled={processing} asChild>
                                     <button type="submit">{language.confirmButton}</button>
                                 </Button>
                             </DialogFooter>

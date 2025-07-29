@@ -42,4 +42,19 @@ class ModelHasPermissionService implements ModelHasEntityServiceInterface
         return $this->modelHasPermissionRepository->searchUnassignedByEntityNameForModel($model, $packet)
             ->through(fn (Permission $permission) => $permission->toPacket());
     }
+
+    /**
+     * Search denied permissions by permission name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        $paginator = $this->modelHasPermissionRepository->searchDeniedByEntityNameForModel($model, $packet);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
+
+        return $paginator->through(function (ModelHasPermission $modelHasPermission) use ($displayTimezone) {
+            $modelHasPermission->offsetSet('denied_at', $modelHasPermission->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
+
+            return $modelHasPermission;
+        });
+    }
 }

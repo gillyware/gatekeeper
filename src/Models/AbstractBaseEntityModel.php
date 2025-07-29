@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $id // PK
  * @property string $name
  * @property bool $is_active
+ * @property bool $grant_by_default
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -51,6 +52,7 @@ abstract class AbstractBaseEntityModel extends Model implements PacketableInterf
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'grant_by_default' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

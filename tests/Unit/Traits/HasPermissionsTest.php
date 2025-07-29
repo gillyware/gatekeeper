@@ -42,28 +42,52 @@ class HasPermissionsTest extends TestCase
         $user->assignAllPermissions($permissions);
     }
 
-    public function test_revoke_permission_delegates_to_facade()
+    public function test_unassign_permission_delegates_to_facade()
     {
         $user = User::factory()->create();
         $permission = 'edit-posts';
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokePermissionFromModel')->with($user, $permission)->once();
+        Gatekeeper::shouldReceive('unassignPermissionFromModel')->with($user, $permission)->once();
 
-        $user->revokePermission($permission);
+        $user->unassignPermission($permission);
     }
 
-    public function test_revoke_permissions_delegates_to_facade()
+    public function test_unassign_permissions_delegates_to_facade()
     {
         $user = User::factory()->create();
         $permissions = ['edit-posts', 'delete-posts'];
 
         Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
 
-        Gatekeeper::shouldReceive('revokeAllPermissionsFromModel')->with($user, $permissions)->once();
+        Gatekeeper::shouldReceive('unassignAllPermissionsFromModel')->with($user, $permissions)->once();
 
-        $user->revokeAllPermissions($permissions);
+        $user->unassignAllPermissions($permissions);
+    }
+
+    public function test_deny_permission_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $permission = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyPermissionFromModel')->with($user, $permission)->once();
+
+        $user->denyPermission($permission);
+    }
+
+    public function test_deny_permissions_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $permissions = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyAllPermissionsFromModel')->with($user, $permissions)->once();
+
+        $user->denyAllPermissions($permissions);
     }
 
     public function test_has_permission_delegates_to_facade()

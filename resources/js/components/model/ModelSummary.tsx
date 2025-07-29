@@ -1,18 +1,22 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
+import { useModel } from '@/context/ModelContext';
 import { manageModelText, type ModelSummaryText } from '@/lib/lang/en/model/manage';
 import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
-import { type ConfiguredModel, type ModelEntitySupport, type VerboseFeature, type VerbosePermission, type VerboseRole } from '@/types/api/model';
+import {
+    type ConfiguredModel,
+    type ModelEntitySupport,
+    type VerboseFeatures,
+    type VerbosePermissions,
+    type VerboseRoles,
+    type VerboseTeams,
+} from '@/types/api/model';
 import { Card, CardContent } from '@components/ui/card';
 import { Input } from '@components/ui/input';
 import { Separator } from '@components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@components/ui/tooltip';
 import { Ban, CheckCircle, ChevronDown, ChevronRight, LayoutPanelTop } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-
-interface ModelSummaryProps {
-    model: ConfiguredModel;
-}
 
 interface SupportIndicatorProps {
     supported: boolean;
@@ -26,42 +30,55 @@ interface ModelInformationProps {
 }
 
 interface EffectivePermissionsProps {
-    effectivePermissions: VerbosePermission[];
+    effectivePermissions: VerbosePermissions[];
     language: ModelSummaryText;
 }
 
 interface EffectiveRolesProps {
-    effectiveRoles: VerboseRole[];
+    effectiveRoles: VerboseRoles[];
     language: ModelSummaryText;
 }
 
 interface EffectiveFeaturesProps {
-    effectiveFeatures: VerboseFeature[];
+    effectiveFeatures: VerboseFeatures[];
+    language: ModelSummaryText;
+}
+
+interface EffectiveTeamsProps {
+    effectiveTeams: VerboseTeams[];
     language: ModelSummaryText;
 }
 
 interface PermissionItemProps {
-    permission: VerbosePermission;
+    permission: VerbosePermissions;
     open: boolean;
     onToggle: () => void;
     language: ModelSummaryText;
 }
 
 interface RoleItemProps {
-    role: VerboseRole;
+    role: VerboseRoles;
     open: boolean;
     onToggle: () => void;
     language: ModelSummaryText;
 }
 
 interface FeatureItemProps {
-    feature: VerboseFeature;
+    feature: VerboseFeatures;
     open: boolean;
     onToggle: () => void;
     language: ModelSummaryText;
 }
 
-export default function ModelSummary({ model }: ModelSummaryProps) {
+interface TeamItemProps {
+    team: VerboseTeams;
+    open: boolean;
+    onToggle: () => void;
+    language: ModelSummaryText;
+}
+
+export default function ModelSummary() {
+    const { model } = useModel();
     const { config } = useGatekeeper();
     const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
     const language: ModelSummaryText = useMemo(() => manageModelText.modelSummaryText, []);
@@ -75,6 +92,8 @@ export default function ModelSummary({ model }: ModelSummaryProps) {
             {entitySupport.role.supported && <EffectiveRoles effectiveRoles={model.access_sources.roles} language={language} />}
 
             {entitySupport.feature.supported && <EffectiveFeatures effectiveFeatures={model.access_sources.features} language={language} />}
+
+            {entitySupport.team.supported && <EffectiveTeams effectiveTeams={model.access_sources.teams} language={language} />}
         </div>
     );
 }
@@ -391,6 +410,85 @@ function EffectiveFeatures({ effectiveFeatures, language }: EffectiveFeaturesPro
     );
 }
 
+function EffectiveTeams({ effectiveTeams, language }: EffectiveTeamsProps) {
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const filteredTeams = useMemo(
+        () => effectiveTeams.filter((r) => r.name.toLowerCase().includes(searchTerm.toLowerCase())),
+        [effectiveTeams, searchTerm],
+    );
+    const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => Object.fromEntries(filteredTeams.map((r) => [r.name, false])));
+    const allOpen = useMemo(() => Object.values(openStates).every(Boolean), [openStates]);
+
+    useEffect(() => {
+        setOpenStates(Object.fromEntries(filteredTeams.map((r) => [r.name, false])));
+    }, [filteredTeams]);
+
+    const toggleAll = () => {
+        const next = Object.fromEntries(filteredTeams.map((r) => [r.name, !allOpen]));
+        setOpenStates(next);
+    };
+
+    const toggleOne = (name: string) => {
+        setOpenStates((prev) => ({ ...prev, [name]: !prev[name] }));
+    };
+
+    return (
+        <Card className="col-span-full">
+            <CardContent className="flex flex-col gap-4">
+                <div className="mb-0 flex items-center justify-between">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="cursor-default font-bold">{language.effectiveTeamsText.title}</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{language.effectiveTeamsText.titleTooltip}</TooltipContent>
+                    </Tooltip>
+
+                    {effectiveTeams.length > 0 && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={toggleAll}
+                                    className="text-sidebar-foreground hover:bg-sidebar-accent flex cursor-pointer items-center gap-1 rounded-md p-2 text-xs"
+                                >
+                                    <LayoutPanelTop className="h-4 w-4" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">{language.effectiveTeamsText.toggleAllTooltip(allOpen)}</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+
+                {effectiveTeams.length > 0 ? (
+                    <>
+                        <Input
+                            type="text"
+                            name="team-search"
+                            placeholder={language.effectiveTeamsText.searchPlaceholder}
+                            className="w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+
+                        <div className="mb-0 flex flex-col justify-between gap-2 sm:flex-row sm:flex-wrap">
+                            {filteredTeams.map((team) => (
+                                <TeamItem
+                                    key={team.name}
+                                    team={team}
+                                    open={openStates[team.name]}
+                                    onToggle={() => toggleOne(team.name)}
+                                    language={language}
+                                />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <span>{language.effectiveTeamsText.empty}</span>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 function PermissionItem({ permission, open, onToggle, language }: PermissionItemProps) {
     return (
         <div className={cn('w-full rounded-md sm:w-[calc(50%-0.5rem)]', open ? 'border' : '')}>
@@ -469,6 +567,35 @@ function FeatureItem({ feature, open, onToggle, language }: FeatureItemProps) {
                         {feature.sources.map((source, idx) => (
                             <li className="border-l-2 pl-4" key={idx}>
                                 {language.effectiveFeaturesText.sourceLabel(source)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function TeamItem({ team, open, onToggle, language }: TeamItemProps) {
+    return (
+        <div className={cn('w-full rounded-md sm:w-[calc(50%-0.5rem)]', open ? 'border' : '')}>
+            <button
+                onClick={onToggle}
+                className={cn(
+                    'bg-muted hover:bg-accent sm:text-md flex w-full cursor-pointer items-center justify-between rounded-t-md px-4 py-2 text-left text-sm',
+                    !open ? 'border' : '',
+                )}
+            >
+                <span className="font-medium">{team.name}</span>
+                {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+
+            {open && (
+                <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
+                    <ul className="space-y-1">
+                        {team.sources.map((source, idx) => (
+                            <li className="border-l-2 pl-4" key={idx}>
+                                {language.effectiveTeamsText.sourceLabel(source)}
                             </li>
                         ))}
                     </ul>

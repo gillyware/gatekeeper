@@ -21,6 +21,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->morphs('model');
+            $table->boolean('denied')->default(false);
 
             $table->timestamps();
             $table->softDeletes();

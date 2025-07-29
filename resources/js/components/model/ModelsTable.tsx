@@ -88,7 +88,7 @@ export default function ModelsTable() {
                     <tbody>
                         {loadingModels ? (
                             <tr>
-                                <td colSpan={numberOfColumns} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={numberOfColumns} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     <div className="inline-flex items-center gap-2">
                                         <Loader className="mx-auto h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
                                     </div>
@@ -96,13 +96,13 @@ export default function ModelsTable() {
                             </tr>
                         ) : errorLoadingModels ? (
                             <tr>
-                                <td colSpan={numberOfColumns} className="px-4 py-6 text-center text-red-500">
+                                <td colSpan={numberOfColumns} className="px-2 py-6 text-center text-red-500 sm:px-4">
                                     {errorLoadingModels || language.errorFallback}
                                 </td>
                             </tr>
                         ) : models.length === 0 ? (
                             <tr>
-                                <td colSpan={numberOfColumns} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={numberOfColumns} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     {language.empty}
                                 </td>
                             </tr>
@@ -163,7 +163,7 @@ function ModelsTableHeader({ modelMetadata }: ModelsTableHeaderProps) {
         <thead className="bg-muted">
             <tr>
                 {(modelMetadata?.displayable || []).map((x) => (
-                    <th key={x.label} className="px-4 py-2 text-left font-semibold">
+                    <th key={x.label} className="px-2 py-2 text-left font-semibold sm:px-4">
                         {x.label}
                     </th>
                 ))}
@@ -188,7 +188,7 @@ function ModelsTableRow({ model, navigate }: ModelsTableRowProps) {
             className={cn('cursor-pointer border-t transition-colors hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800')}
         >
             {model.displayable.map((x) => (
-                <td key={x.column} className="px-4 py-2">
+                <td key={x.column} className="px-2 py-2 sm:px-4">
                     {model.display[x.column] || ''}
                 </td>
             ))}

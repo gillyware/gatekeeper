@@ -44,7 +44,7 @@ export default function EntityLayout({ entity, children }: EntityLayoutProps) {
     ].filter((x) => Boolean(x)) as NavItem[];
 
     return (
-        <div className="px-4 py-6">
+        <div className="px-2 py-6 sm:px-4">
             <Heading title={language.title} description={language.description} />
 
             <EntityFeatureDisabledAlert entity={entity} language={language} />

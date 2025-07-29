@@ -52,38 +52,10 @@ class TeamController extends AbstractBaseController
     /**
      * Update an existing team.
      */
-    public function update(UpdateTeamPacket $packet, Team $team): HttpFoundationResponse
+    public function update(Team $team, UpdateTeamPacket $packet): HttpFoundationResponse
     {
         try {
-            $team = $this->teamService->update($team, $packet->name);
-
-            return Response::json($team);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Deactivate a team.
-     */
-    public function deactivate(Team $team): HttpFoundationResponse
-    {
-        try {
-            $team = $this->teamService->deactivate($team);
-
-            return Response::json($team);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Reactivate a team.
-     */
-    public function reactivate(Team $team): HttpFoundationResponse
-    {
-        try {
-            $team = $this->teamService->reactivate($team);
+            $team = $this->teamService->update($team, $packet);
 
             return Response::json($team);
         } catch (GatekeeperException $e) {

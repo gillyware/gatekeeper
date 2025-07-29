@@ -2,10 +2,12 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
 use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Permission\RevokingGatekeeperDashboardPermissionFromSelfException;
+use Gillyware\Gatekeeper\Exceptions\Permission\UnassigningGatekeeperDashboardPermissionFromSelfException;
+use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
@@ -13,12 +15,18 @@ use Gillyware\Gatekeeper\Packets\AuditLog\Permission\AssignPermissionAuditLogPac
 use Gillyware\Gatekeeper\Packets\AuditLog\Permission\CreatePermissionAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeactivatePermissionAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeletePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DenyPermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\GrantedPermissionByDefaultAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Permission\ReactivatePermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\RevokePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\RevokedPermissionDefaultGrantAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UnassignPermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UndenyPermissionAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UpdatePermissionAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Permission\UpdatePermissionPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
+use Gillyware\Gatekeeper\Repositories\FeatureRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
@@ -28,6 +36,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -38,6 +47,7 @@ class PermissionService extends AbstractBaseEntityService
     public function __construct(
         private readonly PermissionRepository $permissionRepository,
         private readonly RoleRepository $roleRepository,
+        private readonly FeatureRepository $featureRepository,
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
         private readonly AuditLogRepository $auditLogRepository,
@@ -86,9 +96,25 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Update an existing permission.
      *
+     * @param  Permission|PermissionPacket|string|UnitEnum  $entity
+     * @param UpdatePermissionPacket
+     */
+    public function update($entity, $packet): PermissionPacket
+    {
+        return match ($packet->action) {
+            EntityUpdateAction::Name->value => $this->updateName($entity, $packet->value),
+            EntityUpdateAction::Status->value => $packet->value ? $this->reactivate($entity) : $this->deactivate($entity),
+            EntityUpdateAction::DefaultGrant->value => $packet->value ? $this->grantByDefault($entity) : $this->revokeDefaultGrant($entity),
+            default => throw new InvalidArgumentException('Invalid update action.'),
+        };
+    }
+
+    /**
+     * Update an existing permission name.
+     *
      * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
-    public function update($permission, string|UnitEnum $newPermissionName): PermissionPacket
+    public function updateName($permission, string|UnitEnum $newPermissionName): PermissionPacket
     {
         $this->enforceAuditFeature();
 
@@ -101,13 +127,61 @@ class PermissionService extends AbstractBaseEntityService
         }
 
         $oldPermissionName = $currentPermission->name;
-        $updatedPermission = $this->permissionRepository->update($currentPermission, $newPermissionName);
+        $updatedPermission = $this->permissionRepository->updateName($currentPermission, $newPermissionName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(UpdatePermissionAuditLogPacket::make($updatedPermission, $oldPermissionName));
         }
 
         return $updatedPermission->toPacket();
+    }
+
+    /**
+     * Grant a permission to all models that are not explicitly denying it.
+     *
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
+     */
+    public function grantByDefault($permission): PermissionPacket
+    {
+        $this->enforceAuditFeature();
+
+        $currentPermission = $this->resolveEntity($permission, orFail: true);
+
+        if ($currentPermission->grant_by_default) {
+            return $currentPermission->toPacket();
+        }
+
+        $defaultedOnPermission = $this->permissionRepository->grantByDefault($currentPermission);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(GrantedPermissionByDefaultAuditLogPacket::make($defaultedOnPermission));
+        }
+
+        return $defaultedOnPermission->toPacket();
+    }
+
+    /**
+     * Revoke a permission's default grant.
+     *
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
+     */
+    public function revokeDefaultGrant($permission): PermissionPacket
+    {
+        $this->enforceAuditFeature();
+
+        $currentPermission = $this->resolveEntity($permission, orFail: true);
+
+        if (! $currentPermission->grant_by_default) {
+            return $currentPermission->toPacket();
+        }
+
+        $defaultedOffPermission = $this->permissionRepository->revokeDefaultGrant($currentPermission);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(RevokedPermissionDefaultGrantAuditLogPacket::make($defaultedOffPermission));
+        }
+
+        return $defaultedOffPermission->toPacket();
     }
 
     /**
@@ -205,7 +279,7 @@ class PermissionService extends AbstractBaseEntityService
             return true;
         }
 
-        $this->modelHasPermissionRepository->create($model, $permission);
+        $this->modelHasPermissionRepository->assignToModel($model, $permission);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(AssignPermissionAuditLogPacket::make($model, $permission));
@@ -231,43 +305,115 @@ class PermissionService extends AbstractBaseEntityService
     }
 
     /**
-     * Revoke a permission from a model.
+     * Unassign a permission from a model.
      *
      * @param  Permission|PermissionPacket|string|UnitEnum  $permission
      */
-    public function revokeFromModel(Model $model, $permission): bool
+    public function unassignFromModel(Model $model, $permission): bool
     {
         $this->enforceAuditFeature();
 
         $permission = $this->resolveEntity($permission, orFail: true);
 
-        // Don't allow an authenticated user to revoke a Gatekeeper dashboard permission from themself.
+        // Don't allow an authenticated user to unassign a Gatekeeper dashboard permission from themself.
         $user = Auth::user();
 
         if ($user instanceof Model && $user->is($model) && in_array($permission->name, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
-            throw new RevokingGatekeeperDashboardPermissionFromSelfException;
+            throw new UnassigningGatekeeperDashboardPermissionFromSelfException;
         }
 
-        $revoked = $this->modelHasPermissionRepository->deleteForModelAndEntity($model, $permission);
+        $unassigned = $this->modelHasPermissionRepository->unassignFromModel($model, $permission);
 
-        if ($revoked && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokePermissionAuditLogPacket::make($model, $permission));
+        if ($unassigned && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(UnassignPermissionAuditLogPacket::make($model, $permission));
         }
 
-        return $revoked;
+        return $unassigned;
     }
 
     /**
-     * Revoke multiple permissions from a model.
+     * Unassign multiple permissions from a model.
      *
      * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
-    public function revokeAllFromModel(Model $model, array|Arrayable $permissions): bool
+    public function unassignAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
         $result = true;
 
         $this->resolveEntities($permissions, orFail: true)->each(function (Permission $permission) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $permission);
+            $result = $result && $this->unassignFromModel($model, $permission);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Deny a permission from a model.
+     *
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
+     */
+    public function denyFromModel(Model $model, $permission): bool
+    {
+        $this->enforceAuditFeature();
+
+        $permission = $this->resolveEntity($permission, orFail: true);
+
+        $denied = $this->modelHasPermissionRepository->denyFromModel($model, $permission);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(DenyPermissionAuditLogPacket::make($model, $permission));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Deny multiple permissions from a model.
+     *
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $features
+     */
+    public function denyAllFromModel(Model $model, array|Arrayable $permissions): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($permissions, orFail: true)->each(function (Permission $permission) use ($model, &$result) {
+            $result = $result && $this->denyFromModel($model, $permission);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Undeny a permission from a model.
+     *
+     * @param  Permission|PermissionPacket|string|UnitEnum  $permission
+     */
+    public function undenyFromModel(Model $model, $permission): bool
+    {
+        $this->enforceAuditFeature();
+
+        $permission = $this->resolveEntity($permission, orFail: true);
+
+        $denied = $this->modelHasPermissionRepository->undenyFromModel($model, $permission);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(UndenyPermissionAuditLogPacket::make($model, $permission));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Undeny multiple permissions from a model.
+     *
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $features
+     */
+    public function undenyAllFromModel(Model $model, array|Arrayable $permissions): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($permissions, orFail: true)->each(function (Permission $permission) use ($model, &$result) {
+            $result = $result && $this->undenyFromModel($model, $permission);
         });
 
         return $result;
@@ -292,6 +438,11 @@ class PermissionService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the permission is denied from the model, return false.
+        if ($this->permissionRepository->deniedFromModel($model)->has($permission->name)) {
+            return false;
+        }
+
         // If the permission is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $permission)) {
             return true;
@@ -299,8 +450,8 @@ class PermissionService extends AbstractBaseEntityService
 
         // If roles are enabled and the model interacts with roles, check if the model has the permission through a role.
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
-            $hasRoleWithPermission = $this->roleRepository
-                ->activeForModel($model)
+            $hasRoleWithPermission = $this->roleRepository->assignedToModel($model)
+                ->filter(fn (Role $role) => $role->is_active)
                 ->some(fn (Role $role) => $role->hasPermission($permission));
 
             // If the model has any active roles with the permission, return true.
@@ -311,8 +462,8 @@ class PermissionService extends AbstractBaseEntityService
 
         // If teams are enabled and the model interacts with teams, check if the model has the permission through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithPermission = $this->teamRepository
-                ->activeForModel($model)
+            $onTeamWithPermission = $this->teamRepository->assignedToModel($model)
+                ->filter(fn (Team $team) => $team->is_active)
                 ->some(fn (Team $team) => $team->hasPermission($permission));
 
             // If the model has any active teams with the permission, return true.
@@ -321,8 +472,7 @@ class PermissionService extends AbstractBaseEntityService
             }
         }
 
-        // Return false by default.
-        return false;
+        return $permission->grant_by_default;
     }
 
     /**
@@ -334,7 +484,13 @@ class PermissionService extends AbstractBaseEntityService
     {
         $permission = $this->resolveEntity($permission);
 
-        return $permission && $this->permissionRepository->activeForModel($model)->some(fn (Permission $p) => $permission->name === $p->name);
+        if (! $permission) {
+            return false;
+        }
+
+        $foundAssignment = $this->permissionRepository->assignedToModel($model)->get($permission->name);
+
+        return $foundAssignment && $foundAssignment->is_active;
     }
 
     /**
@@ -372,7 +528,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get all permissions.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getAll(): Collection
     {
@@ -383,7 +539,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get all permissions assigned directly or indirectly to a model.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getForModel(Model $model): Collection
     {
@@ -395,11 +551,11 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Get all permissions directly assigned to a model.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->permissionRepository->forModel($model)
+        return $this->permissionRepository->assignedToModel($model)
             ->map(fn (Permission $permission) => $permission->toPacket());
     }
 
@@ -408,19 +564,37 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function getVerboseForModel(Model $model): Collection
     {
+        $result = collect();
         $sourcesMap = [];
 
-        if ($this->modelInteractsWithPermissions($model)) {
-            $this->permissionRepository->activeForModel($model)
-                ->each(function (Permission $permission) use (&$sourcesMap) {
-                    $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
-                });
+        if (! $this->modelInteractsWithPermissions($model)) {
+            return $result;
         }
 
+        $this->permissionRepository->all()
+            ->filter(function (Permission $permission) use ($model) {
+                $denied = $this->permissionRepository->deniedFromModel($model)->has($permission->name);
+
+                return $permission->grant_by_default && ! $denied;
+            })
+            ->each(function (Permission $permission) use (&$sourcesMap) {
+                $sourcesMap[$permission->name][] = [
+                    'type' => PermissionSourceType::DEFAULT,
+                ];
+            });
+
+        $this->permissionRepository->assignedToModel($model)
+            ->filter(fn (Permission $permission) => $permission->is_active)
+            ->each(function (Permission $permission) use (&$sourcesMap) {
+                $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
+            });
+
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
-            $this->roleRepository->activeForModel($model)
+            $this->roleRepository->assignedToModel($model)
+                ->filter(fn (Role $role) => $role->is_active)
                 ->each(function (Role $role) use (&$sourcesMap) {
-                    $this->permissionRepository->activeForModel($role)
+                    $this->permissionRepository->assignedToModel($role)
+                        ->filter(fn (Permission $permission) => $permission->is_active)
                         ->each(function (Permission $permission) use (&$sourcesMap, $role) {
                             $sourcesMap[$permission->name][] = [
                                 'type' => PermissionSourceType::ROLE,
@@ -430,10 +604,27 @@ class PermissionService extends AbstractBaseEntityService
                 });
         }
 
+        if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
+            $this->featureRepository->assignedToModel($model)
+                ->filter(fn (Feature $feature) => $feature->is_active)
+                ->each(function (Feature $feature) use (&$sourcesMap) {
+                    $this->permissionRepository->assignedToModel($feature)
+                        ->filter(fn (Permission $permission) => $permission->is_active)
+                        ->each(function (Permission $permission) use (&$sourcesMap, $feature) {
+                            $sourcesMap[$permission->name][] = [
+                                'type' => PermissionSourceType::FEATURE,
+                                'feature' => $feature->name,
+                            ];
+                        });
+                });
+        }
+
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $teams = $this->teamRepository->activeForModel($model)
+            $this->teamRepository->assignedToModel($model)
+                ->filter(fn (Team $team) => $team->is_active)
                 ->each(function (Team $team) use (&$sourcesMap) {
-                    $this->permissionRepository->activeForModel($team)
+                    $this->permissionRepository->assignedToModel($team)
+                        ->filter(fn (Permission $permission) => $permission->is_active)
                         ->each(function (Permission $permission) use (&$sourcesMap, $team) {
                             $sourcesMap[$permission->name][] = [
                                 'type' => PermissionSourceType::TEAM,
@@ -442,9 +633,11 @@ class PermissionService extends AbstractBaseEntityService
                         });
 
                     if ($this->rolesFeatureEnabled()) {
-                        $this->roleRepository->activeForModel($team)
+                        $this->roleRepository->assignedToModel($team)
+                            ->filter(fn (Role $role) => $role->is_active)
                             ->each(function (Role $role) use (&$sourcesMap, $team) {
-                                $this->permissionRepository->activeForModel($role)
+                                $this->permissionRepository->assignedToModel($role)
+                                    ->filter(fn (Permission $permission) => $permission->is_active)
                                     ->each(function (Permission $permission) use (&$sourcesMap, $role, $team) {
                                         $sourcesMap[$permission->name][] = [
                                             'type' => PermissionSourceType::TEAM_ROLE,
@@ -456,8 +649,6 @@ class PermissionService extends AbstractBaseEntityService
                     }
                 });
         }
-
-        $result = collect();
 
         foreach ($sourcesMap as $permissionName => $sources) {
             $result->push([

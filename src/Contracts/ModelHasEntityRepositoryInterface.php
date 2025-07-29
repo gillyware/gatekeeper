@@ -22,15 +22,38 @@ interface ModelHasEntityRepositoryInterface
     public function existsForEntity($entity): bool;
 
     /**
-     * Create a new model entity assigment.
+     * Assign an entity to a model.
      *
      * @param  TModel  $entity
      * @return TModelHasEntity
      */
-    public function create(Model $model, $entity);
+    public function assignToModel(Model $model, $entity);
 
     /**
-     * Delete all entity assignments for a given model.
+     * Delete all non-denied entity assignments for a given model and entity.
+     *
+     * @param  TModel  $entity
+     */
+    public function unassignFromModel(Model $model, $entity): bool;
+
+    /**
+     * Deny an entity from a model.
+     *
+     * @param  TModel  $entity
+     * @return TModelHasEntity
+     */
+    public function denyFromModel(Model $model, $entity);
+
+    /**
+     * Delete all denied entity assignments for a given model and entity.
+     *
+     * @param  TModel  $entity
+     * @return TModelHasEntity
+     */
+    public function undenyFromModel(Model $model, $entity);
+
+    /**
+     * Delete all entity assignments and denials for a given model.
      */
     public function deleteForModel(Model $model): bool;
 
@@ -42,13 +65,6 @@ interface ModelHasEntityRepositoryInterface
     public function deleteForEntity($entity): bool;
 
     /**
-     * Delete all entity assignments for a given model and entity.
-     *
-     * @param  TModel  $entity
-     */
-    public function deleteForModelAndEntity(Model $model, $entity): bool;
-
-    /**
      * Search model entity assignments by entity name.
      */
     public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator;
@@ -57,4 +73,9 @@ interface ModelHasEntityRepositoryInterface
      * Search unassigned entities by entity name for model.
      */
     public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator;
+
+    /**
+     * Search denied entities by entity name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator;
 }

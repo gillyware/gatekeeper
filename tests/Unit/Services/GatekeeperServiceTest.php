@@ -40,15 +40,33 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($permissionName, $permission->name);
     }
 
-    public function test_update_permission_delegates_to_permission_service()
+    public function test_update_permission_name_delegates_to_permission_service()
     {
         $permission = Permission::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedPermission = $this->service->updatePermission($permission, $newName);
+        $updatedPermission = $this->service->updatePermissionName($permission, $newName);
 
         $this->assertInstanceOf(PermissionPacket::class, $updatedPermission);
         $this->assertEquals($newName, $updatedPermission->name);
+    }
+
+    public function test_grant_permission_by_default_delegates_to_role_service()
+    {
+        $permission = Permission::factory()->create();
+
+        $permission = $this->service->grantPermissionByDefault($permission);
+
+        $this->assertTrue($permission->grantedByDefault);
+    }
+
+    public function test_revoke_permission_default_grant_delegates_to_role_service()
+    {
+        $permission = Permission::factory()->grantByDefault()->create();
+
+        $permission = $this->service->revokePermissionDefaultGrant($permission);
+
+        $this->assertFalse($permission->grantedByDefault);
     }
 
     public function test_deactivate_permission_delegates_to_permission_service()
@@ -91,17 +109,39 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($roleName, $role->name);
     }
 
-    public function test_update_role_delegates_to_role_service()
+    public function test_update_role_name_delegates_to_role_service()
     {
         Config::set('gatekeeper.features.roles.enabled', true);
 
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedRole = $this->service->updateRole($role, $newName);
+        $updatedRole = $this->service->updateRoleName($role, $newName);
 
         $this->assertInstanceOf(RolePacket::class, $updatedRole);
         $this->assertEquals($newName, $updatedRole->name);
+    }
+
+    public function test_grant_role_by_default_delegates_to_role_service()
+    {
+        Config::set('gatekeeper.features.roles.enabled', true);
+
+        $role = Role::factory()->create();
+
+        $role = $this->service->grantRoleByDefault($role);
+
+        $this->assertTrue($role->grantedByDefault);
+    }
+
+    public function test_revoke_role_default_grant_delegates_to_role_service()
+    {
+        Config::set('gatekeeper.features.roles.enabled', true);
+
+        $role = Role::factory()->grantByDefault()->create();
+
+        $role = $this->service->revokeRoleDefaultGrant($role);
+
+        $this->assertFalse($role->grantedByDefault);
     }
 
     public function test_deactivate_role_delegates_to_role_service()
@@ -150,14 +190,14 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($featureName, $feature->name);
     }
 
-    public function test_update_feature_delegates_to_feature_service()
+    public function test_update_feature_name_delegates_to_feature_service()
     {
         Config::set('gatekeeper.features.features.enabled', true);
 
         $feature = Feature::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedFeature = $this->service->updateFeature($feature, $newName);
+        $updatedFeature = $this->service->updateFeatureName($feature, $newName);
 
         $this->assertInstanceOf(FeaturePacket::class, $updatedFeature);
         $this->assertEquals($newName, $updatedFeature->name);
@@ -167,11 +207,11 @@ class GatekeeperServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.features.enabled', true);
 
-        $feature = Feature::factory()->defaultOn()->create();
+        $feature = Feature::factory()->grantByDefault()->create();
 
-        $feature = $this->service->turnFeatureOffByDefault($feature);
+        $feature = $this->service->revokeFeatureDefaultGrant($feature);
 
-        $this->assertFalse($feature->enabledByDefault);
+        $this->assertFalse($feature->grantedByDefault);
     }
 
     public function test_turn_on_feature_by_default_delegates_to_feature_service()
@@ -180,9 +220,31 @@ class GatekeeperServiceTest extends TestCase
 
         $feature = Feature::factory()->create();
 
-        $feature = $this->service->turnFeatureOnByDefault($feature);
+        $feature = $this->service->grantFeatureByDefault($feature);
 
-        $this->assertTrue($feature->enabledByDefault);
+        $this->assertTrue($feature->grantedByDefault);
+    }
+
+    public function test_grant_feature_by_default_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->create();
+
+        $feature = $this->service->grantFeatureByDefault($feature);
+
+        $this->assertTrue($feature->grantedByDefault);
+    }
+
+    public function test_revoke_feature_default_grant_delegates_to_feature_service()
+    {
+        Config::set('gatekeeper.features.features.enabled', true);
+
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $feature = $this->service->revokeFeatureDefaultGrant($feature);
+
+        $this->assertFalse($feature->grantedByDefault);
     }
 
     public function test_deactivate_feature_delegates_to_feature_service()
@@ -231,17 +293,39 @@ class GatekeeperServiceTest extends TestCase
         $this->assertEquals($teamName, $team->name);
     }
 
-    public function test_update_team_delegates_to_team_service()
+    public function test_update_team_name_delegates_to_team_service()
     {
         Config::set('gatekeeper.features.teams.enabled', true);
 
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedTeam = $this->service->updateTeam($team, $newName);
+        $updatedTeam = $this->service->updateTeamName($team, $newName);
 
         $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
         $this->assertEquals($newName, $updatedTeam->name);
+    }
+
+    public function test_grant_team_by_default_delegates_to_team_service()
+    {
+        Config::set('gatekeeper.features.teams.enabled', true);
+
+        $team = Team::factory()->create();
+
+        $team = $this->service->grantTeamByDefault($team);
+
+        $this->assertTrue($team->grantedByDefault);
+    }
+
+    public function test_revoke_team_default_grant_delegates_to_team_service()
+    {
+        Config::set('gatekeeper.features.teams.enabled', true);
+
+        $team = Team::factory()->grantByDefault()->create();
+
+        $team = $this->service->revokeTeamDefaultGrant($team);
+
+        $this->assertFalse($team->grantedByDefault);
     }
 
     public function test_deactivate_team_delegates_to_team_service()
@@ -289,8 +373,8 @@ class GatekeeperServiceTest extends TestCase
         $this->assertTrue($this->service->modelHasPermission($user, $perm1->name));
         $this->assertTrue($this->service->modelHasAnyPermission($user, [$perm1->name, $perm2->name]));
         $this->assertTrue($this->service->modelHasAllPermissions($user, [$perm1->name, $perm2->name]));
-        $this->assertTrue($this->service->revokePermissionFromModel($user, $perm1->name));
-        $this->assertTrue($this->service->revokeAllPermissionsFromModel($user, [$perm2->name]));
+        $this->assertTrue($this->service->unassignPermissionFromModel($user, $perm1->name));
+        $this->assertTrue($this->service->unassignAllPermissionsFromModel($user, [$perm2->name]));
     }
 
     public function test_model_role_methods_delegate()
@@ -306,8 +390,8 @@ class GatekeeperServiceTest extends TestCase
         $this->assertTrue($this->service->modelHasRole($user, $role1->name));
         $this->assertTrue($this->service->modelHasAnyRole($user, [$role1->name, $role2->name]));
         $this->assertTrue($this->service->modelHasAllRoles($user, [$role1->name, $role2->name]));
-        $this->assertTrue($this->service->revokeRoleFromModel($user, $role1->name));
-        $this->assertTrue($this->service->revokeAllRolesFromModel($user, [$role2->name]));
+        $this->assertTrue($this->service->unassignRoleFromModel($user, $role1->name));
+        $this->assertTrue($this->service->unassignAllRolesFromModel($user, [$role2->name]));
     }
 
     public function test_model_feature_methods_delegate()
@@ -318,13 +402,13 @@ class GatekeeperServiceTest extends TestCase
         $feature1 = Feature::factory()->create(['name' => fake()->unique()->word()]);
         $feature2 = Feature::factory()->create(['name' => fake()->unique()->word()]);
 
-        $this->assertTrue($this->service->turnFeatureOnForModel($user, $feature1->name));
-        $this->assertTrue($this->service->turnAllFeaturesOnForModel($user, [$feature2->name]));
+        $this->assertTrue($this->service->assignFeatureForModel($user, $feature1->name));
+        $this->assertTrue($this->service->assignAllFeaturesForModel($user, [$feature2->name]));
         $this->assertTrue($this->service->modelHasFeature($user, $feature1->name));
         $this->assertTrue($this->service->modelHasAnyFeature($user, [$feature1->name, $feature2->name]));
         $this->assertTrue($this->service->modelHasAllFeatures($user, [$feature1->name, $feature2->name]));
-        $this->assertTrue($this->service->turnFeatureOffForModel($user, $feature1->name));
-        $this->assertTrue($this->service->turnAllFeaturesOffForModel($user, [$feature2->name]));
+        $this->assertTrue($this->service->unassignFeatureForModel($user, $feature1->name));
+        $this->assertTrue($this->service->unassignAllFeaturesForModel($user, [$feature2->name]));
     }
 
     public function test_model_team_methods_delegate()

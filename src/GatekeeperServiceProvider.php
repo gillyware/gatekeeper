@@ -121,7 +121,6 @@ class GatekeeperServiceProvider extends ServiceProvider
 
         Route::middleware(['web', 'auth', 'has_permission:'.GatekeeperPermission::View->value])
             ->namespace('Gillyware\Gatekeeper\Http\Controllers')
-            ->name('gatekeeper.')
             ->group(__DIR__.'/../routes/web.php');
     }
 

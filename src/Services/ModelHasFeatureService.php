@@ -42,4 +42,19 @@ class ModelHasFeatureService implements ModelHasEntityServiceInterface
         return $this->modelHasFeatureRepository->searchUnassignedByEntityNameForModel($model, $packet)
             ->through(fn (Feature $feature) => $feature->toPacket());
     }
+
+    /**
+     * Search denied features by feature name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        $paginator = $this->modelHasFeatureRepository->searchDeniedByEntityNameForModel($model, $packet);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
+
+        return $paginator->through(function (ModelHasFeature $modelHasFeature) use ($displayTimezone) {
+            $modelHasFeature->offsetSet('denied_at', $modelHasFeature->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
+
+            return $modelHasFeature;
+        });
+    }
 }

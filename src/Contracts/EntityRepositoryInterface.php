@@ -24,18 +24,18 @@ interface EntityRepositoryInterface
     public function exists(string $entityName): bool;
 
     /**
+     * Get all entities.
+     *
+     * @return Collection<string, TModel>
+     */
+    public function all(): Collection;
+
+    /**
      * Find an entity by its name.
      *
      * @return ?TModel
      */
     public function findByName(string $entityName);
-
-    /**
-     * Find an entity by its name for a specific model.
-     *
-     * @return ?TModel
-     */
-    public function findByNameForModel(Model $model, string $entityName);
 
     /**
      * Find an entity by its name, or fail.
@@ -52,12 +52,28 @@ interface EntityRepositoryInterface
     public function create(string $entityName);
 
     /**
-     * Update an existing entity.
+     * Update an existing entity name.
      *
      * @param  TModel  $entity
      * @return TModel
      */
-    public function update($entity, string $newEntityName);
+    public function updateName($entity, string $newEntityName);
+
+    /**
+     * Grant an entity to all models that are not explicitly denying it.
+     *
+     * @param  TModel  $entity
+     * @return TModel
+     */
+    public function grantByDefault($entity);
+
+    /**
+     * Revoke an entity's default grant.
+     *
+     * @param  TModel  $entity
+     * @return TModel
+     */
+    public function revokeDefaultGrant($entity);
 
     /**
      * Deactivate an entity.
@@ -84,46 +100,18 @@ interface EntityRepositoryInterface
     public function delete($entity): bool;
 
     /**
-     * Get all entities.
+     * Get all entities assigned to a specific model.
      *
-     * @return Collection<TModel>
+     * @return Collection<string, TModel>
      */
-    public function all(): Collection;
+    public function assignedToModel(Model $model): Collection;
 
     /**
-     * Get all active entities.
+     * Get all entities denied from a specific model.
      *
-     * @return Collection<TModel>
+     * @return Collection<string, TModel>
      */
-    public function active(): Collection;
-
-    /**
-     * Get all entities where the name is in the provided array or collection.
-     *
-     * @return Collection<TModel>
-     */
-    public function whereNameIn(array|Collection $entityNames): Collection;
-
-    /**
-     * Get all entity names for a specific model.
-     *
-     * @return Collection<string>
-     */
-    public function namesForModel(Model $model): Collection;
-
-    /**
-     * Get all entities for a specific model.
-     *
-     * @return Collection<TModel>
-     */
-    public function forModel(Model $model): Collection;
-
-    /**
-     * Get all active entities for a specific model.
-     *
-     * @return Collection<TModel>
-     */
-    public function activeForModel(Model $model): Collection;
+    public function deniedFromModel(Model $model): Collection;
 
     /**
      * Get a page of entities.

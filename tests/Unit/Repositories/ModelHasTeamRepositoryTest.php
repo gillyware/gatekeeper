@@ -39,7 +39,7 @@ class ModelHasTeamRepositoryTest extends TestCase
         $this->assertFalse($this->repository->existsForEntity($team));
 
         $user = User::factory()->create();
-        $this->repository->create($user, $team);
+        $this->repository->assignToModel($user, $team);
 
         $this->assertTrue($this->repository->existsForEntity($team));
     }
@@ -50,10 +50,10 @@ class ModelHasTeamRepositoryTest extends TestCase
         $team = Team::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelTeamNames')
+            ->method('invalidateCacheForModelTeamLinks')
             ->with($user);
 
-        $record = $this->repository->create($user, $team);
+        $record = $this->repository->assignToModel($user, $team);
 
         $this->assertInstanceOf(ModelHasTeam::class, $record);
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
@@ -69,12 +69,12 @@ class ModelHasTeamRepositoryTest extends TestCase
         $team = Team::factory()->create();
 
         $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelTeamNames')
+            ->method('invalidateCacheForModelTeamLinks')
             ->with($user);
 
-        $this->repository->create($user, $team);
+        $this->repository->assignToModel($user, $team);
 
-        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $team));
+        $this->assertTrue($this->repository->unassignFromModel($user, $team));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
             'model_type' => $user->getMorphClass(),

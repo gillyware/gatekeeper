@@ -21,6 +21,6 @@ final class UpdateFeatureAuditLogPacket extends AbstractBaseStoreAuditLogPacket
 
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::UpdateFeature;
+        return AuditLogAction::UpdateFeatureName;
     }
 }

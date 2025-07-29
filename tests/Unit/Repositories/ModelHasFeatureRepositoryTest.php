@@ -39,7 +39,7 @@ class ModelHasFeatureRepositoryTest extends TestCase
         $this->assertFalse($this->repository->existsForEntity($feature));
 
         $user = User::factory()->create();
-        $this->repository->create($user, $feature);
+        $this->repository->assignToModel($user, $feature);
 
         $this->assertTrue($this->repository->existsForEntity($feature));
     }
@@ -50,10 +50,10 @@ class ModelHasFeatureRepositoryTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelFeatureNames')
+            ->method('invalidateCacheForModelFeatureLinks')
             ->with($user);
 
-        $record = $this->repository->create($user, $feature);
+        $record = $this->repository->assignToModel($user, $feature);
 
         $this->assertInstanceOf(ModelHasFeature::class, $record);
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_features', GatekeeperConfigDefault::TABLES_MODEL_HAS_FEATURES), [
@@ -69,12 +69,12 @@ class ModelHasFeatureRepositoryTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelFeatureNames')
+            ->method('invalidateCacheForModelFeatureLinks')
             ->with($user);
 
-        $this->repository->create($user, $feature);
+        $this->repository->assignToModel($user, $feature);
 
-        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $feature));
+        $this->assertTrue($this->repository->unassignFromModel($user, $feature));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_features', GatekeeperConfigDefault::TABLES_MODEL_HAS_FEATURES), [
             'model_type' => $user->getMorphClass(),

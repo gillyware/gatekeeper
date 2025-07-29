@@ -55,9 +55,19 @@ interface GatekeeperServiceInterface
     public function createPermission(string|UnitEnum $permissionName): PermissionPacket;
 
     /**
-     * Update an existing permission.
+     * Update an existing permission name.
      */
-    public function updatePermission(Permission|PermissionPacket|string|UnitEnum $permission, string|UnitEnum $permissionName): PermissionPacket;
+    public function updatePermissionName(Permission|PermissionPacket|string|UnitEnum $permission, string|UnitEnum $permissionName): PermissionPacket;
+
+    /**
+     * Grant a permission to all models that are not explicitly denying it.
+     */
+    public function grantPermissionByDefault(Permission|PermissionPacket|string|UnitEnum $permission): PermissionPacket;
+
+    /**
+     * Revoke a permission's default grant.
+     */
+    public function revokePermissionDefaultGrant(Permission|PermissionPacket|string|UnitEnum $permission): PermissionPacket;
 
     /**
      * Deactivate a permission.
@@ -87,16 +97,40 @@ interface GatekeeperServiceInterface
     public function assignAllPermissionsToModel(Model $model, array|Arrayable $permissions): bool;
 
     /**
-     * Revoke a permission from a model.
+     * Unassign a permission from a model.
      */
-    public function revokePermissionFromModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool;
+    public function unassignPermissionFromModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool;
 
     /**
-     * Revoke multiple permissions from a model.
+     * Unassign multiple permissions from a model.
      *
      * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
-    public function revokeAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool;
+    public function unassignAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool;
+
+    /**
+     * Deny a permission from a model.
+     */
+    public function denyPermissionFromModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool;
+
+    /**
+     * Deny multiple permissions from a model.
+     *
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
+     */
+    public function denyAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool;
+
+    /**
+     * Undeny a permission from a model.
+     */
+    public function undenyPermissionFromModel(Model $model, Permission|PermissionPacket|string|UnitEnum $permission): bool;
+
+    /**
+     * Undeny multiple permissions from a model.
+     *
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
+     */
+    public function undenyAllPermissionsFromModel(Model $model, array|Arrayable $permissions): bool;
 
     /**
      * Check if a model has the given permission.
@@ -125,21 +159,21 @@ interface GatekeeperServiceInterface
     /**
      * Get all permissions.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getAllPermissions(): Collection;
 
     /**
      * Get all permissions assigned directly to a model.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getDirectPermissionsForModel(Model $model): Collection;
 
     /**
      * Get all permissions assigned directly or indirectly to a model.
      *
-     * @return Collection<PermissionPacket>
+     * @return Collection<string, PermissionPacket>
      */
     public function getEffectivePermissionsForModel(Model $model): Collection;
 
@@ -159,9 +193,19 @@ interface GatekeeperServiceInterface
     public function createRole(string|UnitEnum $roleName): RolePacket;
 
     /**
-     * Update an existing role.
+     * Update an existing role name.
      */
-    public function updateRole(Role|RolePacket|string|UnitEnum $role, string|UnitEnum $roleName): RolePacket;
+    public function updateRoleName(Role|RolePacket|string|UnitEnum $role, string|UnitEnum $roleName): RolePacket;
+
+    /**
+     * Grant a role to all models that are not explicitly denying it.
+     */
+    public function grantRoleByDefault(Role|RolePacket|string|UnitEnum $role): RolePacket;
+
+    /**
+     * Revoke a role's default grant.
+     */
+    public function revokeRoleDefaultGrant(Role|RolePacket|string|UnitEnum $role): RolePacket;
 
     /**
      * Deactivate a role.
@@ -191,16 +235,40 @@ interface GatekeeperServiceInterface
     public function assignAllRolesToModel(Model $model, array|Arrayable $roles): bool;
 
     /**
-     * Revoke a role from a model.
+     * Unassign a role from a model.
      */
-    public function revokeRoleFromModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool;
+    public function unassignRoleFromModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool;
 
     /**
-     * Revoke multiple roles from a model.
+     * Unassign multiple roles from a model.
      *
      * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
-    public function revokeAllRolesFromModel(Model $model, array|Arrayable $roles): bool;
+    public function unassignAllRolesFromModel(Model $model, array|Arrayable $roles): bool;
+
+    /**
+     * Deny a role from a model.
+     */
+    public function denyRoleFromModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool;
+
+    /**
+     * Deny multiple roles from a model.
+     *
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
+     */
+    public function denyAllRolesFromModel(Model $model, array|Arrayable $roles): bool;
+
+    /**
+     * Undeny a role from a model.
+     */
+    public function undenyRoleFromModel(Model $model, Role|RolePacket|string|UnitEnum $role): bool;
+
+    /**
+     * Undeny multiple roles from a model.
+     *
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
+     */
+    public function undenyAllRolesFromModel(Model $model, array|Arrayable $roles): bool;
 
     /**
      * Check if a model has the given role.
@@ -229,21 +297,21 @@ interface GatekeeperServiceInterface
     /**
      * Get all roles.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getAllRoles(): Collection;
 
     /**
      * Get all roles assigned directly to a model.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getDirectRolesForModel(Model $model): Collection;
 
     /**
      * Get all roles assigned directly or indirectly to a model.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getEffectiveRolesForModel(Model $model): Collection;
 
@@ -263,19 +331,19 @@ interface GatekeeperServiceInterface
     public function createFeature(string|UnitEnum $featureName): FeaturePacket;
 
     /**
-     * Update an existing feature.
+     * Update an existing feature name.
      */
-    public function updateFeature(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName): FeaturePacket;
+    public function updateFeatureName(Feature|FeaturePacket|string|UnitEnum $feature, string|UnitEnum $featureName): FeaturePacket;
 
     /**
-     * Turn feature off by default.
+     * Grant a feature to all models that are not explicitly denying it.
      */
-    public function turnFeatureOffByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+    public function grantFeatureByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
 
     /**
-     * Turn feature on by default.
+     * Revoke a feature's default grant.
      */
-    public function turnFeatureOnByDefault(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
+    public function revokeFeatureDefaultGrant(Feature|FeaturePacket|string|UnitEnum $feature): FeaturePacket;
 
     /**
      * Deactivate a feature.
@@ -293,28 +361,52 @@ interface GatekeeperServiceInterface
     public function deleteFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Turn a feature on for a model.
+     * Assign a feature to a model.
      */
-    public function turnFeatureOnForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function assignFeatureForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Turn multiple features on for a model.
+     * Assign multiple features to a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function turnAllFeaturesOnForModel(Model $model, array|Arrayable $features): bool;
+    public function assignAllFeaturesForModel(Model $model, array|Arrayable $features): bool;
 
     /**
-     * Turn a feature off for a model.
+     * Unassign a feature from a model.
      */
-    public function turnFeatureOffForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+    public function unassignFeatureForModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
 
     /**
-     * Turn multiple features off for a model.
+     * Unassign multiple features from a model.
      *
      * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function turnAllFeaturesOffForModel(Model $model, array|Arrayable $features): bool;
+    public function unassignAllFeaturesForModel(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Deny a feature from a model.
+     */
+    public function denyFeatureFromModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Deny multiple features from a model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $roles
+     */
+    public function denyAllFeaturesFromModel(Model $model, array|Arrayable $features): bool;
+
+    /**
+     * Undeny a feature from a model.
+     */
+    public function undenyFeatureFromModel(Model $model, Feature|FeaturePacket|string|UnitEnum $feature): bool;
+
+    /**
+     * Undeny multiple features from a model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $roles
+     */
+    public function undenyAllFeaturesFromModel(Model $model, array|Arrayable $features): bool;
 
     /**
      * Check if a model has the given feature.
@@ -343,21 +435,21 @@ interface GatekeeperServiceInterface
     /**
      * Get all features.
      *
-     * @return Collection<FeaturePacket>
+     * @return Collection<string, FeaturePacket>
      */
     public function getAllFeatures(): Collection;
 
     /**
      * Get all features assigned directly to a model.
      *
-     * @return Collection<FeaturePacket>
+     * @return Collection<string, FeaturePacket>
      */
     public function getDirectFeaturesForModel(Model $model): Collection;
 
     /**
      * Get all features assigned directly or indirectly to a model.
      *
-     * @return Collection<FeaturePacket>
+     * @return Collection<string, FeaturePacket>
      */
     public function getEffectiveFeaturesForModel(Model $model): Collection;
 
@@ -377,9 +469,19 @@ interface GatekeeperServiceInterface
     public function createTeam(string|UnitEnum $teamName): TeamPacket;
 
     /**
-     * Update an existing team.
+     * Update an existing team name.
      */
-    public function updateTeam(Team|TeamPacket|string|UnitEnum $team, string|UnitEnum $teamName): TeamPacket;
+    public function updateTeamName(Team|TeamPacket|string|UnitEnum $team, string|UnitEnum $teamName): TeamPacket;
+
+    /**
+     * Treat all models as on a team that are not explicitly denying the team.
+     */
+    public function grantTeamByDefault(Team|TeamPacket|string|UnitEnum $team): TeamPacket;
+
+    /**
+     * Revoke a team's default grant.
+     */
+    public function revokeTeamDefaultGrant(Team|TeamPacket|string|UnitEnum $team): TeamPacket;
 
     /**
      * Deactivate a team.
@@ -421,6 +523,30 @@ interface GatekeeperServiceInterface
     public function removeModelFromAllTeams(Model $model, array|Arrayable $teams): bool;
 
     /**
+     * Deny a team from a model.
+     */
+    public function denyTeamFromModel(Model $model, Team|TeamPacket|string|UnitEnum $team): bool;
+
+    /**
+     * Deny multiple teams from a model.
+     *
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
+     */
+    public function denyAllTeamsFromModel(Model $model, array|Arrayable $teams): bool;
+
+    /**
+     * Undeny a team from a model.
+     */
+    public function undenyTeamFromModel(Model $model, Team|TeamPacket|string|UnitEnum $team): bool;
+
+    /**
+     * Undeny multiple teams from a model.
+     *
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
+     */
+    public function undenyAllTeamsFromModel(Model $model, array|Arrayable $teams): bool;
+
+    /**
      * Check if a model is on a given team.
      */
     public function modelOnTeam(Model $model, Team|TeamPacket|string|UnitEnum $team): bool;
@@ -447,14 +573,26 @@ interface GatekeeperServiceInterface
     /**
      * Get all teams.
      *
-     * @return Collection<TeamPacket>
+     * @return Collection<string, TeamPacket>
      */
     public function getAllTeams(): Collection;
 
     /**
-     * Get all teams assigned to a model.
+     * Get all teams assigned directly to a model.
      *
-     * @return Collection<TeamPacket>
+     * @return Collection<string, TeamPacket>
      */
-    public function getTeamsForModel(Model $model): Collection;
+    public function getDirectTeamsForModel(Model $model): Collection;
+
+    /**
+     * Get all teams assigned directly or indirectly to a model.
+     *
+     * @return Collection<string, TeamPacket>
+     */
+    public function getEffectiveTeamsForModel(Model $model): Collection;
+
+    /**
+     * Get all effective teams for the given model with the team source(s).
+     */
+    public function getVerboseTeamsForModel(Model $model): Collection;
 }

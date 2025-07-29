@@ -34,7 +34,6 @@ class FeatureServiceTest extends TestCase
         Gatekeeper::setActor($this->user);
 
         $this->service = app(FeatureService::class);
-        $this->service->actingAs($this->user);
     }
 
     public function test_feature_exists()
@@ -110,18 +109,18 @@ class FeatureServiceTest extends TestCase
         $this->assertCount(0, AuditLog::all());
     }
 
-    public function test_update_feature()
+    public function test_update_feature_name()
     {
         $feature = Feature::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedFeature = $this->service->update($feature, $newName);
+        $updatedFeature = $this->service->updateName($feature, $newName);
 
         $this->assertInstanceOf(FeaturePacket::class, $updatedFeature);
         $this->assertEquals($newName, $updatedFeature->name);
     }
 
-    public function test_update_feature_fails_if_features_feature_disabled()
+    public function test_update_feature_name_fails_if_features_feature_disabled()
     {
         Config::set('gatekeeper.features.features.enabled', false);
 
@@ -129,12 +128,12 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->withName($name)->create();
 
         $this->expectException(FeaturesFeatureDisabledException::class);
-        $this->service->update($feature, 'new-name');
+        $this->service->updateName($feature, 'new-name');
 
         $this->assertSame($name, $feature->fresh()->name);
     }
 
-    public function test_audit_log_inserted_on_feature_update_when_auditing_enabled()
+    public function test_audit_log_inserted_on_feature_update_name_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -142,161 +141,157 @@ class FeatureServiceTest extends TestCase
         $oldName = $feature->name;
         $newName = fake()->unique()->word();
 
-        $this->service->update($feature, $newName);
+        $this->service->updateName($feature, $newName);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
         /** @var AuditLog<User, Feature> $updateFeatureLog */
         $updateFeatureLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::UpdateFeature->value, $updateFeatureLog->action);
+        $this->assertEquals(AuditLogAction::UpdateFeatureName->value, $updateFeatureLog->action);
         $this->assertEquals($oldName, $updateFeatureLog->metadata['old_name']);
         $this->assertEquals($newName, $updateFeatureLog->metadata['name']);
         $this->assertEquals($this->user->id, $updateFeatureLog->actionBy->id);
         $this->assertEquals($feature->id, $updateFeatureLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_feature_update_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_feature_update_name_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $feature = Feature::factory()->create();
         $newName = fake()->unique()->word();
 
-        $this->service->update($feature, $newName);
+        $this->service->updateName($feature, $newName);
 
         $this->assertCount(0, AuditLog::all());
     }
 
-    // / ***********************
-
-    public function test_turn_feature_off_by_default()
-    {
-        $feature = Feature::factory()->defaultOn()->create();
-
-        $feature = $this->service->turnOffByDefault($feature);
-
-        $this->assertInstanceOf(FeaturePacket::class, $feature);
-        $this->assertFalse($feature->enabledByDefault);
-    }
-
-    public function test_turn_feature_off_by_default_succeeds_if_features_feature_disabled()
-    {
-        Config::set('gatekeeper.features.features.enabled', false);
-
-        $feature = Feature::factory()->defaultOn()->create();
-        $feature = $this->service->turnOffByDefault($feature);
-
-        $this->assertFalse($feature->enabledByDefault);
-    }
-
-    public function test_feature_off_by_default_is_idempotent()
-    {
-        Config::set('gatekeeper.features.audit.enabled', true);
-
-        $feature = Feature::factory()->defaultOn()->create();
-
-        $feature = $this->service->turnOffByDefault($feature);
-        $feature = $this->service->turnOffByDefault($feature);
-
-        $this->assertCount(1, AuditLog::all());
-    }
-
-    public function test_audit_log_inserted_on_turn_feature_off_by_default_when_auditing_enabled()
-    {
-        Config::set('gatekeeper.features.audit.enabled', true);
-
-        $feature = Feature::factory()->defaultOn()->create();
-
-        $this->service->turnOffByDefault($feature);
-
-        $auditLogs = AuditLog::all();
-        $this->assertCount(1, $auditLogs);
-
-        /** @var AuditLog<User, Feature> $turnOffByDefaultAuditLog */
-        $turnOffByDefaultAuditLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::TurnFeatureOffByDefault->value, $turnOffByDefaultAuditLog->action);
-        $this->assertEquals($feature->name, $turnOffByDefaultAuditLog->metadata['name']);
-        $this->assertEquals($this->user->id, $turnOffByDefaultAuditLog->actionBy->id);
-        $this->assertEquals($feature->id, $turnOffByDefaultAuditLog->actionTo->id);
-    }
-
-    public function test_audit_log_not_inserted_on_turn_feature_off_by_default_when_auditing_disabled()
-    {
-        Config::set('gatekeeper.features.audit.enabled', false);
-
-        $feature = Feature::factory()->defaultOn()->create();
-
-        $this->service->turnOffByDefault($feature);
-
-        $this->assertCount(0, AuditLog::all());
-    }
-
-    public function test_feature_on_by_default_feature()
+    public function test_grant_feature_by_default()
     {
         $feature = Feature::factory()->create();
 
-        $feature = $this->service->turnOnByDefault($feature);
+        $feature = $this->service->grantByDefault($feature);
 
         $this->assertInstanceOf(FeaturePacket::class, $feature);
-        $this->assertTrue($feature->enabledByDefault);
+        $this->assertTrue($feature->grantedByDefault);
     }
 
-    public function test_feature_on_by_default_feature_fails_if_features_feature_disabled()
+    public function test_grant_feature_by_default_fails_if_features_feature_disabled()
     {
         Config::set('gatekeeper.features.features.enabled', false);
 
         $feature = Feature::factory()->create();
 
         $this->expectException(FeaturesFeatureDisabledException::class);
-        $this->service->turnOnByDefault($feature);
+        $this->service->grantByDefault($feature);
 
-        $this->assertFalse($feature->fresh()->default_enabled);
+        $this->assertFalse($feature->fresh()->grant_by_default);
     }
 
-    public function test_feature_on_by_default_feature_is_idempotent()
+    public function test_grant_feature_by_default_is_idempotent()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $feature = Feature::factory()->create();
 
-        $this->service->turnOnByDefault($feature);
-        $this->service->turnOnByDefault($feature);
+        $this->service->grantByDefault($feature);
+        $this->service->grantByDefault($feature);
 
         $this->assertCount(1, AuditLog::all());
     }
 
-    public function test_audit_log_inserted_on_turn_feature_on_by_default_when_auditing_enabled()
+    public function test_audit_log_inserted_on_grant_feature_by_default_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
         $feature = Feature::factory()->create();
 
-        $this->service->turnOnByDefault($feature);
+        $this->service->grantByDefault($feature);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
-        /** @var AuditLog<User, Feature> $turnOnByDefaultFeatureLog */
-        $turnOnByDefaultFeatureLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::TurnFeatureOnByDefault->value, $turnOnByDefaultFeatureLog->action);
-        $this->assertEquals($feature->name, $turnOnByDefaultFeatureLog->metadata['name']);
-        $this->assertEquals($this->user->id, $turnOnByDefaultFeatureLog->actionBy->id);
-        $this->assertEquals($feature->id, $turnOnByDefaultFeatureLog->actionTo->id);
+        /** @var AuditLog<User, Feature> $grantByDefaultFeatureLog */
+        $grantByDefaultFeatureLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::GrantFeatureByDefault->value, $grantByDefaultFeatureLog->action);
+        $this->assertEquals($feature->name, $grantByDefaultFeatureLog->metadata['name']);
+        $this->assertEquals($this->user->id, $grantByDefaultFeatureLog->actionBy->id);
+        $this->assertEquals($feature->id, $grantByDefaultFeatureLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_turn_feature_on_by_default_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_grant_feature_by_default_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $feature = Feature::factory()->create();
 
-        $this->service->turnOnByDefault($feature);
+        $this->service->grantByDefault($feature);
 
         $this->assertCount(0, AuditLog::all());
     }
 
-    // / ***********************
+    public function test_revoke_feature_default_grant()
+    {
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $feature = $this->service->revokeDefaultGrant($feature);
+
+        $this->assertInstanceOf(FeaturePacket::class, $feature);
+        $this->assertFalse($feature->grantedByDefault);
+    }
+
+    public function test_revoke_feature_default_grant_succeeds_if_features_feature_disabled()
+    {
+        Config::set('gatekeeper.features.features.enabled', false);
+
+        $feature = Feature::factory()->grantByDefault()->create();
+        $feature = $this->service->revokeDefaultGrant($feature);
+
+        $this->assertFalse($feature->grantedByDefault);
+    }
+
+    public function test_revoke_feature_default_grant_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $feature = $this->service->revokeDefaultGrant($feature);
+        $feature = $this->service->revokeDefaultGrant($feature);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_revoke_feature_default_grant_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($feature);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Feature> $revokeDefaultGrantAuditLog */
+        $revokeDefaultGrantAuditLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RevokeFeatureDefaultGrant->value, $revokeDefaultGrantAuditLog->action);
+        $this->assertEquals($feature->name, $revokeDefaultGrantAuditLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeDefaultGrantAuditLog->actionBy->id);
+        $this->assertEquals($feature->id, $revokeDefaultGrantAuditLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_revoke_feature_default_grant_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($feature);
+
+        $this->assertCount(0, AuditLog::all());
+    }
 
     public function test_deactivate_feature()
     {
@@ -565,18 +560,18 @@ class FeatureServiceTest extends TestCase
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
 
-    public function test_revoke_feature()
+    public function test_unassign_feature()
     {
         $user = User::factory()->create();
         $feature = Feature::factory()->create();
 
         $this->service->assignToModel($user, $feature);
 
-        $this->assertTrue($this->service->revokeFromModel($user, $feature));
+        $this->assertTrue($this->service->unassignFromModel($user, $feature));
         $this->assertFalse($user->hasFeature($feature));
     }
 
-    public function test_audit_log_inserted_on_feature_revocation_when_auditing_enabled()
+    public function test_audit_log_inserted_on_feature_unassignment_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -584,20 +579,20 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->service->assignToModel($user, $feature);
-        $this->service->revokeFromModel($user, $feature);
+        $this->service->unassignFromModel($user, $feature);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeFeature->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignFeature->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        /** @var AuditLog<User, Feature> $revokeFeatureLog */
-        $revokeFeatureLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::RevokeFeature->value, $revokeFeatureLog->action);
-        $this->assertEquals($feature->name, $revokeFeatureLog->metadata['name']);
-        $this->assertEquals($this->user->id, $revokeFeatureLog->actionBy->id);
-        $this->assertEquals($user->id, $revokeFeatureLog->actionTo->id);
+        /** @var AuditLog<User, Feature> $unassignFeatureLog */
+        $unassignFeatureLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::UnassignFeature->value, $unassignFeatureLog->action);
+        $this->assertEquals($feature->name, $unassignFeatureLog->metadata['name']);
+        $this->assertEquals($this->user->id, $unassignFeatureLog->actionBy->id);
+        $this->assertEquals($user->id, $unassignFeatureLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_feature_revocation_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_feature_unassignment_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
@@ -605,24 +600,24 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->service->assignToModel($user, $feature);
-        $this->service->revokeFromModel($user, $feature);
+        $this->service->unassignFromModel($user, $feature);
 
         $this->assertCount(0, AuditLog::all());
     }
 
-    public function test_revoke_multiple_features()
+    public function test_unassign_multiple_features()
     {
         $user = User::factory()->create();
         $features = Feature::factory()->count(3)->create();
 
         $this->service->assignAllToModel($user, $features);
 
-        $this->assertTrue($this->service->revokeAllFromModel($user, $features));
+        $this->assertTrue($this->service->unassignAllFromModel($user, $features));
 
         $this->assertFalse($user->hasAnyFeature($features));
     }
 
-    public function test_all_audit_log_lifecycle_ids_match_on_bulk_feature_revocation()
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_feature_unassignment()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -631,9 +626,157 @@ class FeatureServiceTest extends TestCase
 
         $this->service->assignAllToModel($user, $features);
 
-        $this->service->revokeAllFromModel($user, $features);
+        $this->service->unassignAllFromModel($user, $features);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeFeature->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignFeature->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_deny_feature()
+    {
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+
+        $this->service->assignToModel($user, $feature);
+
+        $this->assertTrue($this->service->denyFromModel($user, $feature));
+        $this->assertDatabaseHas((new ModelHasFeature)->getTable(), [
+            'model_id' => $user->id,
+            'denied' => true,
+        ]);
+        $this->assertFalse($user->hasFeature($feature));
+    }
+
+    public function test_audit_log_inserted_on_feature_denial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+
+        $this->service->denyFromModel($user, $feature);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyFeature->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $denyFeatureLog */
+        $denyFeatureLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::DenyFeature->value, $denyFeatureLog->action);
+        $this->assertEquals($feature->name, $denyFeatureLog->metadata['name']);
+        $this->assertEquals($this->user->id, $denyFeatureLog->actionBy->id);
+        $this->assertEquals($user->id, $denyFeatureLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_feature_denial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+
+        $this->service->denyFromModel($user, $feature);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_deny_multiple_features()
+    {
+        $user = User::factory()->create();
+        $features = Feature::factory()->count(3)->create();
+
+        $this->service->assignAllToModel($user, $features);
+        $this->service->denyAllFromModel($user, $features);
+
+        $this->assertFalse($user->hasAnyFeature($features));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_feature_denial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $features = Feature::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $features);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyFeature->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_undeny_feature()
+    {
+        $user = User::factory()->create();
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $this->service->denyFromModel($user, $feature);
+        $this->service->undenyFromModel($user, $feature);
+
+        $this->assertTrue($this->service->undenyFromModel($user, $feature));
+
+        $this->assertEmpty(ModelHasFeature::query()->where([
+            'model_id' => $user->id,
+            'denied' => true,
+        ])->get());
+
+        $this->assertTrue($user->hasFeature($feature));
+    }
+
+    public function test_audit_log_inserted_on_feature_undenial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+
+        $this->service->undenyFromModel($user, $feature);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyFeature->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $undenyFeatureLog */
+        $undenyFeatureLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::UndenyFeature->value, $undenyFeatureLog->action);
+        $this->assertEquals($feature->name, $undenyFeatureLog->metadata['name']);
+        $this->assertEquals($this->user->id, $undenyFeatureLog->actionBy->id);
+        $this->assertEquals($user->id, $undenyFeatureLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_feature_undenial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+
+        $this->service->undenyFromModel($user, $feature);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_undeny_multiple_features()
+    {
+        $user = User::factory()->create();
+        $features = Feature::factory()->grantByDefault()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $features);
+        $this->service->undenyAllFromModel($user, $features);
+
+        $this->assertTrue($user->hasAnyFeature($features));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_feature_undenial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $features = Feature::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $features);
+        $this->service->undenyAllFromModel($user, $features);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyFeature->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -656,10 +799,44 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
         $team = Team::factory()->create();
 
-        $team->turnFeatureOn($feature);
+        $team->assignFeature($feature);
         $user->addToTeam($team);
 
         $this->assertTrue($this->service->modelHas($user, $feature));
+    }
+
+    public function test_model_does_not_have_feature_granted_by_default_when_denied()
+    {
+        $user = User::factory()->create();
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $user->denyFeature($feature);
+
+        $this->assertFalse($this->service->modelHas($user, $feature));
+    }
+
+    public function test_model_has_feature_when_granted_by_default()
+    {
+        $user = User::factory()->create();
+        $feature = Feature::factory()->grantByDefault()->create();
+
+        $this->assertTrue($this->service->modelHas($user, $feature));
+    }
+
+    public function test_model_does_not_have_feature_through_team_feature_when_denied()
+    {
+        Config::set('gatekeeper.features.teams.enabled', true);
+
+        $user = User::factory()->create();
+        $feature = Feature::factory()->create();
+        $team = Team::factory()->create();
+
+        $team->assignFeature($feature);
+        $user->addToTeam($team);
+
+        $user->denyFeature($feature);
+
+        $this->assertFalse($this->service->modelHas($user, $feature));
     }
 
     public function test_model_has_any_feature()
@@ -681,7 +858,7 @@ class FeatureServiceTest extends TestCase
 
         $this->assertTrue($this->service->modelHasAll($user, $features));
 
-        $this->service->revokeFromModel($user, $features->last());
+        $this->service->unassignFromModel($user, $features->last());
 
         $this->assertFalse($this->service->modelHasAll($user, $features));
     }
@@ -704,7 +881,7 @@ class FeatureServiceTest extends TestCase
         $feature = Feature::factory()->create();
         $team = Team::factory()->inactive()->create();
 
-        $team->turnFeatureOn($feature);
+        $team->assignFeature($feature);
         $user->addToTeam($team);
 
         $this->assertFalse($this->service->modelHas($user, $feature));
@@ -787,10 +964,10 @@ class FeatureServiceTest extends TestCase
         $teamFeature = Feature::factory()->create();
 
         $team = Team::factory()->create();
-        $team->turnFeatureOn($teamFeature);
+        $team->assignFeature($teamFeature);
         $user->addToTeam($team);
 
-        $user->turnFeatureOn($directFeature);
+        $user->assignFeature($directFeature);
 
         $effective = $this->service->getForModel($user);
 

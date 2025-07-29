@@ -12,8 +12,8 @@ export interface EntityApiText {
     getPageError: string;
     getOneError: string;
     persistError: Record<EntityFormType, string>;
-    turnOffByDefaultError: string;
-    turnOnByDefaultError: string;
+    revokeDefaultGrantError: string;
+    grantByDefaultError: string;
     deactivateError: string;
     reactivateError: string;
     deleteError: string;
@@ -34,8 +34,8 @@ export const apiText: ApiText = {
                 create: 'Failed to create permission.',
                 update: 'Failed to update permission.',
             },
-            turnOffByDefaultError: '',
-            turnOnByDefaultError: '',
+            revokeDefaultGrantError: '',
+            grantByDefaultError: '',
             deactivateError: 'Failed to deactivate permission.',
             reactivateError: 'Failed to reactivate permission.',
             deleteError: 'Failed to delete permission.',
@@ -47,8 +47,8 @@ export const apiText: ApiText = {
                 create: 'Failed to create role.',
                 update: 'Failed to update role.',
             },
-            turnOffByDefaultError: '',
-            turnOnByDefaultError: '',
+            revokeDefaultGrantError: '',
+            grantByDefaultError: '',
             deactivateError: 'Failed to deactivate role.',
             reactivateError: 'Failed to reactivate role.',
             deleteError: 'Failed to delete role.',
@@ -60,8 +60,8 @@ export const apiText: ApiText = {
                 create: 'Failed to create feature.',
                 update: 'Failed to update feature.',
             },
-            turnOffByDefaultError: 'Failed to turn feature off by default',
-            turnOnByDefaultError: 'Failed to turn feature on by default',
+            revokeDefaultGrantError: 'Failed to grant feature by default.',
+            grantByDefaultError: 'Failed to unassign feature default grant.',
             deactivateError: 'Failed to deactivate feature.',
             reactivateError: 'Failed to reactivate feature.',
             deleteError: 'Failed to delete feature.',
@@ -73,8 +73,8 @@ export const apiText: ApiText = {
                 create: 'Failed to create team.',
                 update: 'Failed to update team.',
             },
-            turnOffByDefaultError: '',
-            turnOnByDefaultError: '',
+            revokeDefaultGrantError: '',
+            grantByDefaultError: '',
             deactivateError: 'Failed to deactivate team.',
             reactivateError: 'Failed to reactivate team.',
             deleteError: 'Failed to delete team.',

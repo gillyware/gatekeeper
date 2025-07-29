@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
  * @property string $model_type
  * @property int $model_id
  * @property int $entity_id
+ * @property bool $denied
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -34,6 +35,7 @@ abstract class AbstractBaseModelHasEntityModel extends Model
      * @var array
      */
     protected $casts = [
+        'denied' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

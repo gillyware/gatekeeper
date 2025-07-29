@@ -56,7 +56,7 @@ Determines which core Gatekeeper features are enabled:
 
 **Key:** `tables`
 
-Specifies the database table names used by Gatekeeper. There are 3 tables for entities, 3 pivot tables to assign entities to models, and an audit log table.
+Specifies the database table names used by Gatekeeper. There are 4 tables for entities, 4 pivot tables to assign/deny entities to/from models, and an audit log table.
 
 ```php
 'tables' => [
@@ -140,4 +140,4 @@ Manage Entities and Assignments:
 - [Artisan Commands](usage/artisan-commands.md)
 
 Track Entity and Entity Assignment Changes:
-- [Audit Logging]('usage/audit-logging.md')
+- [Audit Logging](usage/audit-logging.md)

@@ -6,7 +6,11 @@ enum AuditLogAction: string
 {
     case CreatePermission = 'permission_create';
 
-    case UpdatePermission = 'permission_update';
+    case UpdatePermissionName = 'permission_update_name';
+
+    case GrantPermissionByDefault = 'permission_grant_by_default';
+
+    case RevokePermissionDefaultGrant = 'permission_revoke_default_grant';
 
     case DeactivatePermission = 'permission_deactivate';
 
@@ -16,11 +20,21 @@ enum AuditLogAction: string
 
     case AssignPermission = 'permission_assign';
 
-    case RevokePermission = 'permission_revoke';
+    case UnassignPermission = 'permission_unassign';
+
+    case RevokePermission = 'permission_revoke'; // Deprecated.
+
+    case DenyPermission = 'permission_deny';
+
+    case UndenyPermission = 'permission_undeny';
 
     case CreateRole = 'role_create';
 
-    case UpdateRole = 'role_update';
+    case UpdateRoleName = 'role_update_name';
+
+    case GrantRoleByDefault = 'role_grant_by_default';
+
+    case RevokeRoleDefaultGrant = 'role_revoke_default_grant';
 
     case DeactivateRole = 'role_deactivate';
 
@@ -30,15 +44,21 @@ enum AuditLogAction: string
 
     case AssignRole = 'role_assign';
 
-    case RevokeRole = 'role_revoke';
+    case UnassignRole = 'role_unassign';
+
+    case RevokeRole = 'role_revoke'; // Deprecated.
+
+    case DenyRole = 'role_deny';
+
+    case UndenyRole = 'role_undeny';
 
     case CreateFeature = 'feature_create';
 
-    case UpdateFeature = 'feature_update';
+    case UpdateFeatureName = 'feature_update_name';
 
-    case TurnFeatureOffByDefault = 'feature_default_off';
+    case GrantFeatureByDefault = 'feature_grant_by_default';
 
-    case TurnFeatureOnByDefault = 'feature_default_on';
+    case RevokeFeatureDefaultGrant = 'feature_revoke_default_grant';
 
     case DeactivateFeature = 'feature_deactivate';
 
@@ -48,11 +68,21 @@ enum AuditLogAction: string
 
     case AssignFeature = 'feature_assign';
 
-    case RevokeFeature = 'feature_revoke';
+    case UnassignFeature = 'feature_unassign';
+
+    case RevokeFeature = 'feature_revoke'; // Deprecated.
+
+    case DenyFeature = 'feature_deny';
+
+    case UndenyFeature = 'feature_undeny';
 
     case CreateTeam = 'team_create';
 
-    case UpdateTeam = 'team_update';
+    case UpdateTeamName = 'team_update_name';
+
+    case GrantTeamByDefault = 'team_grant_by_default';
+
+    case RevokeTeamDefaultGrant = 'team_revoke_default_grant';
 
     case DeactivateTeam = 'team_deactivate';
 
@@ -63,4 +93,13 @@ enum AuditLogAction: string
     case AddTeam = 'team_add';
 
     case RemoveTeam = 'team_remove';
+
+    case DenyTeam = 'team_deny';
+
+    case UndenyTeam = 'team_undeny';
+
+    public static function build(GatekeeperEntity $entity, AuditLogActionVerb $verb): static
+    {
+        return self::from($entity->value.'_'.$verb->value);
+    }
 }

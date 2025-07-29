@@ -52,38 +52,10 @@ class RoleController extends AbstractBaseController
     /**
      * Update an existing role.
      */
-    public function update(UpdateRolePacket $packet, Role $role): HttpFoundationResponse
+    public function update(Role $role, UpdateRolePacket $packet): HttpFoundationResponse
     {
         try {
-            $role = $this->roleService->update($role, $packet->name);
-
-            return Response::json($role);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Deactivate a role.
-     */
-    public function deactivate(Role $role): HttpFoundationResponse
-    {
-        try {
-            $role = $this->roleService->deactivate($role);
-
-            return Response::json($role);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Reactivate a role.
-     */
-    public function reactivate(Role $role): HttpFoundationResponse
-    {
-        try {
-            $role = $this->roleService->reactivate($role);
+            $role = $this->roleService->update($role, $packet);
 
             return Response::json($role);
         } catch (GatekeeperException $e) {

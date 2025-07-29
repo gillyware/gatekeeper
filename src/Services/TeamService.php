@@ -2,17 +2,24 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
+use Gillyware\Gatekeeper\Enums\TeamSourceType;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\AssignTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\CreateTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeactivateTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeleteTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\DenyTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\GrantedTeamByDefaultAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\ReactivateTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\RevokeTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\RevokedTeamDefaultGrantAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\UnassignTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Team\UndenyTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Team\UpdateTeamAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
+use Gillyware\Gatekeeper\Packets\Entities\Team\UpdateTeamPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
@@ -20,6 +27,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -78,8 +86,24 @@ class TeamService extends AbstractBaseEntityService
      * Update an existing team.
      *
      * @param  Team|TeamPacket|string|UnitEnum  $team
+     * @param UpdateTeamPacket
      */
-    public function update($team, string|UnitEnum $newTeamName): TeamPacket
+    public function update($team, $packet): TeamPacket
+    {
+        return match ($packet->action) {
+            EntityUpdateAction::Name->value => $this->updateName($team, $packet->value),
+            EntityUpdateAction::Status->value => $packet->value ? $this->reactivate($team) : $this->deactivate($team),
+            EntityUpdateAction::DefaultGrant->value => $packet->value ? $this->grantByDefault($team) : $this->revokeDefaultGrant($team),
+            default => throw new InvalidArgumentException('Invalid update action.'),
+        };
+    }
+
+    /**
+     * Update an existing team name.
+     *
+     * @param  Team|TeamPacket|string|UnitEnum  $team
+     */
+    public function updateName($team, string|UnitEnum $newTeamName): TeamPacket
     {
         $this->enforceAuditFeature();
         $this->enforceTeamsFeature();
@@ -93,13 +117,62 @@ class TeamService extends AbstractBaseEntityService
         }
 
         $oldTeamName = $currentTeam->name;
-        $updatedTeam = $this->teamRepository->update($currentTeam, $newTeamName);
+        $updatedTeam = $this->teamRepository->updateName($currentTeam, $newTeamName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(UpdateTeamAuditLogPacket::make($updatedTeam, $oldTeamName));
         }
 
         return $updatedTeam->toPacket();
+    }
+
+    /**
+     * Grant a team to all models that are not explicitly denying it.
+     *
+     * @param  Team|TeamPacket|string|UnitEnum  $team
+     */
+    public function grantByDefault($team): TeamPacket
+    {
+        $this->enforceAuditFeature();
+        $this->enforceTeamsFeature();
+
+        $currentTeam = $this->resolveEntity($team, orFail: true);
+
+        if ($currentTeam->grant_by_default) {
+            return $currentTeam->toPacket();
+        }
+
+        $defaultedOnTeam = $this->teamRepository->grantByDefault($currentTeam);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(GrantedTeamByDefaultAuditLogPacket::make($defaultedOnTeam));
+        }
+
+        return $defaultedOnTeam->toPacket();
+    }
+
+    /**
+     * Revoke a team's default grant.
+     *
+     * @param  Team|TeamPacket|string|UnitEnum  $team
+     */
+    public function revokeDefaultGrant($team): TeamPacket
+    {
+        $this->enforceAuditFeature();
+
+        $currentTeam = $this->resolveEntity($team, orFail: true);
+
+        if (! $currentTeam->grant_by_default) {
+            return $currentTeam->toPacket();
+        }
+
+        $defaultedOffTeam = $this->teamRepository->revokeDefaultGrant($currentTeam);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(RevokedTeamDefaultGrantAuditLogPacket::make($defaultedOffTeam));
+        }
+
+        return $defaultedOffTeam->toPacket();
     }
 
     /**
@@ -201,7 +274,7 @@ class TeamService extends AbstractBaseEntityService
             return true;
         }
 
-        $this->modelHasTeamRepository->create($model, $team);
+        $this->modelHasTeamRepository->assignToModel($model, $team);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(AssignTeamAuditLogPacket::make($model, $team));
@@ -227,36 +300,109 @@ class TeamService extends AbstractBaseEntityService
     }
 
     /**
-     * Revoke a team from a model.
+     * Unassign a team from a model.
      *
      * @param  Team|TeamPacket|string|UnitEnum  $team
      */
-    public function revokeFromModel(Model $model, $team): bool
+    public function unassignFromModel(Model $model, $team): bool
     {
         $this->enforceAuditFeature();
 
         $team = $this->resolveEntity($team, orFail: true);
 
-        $removed = $this->modelHasTeamRepository->deleteForModelAndEntity($model, $team);
+        $removed = $this->modelHasTeamRepository->unassignFromModel($model, $team);
 
         if ($removed && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokeTeamAuditLogPacket::make($model, $team));
+            $this->auditLogRepository->create(UnassignTeamAuditLogPacket::make($model, $team));
         }
 
         return $removed;
     }
 
     /**
-     * Revoke multiple teams from a model.
+     * Unassign multiple teams from a model.
      *
      * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
-    public function revokeAllFromModel(Model $model, array|Arrayable $teams): bool
+    public function unassignAllFromModel(Model $model, array|Arrayable $teams): bool
     {
         $result = true;
 
         $this->resolveEntities($teams, orFail: true)->each(function (Team $team) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $team);
+            $result = $result && $this->unassignFromModel($model, $team);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Deny a team from a model.
+     *
+     * @param  Team|TeamPacket|string|UnitEnum  $team
+     */
+    public function denyFromModel(Model $model, $team): bool
+    {
+        $this->enforceAuditFeature();
+
+        $team = $this->resolveEntity($team, orFail: true);
+
+        $denied = $this->modelHasTeamRepository->denyFromModel($model, $team);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(DenyTeamAuditLogPacket::make($model, $team));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Deny multiple teams from a model.
+     *
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     */
+    public function denyAllFromModel(Model $model, array|Arrayable $teams): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($teams, orFail: true)->each(function (Team $team) use ($model, &$result) {
+            $result = $result && $this->denyFromModel($model, $team);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Undeny a team from a model.
+     *
+     * @param  Team|TeamPacket|string|UnitEnum  $team
+     */
+    public function undenyFromModel(Model $model, $team): bool
+    {
+        $this->enforceTeamsFeature();
+        $this->enforceAuditFeature();
+
+        $team = $this->resolveEntity($team, orFail: true);
+
+        $denied = $this->modelHasTeamRepository->undenyFromModel($model, $team);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(UndenyTeamAuditLogPacket::make($model, $team));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Deny multiple teams from a model.
+     *
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     */
+    public function undenyAllFromModel(Model $model, array|Arrayable $teams): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($teams, orFail: true)->each(function (Team $team) use ($model, &$result) {
+            $result = $result && $this->undenyFromModel($model, $team);
         });
 
         return $result;
@@ -276,12 +422,22 @@ class TeamService extends AbstractBaseEntityService
 
         $team = $this->resolveEntity($team);
 
+        // If the team is denied from the model, return false.
+        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
+            return false;
+        }
+
         // The team cannot be accessed if it does not exist or is inactive.
         if (! $team || ! $team->is_active) {
             return false;
         }
 
-        return $this->modelHasDirectly($model, $team);
+        // If the team is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $team)) {
+            return true;
+        }
+
+        return $team->grant_by_default;
     }
 
     /**
@@ -293,7 +449,13 @@ class TeamService extends AbstractBaseEntityService
     {
         $team = $this->resolveEntity($team);
 
-        return $team && $this->teamRepository->activeForModel($model)->some(fn (Team $t) => $team->name === $t->name);
+        if (! $team) {
+            return false;
+        }
+
+        $foundAssignment = $this->teamRepository->assignedToModel($model)->get($team->name);
+
+        return $foundAssignment && $foundAssignment->is_active;
     }
 
     /**
@@ -331,7 +493,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Get all teams.
      *
-     * @return Collection<TeamPacket>
+     * @return Collection<string, TeamPacket>
      */
     public function getAll(): Collection
     {
@@ -342,23 +504,64 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Get all teams assigned directly or indirectly to a model.
      *
-     * @return Collection<TeamPacket>
+     * @return Collection<string, TeamPacket>
      */
     public function getForModel(Model $model): Collection
     {
-        return $this->getDirectForModel($model)
+        return $this->teamRepository->all()
+            ->filter(fn (Team $team) => $this->modelHas($model, $team))
             ->map(fn (Team $team) => $team->toPacket());
     }
 
     /**
      * Get all teams directly assigned to a model.
      *
-     * @return Collection<TeamPacket>
+     * @return Collection<string, TeamPacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->teamRepository->forModel($model)
+        return $this->teamRepository->assignedToModel($model)
             ->map(fn (Team $team) => $team->toPacket());
+    }
+
+    /**
+     * Get all effective teams for the given model with the team source(s).
+     */
+    public function getVerboseForModel(Model $model): Collection
+    {
+        $result = collect();
+        $sourcesMap = [];
+
+        if (! $this->teamsFeatureEnabled() || ! $this->modelInteractsWithTeams($model)) {
+            return $result;
+        }
+
+        $this->teamRepository->all()
+            ->filter(function (Team $team) use ($model) {
+                $denied = $this->teamRepository->deniedFromModel($model)->has($team->name);
+
+                return $team->grant_by_default && ! $denied;
+            })
+            ->each(function (Team $team) use (&$sourcesMap) {
+                $sourcesMap[$team->name][] = [
+                    'type' => TeamSourceType::DEFAULT,
+                ];
+            });
+
+        $this->teamRepository->assignedToModel($model)
+            ->filter(fn (Team $team) => $team->is_active)
+            ->each(function (Team $team) use (&$sourcesMap) {
+                $sourcesMap[$team->name][] = ['type' => TeamSourceType::DIRECT];
+            });
+
+        foreach ($sourcesMap as $roleName => $sources) {
+            $result->push([
+                'name' => $roleName,
+                'sources' => $sources,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

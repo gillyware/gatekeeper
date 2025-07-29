@@ -2,9 +2,9 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
+use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -12,7 +12,6 @@ use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -32,7 +31,7 @@ class RoleRepository implements EntityRepositoryInterface
      */
     public function tableExists(): bool
     {
-        return Schema::hasTable(Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES));
+        return Schema::hasTable((new Role)->getTable());
     }
 
     /**
@@ -44,19 +43,31 @@ class RoleRepository implements EntityRepositoryInterface
     }
 
     /**
+     * Get all roles.
+     *
+     * @return Collection<string, Role>
+     */
+    public function all(): Collection
+    {
+        $roles = $this->cacheService->getAllRoles();
+
+        if ($roles) {
+            return $roles;
+        }
+
+        $roles = Role::all()->mapWithKeys(fn (Role $role) => [$role->name => $role]);
+
+        $this->cacheService->putAllRoles($roles);
+
+        return $roles;
+    }
+
+    /**
      * Find a role by its name.
      */
     public function findByName(string $roleName): ?Role
     {
         return $this->all()->get($roleName);
-    }
-
-    /**
-     * Find a role by its name for a specific model.
-     */
-    public function findByNameForModel(Model $model, string $roleName): ?Role
-    {
-        return $this->forModel($model)->get($roleName);
     }
 
     /**
@@ -81,20 +92,48 @@ class RoleRepository implements EntityRepositoryInterface
         $role = new Role(['name' => $roleName]);
 
         if ($role->save()) {
-            $this->cacheService->invalidateCacheForAllRoles();
+            $this->cacheService->invalidateCacheForAllLinks();
         }
 
         return $role->fresh();
     }
 
     /**
-     * Update an existing role.
+     * Update an existing role name.
      *
      * @param  Role  $role
      */
-    public function update($role, string $newRoleName): Role
+    public function updateName($role, string $newRoleName): Role
     {
         if ($role->update(['name' => $newRoleName])) {
+            $this->cacheService->clear();
+        }
+
+        return $role;
+    }
+
+    /**
+     * Grant a role to all models that are not explicitly denying it.
+     *
+     * @param  Role  $role
+     */
+    public function grantByDefault($role): Role
+    {
+        if ($role->update(['grant_by_default' => true])) {
+            $this->cacheService->clear();
+        }
+
+        return $role;
+    }
+
+    /**
+     * Revoke a role's default grant.
+     *
+     * @param  Role  $role
+     */
+    public function revokeDefaultGrant($role): Role
+    {
+        if ($role->update(['grant_by_default' => false])) {
             $this->cacheService->clear();
         }
 
@@ -149,97 +188,27 @@ class RoleRepository implements EntityRepositoryInterface
     }
 
     /**
-     * Get all roles.
+     * Get all roles assigned to a specific model.
      *
-     * @return Collection<Role>
+     * @return Collection<string, Role>
      */
-    public function all(): Collection
-    {
-        $roles = $this->cacheService->getAllRoles();
-
-        if ($roles) {
-            return $roles;
-        }
-
-        $roles = Role::all()->mapWithKeys(fn (Role $r) => [$r->name => $r]);
-
-        $this->cacheService->putAllRoles($roles);
-
-        return $roles;
-    }
-
-    /**
-     * Get all active roles.
-     *
-     * @return Collection<Role>
-     */
-    public function active(): Collection
-    {
-        return $this->all()->filter(fn (Role $role) => $role->is_active);
-    }
-
-    /**
-     * Get all roles where the name is in the provided array or collection.
-     *
-     * @return Collection<Role>
-     */
-    public function whereNameIn(array|Collection $roleNames): Collection
-    {
-        return $this->all()->whereIn('name', $roleNames);
-    }
-
-    /**
-     * Get all role names for a specific model.
-     *
-     * @return Collection<string>
-     */
-    public function namesForModel(Model $model): Collection
-    {
-        $allRoleNames = $this->cacheService->getModelRoleNames($model);
-
-        if ($allRoleNames) {
-            return $allRoleNames;
-        }
-
-        if (! $this->modelInteractsWithRoles($model)) {
-            return collect();
-        }
-
-        $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
-        $modelHasRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
-
-        $allRoleNames = $model->roles()
-            ->select("$rolesTable.*")
-            ->whereNull("$modelHasRolesTable.deleted_at")
-            ->pluck("$rolesTable.name")
-            ->values();
-
-        $this->cacheService->putModelRoleNames($model, $allRoleNames);
-
-        return $allRoleNames;
-    }
-
-    /**
-     * Get all roles for a specific model.
-     *
-     * @return Collection<Role>
-     */
-    public function forModel(Model $model): Collection
-    {
-        $namesForModel = $this->namesForModel($model);
-
-        return $this->whereNameIn($namesForModel);
-    }
-
-    /**
-     * Get all active roles for a specific model.
-     *
-     * @return Collection<Role>
-     */
-    public function activeForModel(Model $model): Collection
+    public function assignedToModel(Model $model): Collection
     {
         return $this->forModel($model)
-            ->filter(fn (Role $role) => $role->is_active);
+            ->filter(fn (array $link) => ! $link['denied'])
+            ->map(fn (array $link) => $link['role']);
+    }
+
+    /**
+     * Get all roles denied from a specific model.
+     *
+     * @return Collection<string, Role>
+     */
+    public function deniedFromModel(Model $model): Collection
+    {
+        return $this->forModel($model)
+            ->filter(fn (array $link) => $link['denied'])
+            ->map(fn (array $link) => $link['role']);
     }
 
     /**
@@ -249,16 +218,73 @@ class RoleRepository implements EntityRepositoryInterface
     {
         $query = Role::query()->whereLike('name', "%{$packet->searchTerm}%");
 
-        if ($packet->prioritizedAttribute === 'is_active') {
-            $query = $query
-                ->orderBy('is_active', $packet->isActiveOrder)
-                ->orderBy('name', $packet->nameOrder);
-        } else {
-            $query = $query
+        $query = match ($packet->prioritizedAttribute) {
+            'name' => $query
                 ->orderBy('name', $packet->nameOrder)
-                ->orderBy('is_active', $packet->isActiveOrder);
-        }
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            'grant_by_default' => $query
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('is_active', $packet->isActiveOrder),
+            'is_active' => $query
+                ->orderBy('is_active', $packet->isActiveOrder)
+                ->orderBy('name', $packet->nameOrder)
+                ->orderBy('grant_by_default', $packet->grantByDefaultOrder),
+            default => $query,
+        };
 
         return $query->paginate(10, ['*'], 'page', $packet->page);
+    }
+
+    /**
+     * Get all roles for a specific model.
+     *
+     * @return Collection<string, array{role: Role, denied: bool}>
+     */
+    private function forModel(Model $model): Collection
+    {
+        return $this->linksForModel($model)
+            ->mapWithKeys(function (array $link) {
+                [$name, $denied] = [$link['name'], $link['denied']];
+
+                return [
+                    $name => [
+                        'role' => $this->findByName($name),
+                        'denied' => $denied,
+                    ],
+                ];
+            });
+    }
+
+    /**
+     * Get all role links for a specific model.
+     *
+     * @return Collection<int, array{name: string, denied: bool}>
+     */
+    private function linksForModel(Model $model): Collection
+    {
+        $allRoleLinks = $this->cacheService->getModelRoleLinks($model);
+
+        if ($allRoleLinks) {
+            return $allRoleLinks;
+        }
+
+        if (! $this->modelInteractsWithRoles($model)) {
+            return collect();
+        }
+
+        $allRoleLinks = $model->roles()
+            ->select([
+                'name' => (new Role)->qualifyColumn('name'),
+                'denied' => (new ModelHasRole)->qualifyColumn('denied'),
+            ])
+            ->whereNull((new ModelHasRole)->qualifyColumn('deleted_at'))
+            ->get(['name', 'denied'])
+            ->map(fn (Role $role) => $role->only(['name', 'denied']));
+
+        $this->cacheService->putModelRoleLinks($model, $allRoleLinks);
+
+        return $allRoleLinks;
     }
 }

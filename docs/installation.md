@@ -43,7 +43,7 @@ php artisan db:seed --class="Gillyware\Gatekeeper\Database\Seeders\GatekeeperPer
 Uncomment the `User` model (under `models.manageable`) in the added `gatekeeper.php` configuration file.
 
 > [!NOTE]
-> This is where all models that will have permissions, roles, or team memberships should be registered. This is how the dashboard and Artisan commands know which models to manage, search, and display. Ensure the models are correctly configured according to the [configuration specs](./docs/configuration.md#models).
+> This is where all models that will have permissions, roles, features, or team memberships should be registered. This is how the dashboard and Artisan commands know which models to manage, search, and display. Ensure the models are correctly configured according to the [configuration specs](./docs/configuration.md#models).
 
 Add the `\Gillyware\Gatekeeper\Traits\HasPermissions` trait to your user model. This is required for Gatekeeper to permit access to (and allow assignments of) permissions.
 
@@ -60,12 +60,12 @@ php artisan gatekeeper:permission
 
 Choose "Assign one or more permissions to a model", then select:
  - `gatekeeper.view` - to access the dashboard
- - `gatekeeper.manage` - to manage permissions, roles, teams, and their assignments
+ - `gatekeeper.manage` - to manage permissions, roles, features, teams, and their assignments through the dashboard
 
-Then, select the User model and search for your target user using any of the searchable columns specified in your configuration.
+Then, select the "User" model and search for your target user using any of the searchable columns specified in your configuration.
 
 > [!NOTE]
-> If audit logging is enabled, you will be prompted to attribute this action to a model. You may attribute the action to the yourself or to the system.
+> If audit logging is enabled, you will be prompted to attribute this action to a model. You may attribute any action to the yourself or to the system.
 
 <a name="access-the-dashboard"></a>
 ## Access the Dashboard

@@ -21,6 +21,6 @@ final class UpdateTeamAuditLogPacket extends AbstractBaseStoreAuditLogPacket
 
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::UpdateTeam;
+        return AuditLogAction::UpdateTeamName;
     }
 }

@@ -42,7 +42,7 @@ class HasTeamsTest extends TestCase
         $user->addToAllTeams($teams);
     }
 
-    public function test_revoke_team_delegates_to_facade()
+    public function test_unassign_team_delegates_to_facade()
     {
         $user = User::factory()->create();
         $team = 'edit-posts';
@@ -54,7 +54,7 @@ class HasTeamsTest extends TestCase
         $user->removeFromTeam($team);
     }
 
-    public function test_revoke_teams_delegates_to_facade()
+    public function test_unassign_teams_delegates_to_facade()
     {
         $user = User::factory()->create();
         $teams = ['edit-posts', 'delete-posts'];
@@ -64,6 +64,30 @@ class HasTeamsTest extends TestCase
         Gatekeeper::shouldReceive('removeModelFromAllTeams')->with($user, $teams)->once();
 
         $user->removeFromAllTeams($teams);
+    }
+
+    public function test_deny_team_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $team = 'edit-posts';
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyTeamFromModel')->with($user, $team)->once();
+
+        $user->denyTeam($team);
+    }
+
+    public function test_deny_teams_delegates_to_facade()
+    {
+        $user = User::factory()->create();
+        $teams = ['edit-posts', 'delete-posts'];
+
+        Gatekeeper::shouldReceive('for')->with($user)->andReturn($this->gatekeeperForModelService->setModel($user));
+
+        Gatekeeper::shouldReceive('denyAllTeamsFromModel')->with($user, $teams)->once();
+
+        $user->denyAllTeams($teams);
     }
 
     public function test_has_team_delegates_to_facade()

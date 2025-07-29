@@ -14,7 +14,7 @@ export default function AuditLogLayout({ children }: PropsWithChildren) {
     }
 
     return (
-        <div className="px-4 py-6">
+        <div className="px-2 py-6 sm:px-4">
             <Heading title={language.title} description={language.description} />
 
             {!config.audit_enabled && (

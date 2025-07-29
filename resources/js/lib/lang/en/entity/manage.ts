@@ -5,8 +5,8 @@ export interface ManageEntityText {
     failedToLoad: string;
     entitySummaryText: EntitySummaryText;
     entityFormText: Record<EntityFormType, EntityFormText>;
-    turnEntityOffByDefaultText: TurnEntityOffByDefaultText;
-    turnEntityOnByDefaultText: TurnEntityOnByDefaultText;
+    revokeEntityDefaultGrantText: RevokeEntityDefaultGrantText;
+    grantEntityByDefaultText: GrantEntityByDefaultText;
     entityDeactivationText: EntityDeactivationText;
     entityReactivationText: EntityReactivationText;
     entityDeletionText: EntityDeletionText;
@@ -31,7 +31,7 @@ export interface EntityFormText {
     successMessage: string;
 }
 
-export interface TurnEntityOffByDefaultText {
+export interface RevokeEntityDefaultGrantText {
     title: string;
     description: string;
     confirmTitle: string;
@@ -42,7 +42,7 @@ export interface TurnEntityOffByDefaultText {
     mismatchError: string;
 }
 
-export interface TurnEntityOnByDefaultText {
+export interface GrantEntityByDefaultText {
     title: string;
     description: string;
     confirmTitle: string;
@@ -92,13 +92,13 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Permission',
             nameLabel: 'Name:',
-            defaultValueLabel: '',
+            defaultValueLabel: 'Default:',
             statusLabel: 'Status:',
-            offByDefault: '',
-            onByDefault: '',
+            offByDefault: 'Off',
+            onByDefault: 'On',
             active: 'Active',
             inactive: 'Inactive',
-            manageAccessLabel: '',
+            manageAccessLabel: 'Manage Permission Access',
         },
         entityFormText: {
             create: {
@@ -108,31 +108,32 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
             update: {
-                title: 'Update Permission',
+                title: 'Update Permission Name',
                 inputLabel: 'Permission Name',
                 submitButton: 'Update',
                 successMessage: 'Saved',
             },
         },
-        turnEntityOffByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        revokeEntityDefaultGrantText: {
+            title: 'Revoke Permission Default Grant',
+            description:
+                "Revoking this permission's default grant will require models to have it directly assigned or assigned via a role, feature, or team to access the permission.",
+            confirmTitle: "Are you sure you want to revoke this permission's default grant?",
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm revoking this permission's default grant.`,
+            inputLabel: 'Permission Name',
+            confirmButton: 'Revoke Default Grant',
+            cancelButton: 'Cancel',
+            mismatchError: 'Permission name does not match.',
         },
-        turnEntityOnByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        grantEntityByDefaultText: {
+            title: 'Grant Permission by Default',
+            description: 'Granting this permission by default will allow all models to access the permission, unless explicitly denied by the model.',
+            confirmTitle: 'Are you sure you want to grant this permission by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm granting this permission by default.`,
+            inputLabel: 'Permission Name',
+            confirmButton: 'Grant by Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Permission name does not match.',
         },
         entityDeactivationText: {
             title: 'Deactivate Permission',
@@ -171,10 +172,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Role',
             nameLabel: 'Name:',
-            defaultValueLabel: '',
+            defaultValueLabel: 'Default:',
             statusLabel: 'Status:',
-            offByDefault: '',
-            onByDefault: '',
+            offByDefault: 'Off',
+            onByDefault: 'On',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Role Access',
@@ -193,25 +194,26 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
         },
-        turnEntityOffByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        revokeEntityDefaultGrantText: {
+            title: 'Revoke Role Default Grant',
+            description:
+                "Revoking this role's default grant will require models to have it directly assigned or assigned via a team to access the role.",
+            confirmTitle: "Are you sure you want to revoke this role's default grant?",
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm revoking this role's default grant.`,
+            inputLabel: 'Role Name',
+            confirmButton: 'Revoke Default Grant',
+            cancelButton: 'Cancel',
+            mismatchError: 'Role name does not match.',
         },
-        turnEntityOnByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        grantEntityByDefaultText: {
+            title: 'Grant Role by Default',
+            description: 'Granting this role by default will allow all models to access the role, unless explicitly denied by the model.',
+            confirmTitle: 'Are you sure you want to grant this role by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm granting this role by default.`,
+            inputLabel: 'Role Name',
+            confirmButton: 'Grant by Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Role name does not match.',
         },
         entityDeactivationText: {
             title: 'Deactivate Role',
@@ -272,24 +274,24 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
         },
-        turnEntityOffByDefaultText: {
-            title: 'Turn Feature Off by Default',
+        revokeEntityDefaultGrantText: {
+            title: 'Revoke Feature Default Grant',
             description:
-                'Turning this feature off by default will require models to have it directly assigned or assigned via a team to access the feature.',
-            confirmTitle: 'Are you sure you want to turn this feature off by default?',
-            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature off by default.`,
+                "Revoking this feature's default grant will require models to have it directly assigned or assigned via a team to access the feature.",
+            confirmTitle: "Are you sure you want to revoke this feature's default grant?",
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm revoking this feature's default grant.`,
             inputLabel: 'Feature Name',
-            confirmButton: 'Turn Off By Default',
+            confirmButton: 'Revoke Default Grant',
             cancelButton: 'Cancel',
             mismatchError: 'Feature name does not match.',
         },
-        turnEntityOnByDefaultText: {
-            title: 'Turn Feature On by Default',
-            description: 'Turning this feature on by default will allow all models to access the feature.',
-            confirmTitle: 'Are you sure you want to turn this feature on by default?',
-            confirmDescription: (entityName) => `Type "${entityName}" to confirm turning this feature on by default.`,
+        grantEntityByDefaultText: {
+            title: 'Grant Feature by Default',
+            description: 'Granting this feature by default will allow all models to access the feature, unless explicitly denied by the model.',
+            confirmTitle: 'Are you sure you want to grant this feature by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm granting this feature by default.`,
             inputLabel: 'Feature Name',
-            confirmButton: 'Turn On By Default',
+            confirmButton: 'Grant by Default',
             cancelButton: 'Cancel',
             mismatchError: 'Feature name does not match.',
         },
@@ -330,10 +332,10 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
         entitySummaryText: {
             title: 'Team',
             nameLabel: 'Name:',
-            defaultValueLabel: '',
+            defaultValueLabel: 'Default:',
             statusLabel: 'Status:',
-            offByDefault: '',
-            onByDefault: '',
+            offByDefault: 'Off',
+            onByDefault: 'On',
             active: 'Active',
             inactive: 'Inactive',
             manageAccessLabel: 'Manage Team Access',
@@ -352,25 +354,25 @@ export const manageEntityText: Record<GatekeeperEntity, ManageEntityText> = {
                 successMessage: 'Saved',
             },
         },
-        turnEntityOffByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        revokeEntityDefaultGrantText: {
+            title: 'Revoke Team Default Grant',
+            description: "Revoking this team's default grant will require models to be directly assigned to the team to access it.",
+            confirmTitle: "Are you sure you want to revoke this team's default grant?",
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm revoking this team's default grant.`,
+            inputLabel: 'Team Name',
+            confirmButton: 'Revoke Default Grant',
+            cancelButton: 'Cancel',
+            mismatchError: 'Team name does not match.',
         },
-        turnEntityOnByDefaultText: {
-            title: '',
-            description: '',
-            confirmTitle: '',
-            confirmDescription: (entityName) => `${entityName}`,
-            inputLabel: '',
-            confirmButton: '',
-            cancelButton: '',
-            mismatchError: '',
+        grantEntityByDefaultText: {
+            title: 'Grant Team by Default',
+            description: 'Granting this team by default will allow all models to access the team, unless explicitly denied by the model.',
+            confirmTitle: 'Are you sure you want to grant this team by default?',
+            confirmDescription: (entityName) => `Type "${entityName}" to confirm granting this team by default.`,
+            inputLabel: 'Team Name',
+            confirmButton: 'Grant by Default',
+            cancelButton: 'Cancel',
+            mismatchError: 'Team name does not match.',
         },
         entityDeactivationText: {
             title: 'Deactivate Team',

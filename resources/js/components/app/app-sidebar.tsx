@@ -17,7 +17,7 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     { title: 'Repository', href: 'https://github.com/gillyware/gatekeeper', icon: Folder },
-    { title: 'Documentation', href: 'https://github.com/gillyware/gatekeeper/blob/main/README.md#official-documentation', icon: BookOpen },
+    { title: 'Documentation', href: 'https://github.com/gillyware/gatekeeper?tab=readme-ov-file#official-documentation', icon: BookOpen },
 ];
 
 export function AppSidebar() {

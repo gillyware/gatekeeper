@@ -2,10 +2,9 @@
 
 namespace Gillyware\Gatekeeper\Traits;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
+use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Facades\Config;
 
 trait InteractsWithTeams
 {
@@ -14,7 +13,7 @@ trait InteractsWithTeams
      */
     public function teams(): MorphToMany
     {
-        $modelHasTeamsTable = Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS);
+        $modelHasTeamsTable = (new ModelHasTeam)->getTable();
 
         return $this->morphToMany(Team::class, 'model', $modelHasTeamsTable, 'model_id', 'team_id');
     }

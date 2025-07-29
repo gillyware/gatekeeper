@@ -1,7 +1,7 @@
 {
     "name": "gillyware/gatekeeper",
     "description": "Gatekeeper provides an expressive, fluent interface for access control.",
-    "keywords": ["laravel", "permissions", "roles", "teams", "access control", "authorization"],
+    "keywords": ["laravel", "permissions", "roles", "features", "teams", "access control", "authorization"],
     "license": "MIT",
     "authors": [
         {

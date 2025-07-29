@@ -1,5 +1,15 @@
 import { ConfiguredModelMetadata } from '@/types/api/model';
-import { type Feature, type ModelFeatureAssignment, type Permission, type Role, type Team } from '@/types/models';
+import {
+    type Feature,
+    type ModelFeatureAssignment,
+    type ModelFeatureDenial,
+    type ModelPermissionDenial,
+    type ModelRoleDenial,
+    type ModelTeamDenial,
+    type Permission,
+    type Role,
+    type Team,
+} from '@/types/models';
 import { LucideIcon } from 'lucide-react';
 
 export type GatekeeperSharedData = {
@@ -57,6 +67,13 @@ export type GatekeeperModelEntityAssignmentMap = {
     role: ModelRoleAssignment;
     feature: ModelFeatureAssignment;
     team: ModelTeamAssignment;
+};
+
+export type GatekeeperModelEntityDenialMap = {
+    permission: ModelPermissionDenial;
+    role: ModelRoleDenial;
+    feature: ModelFeatureDenial;
+    team: ModelTeamDenial;
 };
 
 export type GatekeeperEntityModelMap = {

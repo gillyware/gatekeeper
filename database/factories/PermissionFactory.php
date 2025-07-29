@@ -27,6 +27,7 @@ class PermissionFactory extends Factory
         return [
             'name' => fake()->unique()->word(),
             'is_active' => true,
+            'grant_by_default' => false,
         ];
     }
 
@@ -51,6 +52,18 @@ class PermissionFactory extends Factory
     {
         return $this->state([
             'is_active' => false,
+        ]);
+    }
+
+    /**
+     * Mark the permission as granted by default.
+     *
+     * @return $this
+     */
+    public function grantByDefault(): static
+    {
+        return $this->state([
+            'grant_by_default' => true,
         ]);
     }
 }

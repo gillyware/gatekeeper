@@ -1,4 +1,5 @@
 import { useGatekeeper } from '@/context/GatekeeperContext';
+import { useModel } from '@/context/ModelContext';
 import { manageModelText, type ModelManagementTabsText } from '@/lib/lang/en/model/manage';
 import { getEntitySupportForModel } from '@/lib/models';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ interface Tab {
 
 export default function ModelManagementTabs({ tab, changeTab, model }: ModelManagementTabsProps) {
     const { config } = useGatekeeper();
+    const { refreshModel } = useModel();
     const entitySupport: ModelEntitySupport = useMemo(() => getEntitySupportForModel(config, model), [config, model]);
 
     const showPermissiosnTab = entitySupport.permission.supported || model.access_sources.direct_permissions_count > 0;
@@ -42,8 +44,11 @@ export default function ModelManagementTabs({ tab, changeTab, model }: ModelMana
             {tabs.map(({ value, icon: Icon, label }) => (
                 <button
                     key={value}
-                    onClick={() => {
+                    onClick={async () => {
                         if (tab === value) return;
+                        if (value === 'overview') {
+                            await refreshModel();
+                        }
                         changeTab(value);
                     }}
                     className={cn(

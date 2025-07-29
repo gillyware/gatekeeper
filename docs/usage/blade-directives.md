@@ -2,10 +2,11 @@
 
 - [Permission Directives](#permission-directives)
 - [Role Directives](#role-directives)
+- [Feature Directives](#feature-directives)
 - [Team Directives](#team-directives)
 - [Next Steps](#next-steps)
 
-Gatekeeper provides several Blade directives to simplify conditional rendering based on a user's permissions, roles, or team assignments. Each directive can be used in two ways:
+Gatekeeper provides several Blade directives to simplify conditional rendering based on a user's permissions, roles, features, or team assignments. Each directive can be used in two ways:
 
 - With a model explicitly provided
 
@@ -107,6 +108,48 @@ Renders if the model has all of the given roles.
 @endhasAllRoles
 ```
 
+<a name="feature-directives"></a>
+## Feature Directives
+
+> [!NOTE]
+> The parameter types match the corresponding functions [here](features.md#check-model-has-feature).
+
+`@hasFeature($feature)`
+
+`@hasFeature($model, $feature)`
+
+Renders if the model has the specified feature.
+
+```blade
+@hasFeature('child_tracking')
+    <p>Welcome!</p>
+@endhasFeature
+```
+
+`@hasAnyFeature($features)`
+
+`@hasAnyFeature($model, $features)`
+
+Renders if the model has any of the given features.
+
+```blade
+@hasAnyFeature(['pumping_tracking', 'child_tracking'])
+    <p>You have access.</p>
+@endhasAnyFeature
+```
+
+`@hasAllFeatures($features)`
+
+`@hasAllFeatures($model, $features)`
+
+Renders if the model has all of the given features.
+
+```blade
+@hasAllFeatures(['pumping_tracking', 'child_tracking'])
+    <p>Hey there!</p>
+@endhasAllFeatures
+```
+
 <a name="team-directives"></a>
 ## Team Directives
 
@@ -165,4 +208,4 @@ Manage Entities and Assignments:
 - [Artisan Commands](artisan-commands.md)
 
 Track Entity and Entity Assignment Changes:
-- [Audit Logging]('audit-logging.md')
+- [Audit Logging](audit-logging.md)

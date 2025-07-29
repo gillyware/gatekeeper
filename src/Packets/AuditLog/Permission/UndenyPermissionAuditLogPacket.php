@@ -1,14 +1,14 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Packets\AuditLog\Feature;
+namespace Gillyware\Gatekeeper\Packets\AuditLog\Permission;
 
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Packets\AuditLog\AbstractBaseEntityAssignmentAuditLogPacket;
 
-final class RevokeFeatureAuditLogPacket extends AbstractBaseEntityAssignmentAuditLogPacket
+final class UndenyPermissionAuditLogPacket extends AbstractBaseEntityAssignmentAuditLogPacket
 {
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::RevokeFeature;
+        return AuditLogAction::UndenyPermission;
     }
 }

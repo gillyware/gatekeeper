@@ -2,10 +2,9 @@
 
 namespace Gillyware\Gatekeeper\Traits;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Models\Feature;
+use Gillyware\Gatekeeper\Models\ModelHasFeature;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Facades\Config;
 
 trait InteractsWithFeatures
 {
@@ -14,7 +13,7 @@ trait InteractsWithFeatures
      */
     public function features(): MorphToMany
     {
-        $modelHasFeaturesTable = Config::get('gatekeeper.tables.model_has_features', GatekeeperConfigDefault::TABLES_MODEL_HAS_FEATURES);
+        $modelHasFeaturesTable = (new ModelHasFeature)->getTable();
 
         return $this->morphToMany(Feature::class, 'model', $modelHasFeaturesTable, 'model_id', 'feature_id');
     }

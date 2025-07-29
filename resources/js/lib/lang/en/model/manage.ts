@@ -1,5 +1,5 @@
 import { type GatekeeperEntity } from '@/types';
-import { type FeatureSource, type PermissionSource, type RoleSource } from '@/types/api/model';
+import { type FeatureSource, type PermissionSource, type RoleSource, type TeamSource } from '@/types/api/model';
 
 export interface ManageModelText {
     failedToLoad: string;
@@ -15,6 +15,7 @@ export interface ModelSummaryText {
     effectivePermissionsText: ModelEffectivePermissionsText;
     effectiveRolesText: ModelEffectiveRolesText;
     effectiveFeaturesText: ModelEffectiveFeaturesText;
+    effectiveTeamsText: ModelEffectiveTeamsText;
 }
 
 export interface ModelManagementTabsText {
@@ -84,24 +85,38 @@ export interface ModelEffectiveFeaturesText {
     empty: string;
 }
 
+export interface ModelEffectiveTeamsText {
+    title: string;
+    titleTooltip: string;
+    toggleAllTooltip: (allOpen: boolean) => string;
+    searchPlaceholder: string;
+    sourceLabel: (source: TeamSource) => string;
+    empty: string;
+}
+
 export type ModelEntityTablesText = {
     actionHeader: string;
+    nameHeader: string;
+    grantedByDefaultHeader: string;
+    statusHeader: string;
     assignedDateTimeHeader: string;
+    assign: string;
+    unassign: string;
+    deny: string;
+    undeny: string;
     previous: string;
     next: string;
     pagination: (from: number, to: number, total: number) => string;
 } & Record<GatekeeperEntity, EntitySpecificModelEntityTablesText>;
 
 interface EntitySpecificModelEntityTablesText {
-    assign: string;
-    revoke: string;
     assignedHeader: string;
     unassignedHeader: string;
+    deniedHeader: string;
     searchPlaceholder: string;
-    nameHeader: string;
-    statusHeader: string;
     assignedEmpty: string;
     unassignedEmpty: string;
+    deniedEmpty: string;
 }
 
 export const manageModelText: ManageModelText = {
@@ -149,15 +164,19 @@ export const manageModelText: ManageModelText = {
         },
         effectivePermissionsText: {
             title: 'Effective Permissions',
-            titleTooltip: 'All permissions this model currently has — whether assigned directly, via roles, or via teams',
+            titleTooltip: 'All permissions this model currently has, whether assigned directly, via roles, via teams, or granted by default',
             toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
             searchPlaceholder: 'Search permissions by name',
             sourceLabel: (source: PermissionSource) => {
                 switch (source.type) {
+                    case 'default':
+                        return 'Granted by Default';
                     case 'direct':
                         return 'Direct';
                     case 'role':
                         return `Role: ${source.role}`;
+                    case 'feature':
+                        return `Feature: ${source.feature}`;
                     case 'team':
                         return `Team: ${source.team}`;
                     case 'team-role':
@@ -170,11 +189,13 @@ export const manageModelText: ManageModelText = {
         },
         effectiveRolesText: {
             title: 'Effective Roles',
-            titleTooltip: 'All roles this model currently has — whether assigned directly or via teams',
+            titleTooltip: 'All roles this model currently has, whether assigned directly, via teams, or granted by default',
             toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
             searchPlaceholder: 'Search roles by name',
             sourceLabel: (source: RoleSource) => {
                 switch (source.type) {
+                    case 'default':
+                        return 'Granted by Default';
                     case 'direct':
                         return 'Direct';
                     case 'team':
@@ -187,73 +208,89 @@ export const manageModelText: ManageModelText = {
         },
         effectiveFeaturesText: {
             title: 'Effective Features',
-            titleTooltip: 'All features this model currently has — whether turned on directly, via teams, or on by default',
+            titleTooltip: 'All features this model currently has, whether assigned directly, via teams, or granted by default',
             toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
             searchPlaceholder: 'Search features by name',
             sourceLabel: (source: FeatureSource) => {
                 switch (source.type) {
+                    case 'default':
+                        return 'Granted by Default';
                     case 'direct':
                         return 'Direct';
                     case 'team':
                         return `Team: ${source.team}`;
-                    case 'default':
-                        return 'Default';
                     default:
                         return 'Unknown';
                 }
             },
             empty: 'This model has no effective features.',
         },
+        effectiveTeamsText: {
+            title: 'Effective Teams',
+            titleTooltip: 'All teams this model is currently on, whether turned on directly or granted by default',
+            toggleAllTooltip: (allOpen: boolean) => (allOpen ? 'Close All' : 'Open All'),
+            searchPlaceholder: 'Search teams by name',
+            sourceLabel: (source: TeamSource) => {
+                switch (source.type) {
+                    case 'default':
+                        return 'Granted by Default';
+                    case 'direct':
+                        return 'Direct';
+                    default:
+                        return 'Unknown';
+                }
+            },
+            empty: 'This model has no effective teams.',
+        },
     },
     modelEntityTablesText: {
         actionHeader: 'Action',
+        nameHeader: 'Name',
+        statusHeader: 'Status',
+        grantedByDefaultHeader: 'Default',
         assignedDateTimeHeader: 'Assigned Date/Time',
+        assign: 'Assign',
+        unassign: 'Unassign',
+        deny: 'Deny',
+        undeny: 'Undeny',
         previous: 'Previous',
         next: 'Next',
         pagination: (from: number, to: number, total: number) => `${from} to ${to} of ${total}`,
         permission: {
-            assign: 'Assign',
-            revoke: 'Revoke',
             assignedHeader: 'Assigned Permissions',
             unassignedHeader: 'Unassigned Permissions',
+            deniedHeader: 'Denied Permissions',
             searchPlaceholder: 'Search by permission name',
-            nameHeader: 'Permission Name',
-            statusHeader: 'Permission Status',
             assignedEmpty: 'No permissions assigned.',
             unassignedEmpty: 'No unassigned permissions.',
+            deniedEmpty: 'No denied permissions.',
         },
         role: {
-            assign: 'Assign',
-            revoke: 'Revoke',
             assignedHeader: 'Assigned Roles',
             unassignedHeader: 'Unassigned Roles',
+            deniedHeader: 'Denied Roles',
             searchPlaceholder: 'Search by role name',
-            nameHeader: 'Role Name',
-            statusHeader: 'Role Status',
             assignedEmpty: 'No roles assigned.',
             unassignedEmpty: 'No unassigned roles.',
+            deniedEmpty: 'No denied roles.',
         },
         feature: {
-            assign: 'Turn On',
-            revoke: 'Turn Off',
             assignedHeader: 'Assigned Features',
             unassignedHeader: 'Unassigned Features',
+            deniedHeader: 'Denied Features',
             searchPlaceholder: 'Search by feature name',
-            nameHeader: 'Feature Name',
-            statusHeader: 'Feature Status',
             assignedEmpty: 'No features assigned.',
             unassignedEmpty: 'No unassigned features.',
+            deniedEmpty: 'No denied features',
         },
         team: {
-            assign: 'Assign',
-            revoke: 'Revoke',
             assignedHeader: 'Assigned Teams',
             unassignedHeader: 'Unassigned Teams',
+            deniedHeader: 'Denied Teams',
             searchPlaceholder: 'Search by team name',
-            nameHeader: 'Team Name',
-            statusHeader: 'Team Status',
             assignedEmpty: 'No teams assigned.',
             unassignedEmpty: 'No unassigned teams.',
+            deniedEmpty: 'No denied teams.',
         },
     },
 };

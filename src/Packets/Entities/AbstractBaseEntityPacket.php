@@ -19,6 +19,9 @@ abstract class AbstractBaseEntityPacket extends Packet
 
         #[Field('is_active'), Rule('required|boolean')]
         public readonly bool $isActive,
+
+        #[Field('grant_by_default'), Rule('required|boolean')]
+        public readonly bool $grantedByDefault,
     ) {}
 
     public function toArray(): array
@@ -27,6 +30,7 @@ abstract class AbstractBaseEntityPacket extends Packet
             'id' => $this->id,
             'name' => $this->name,
             'is_active' => $this->isActive,
+            'grant_by_default' => $this->grantedByDefault,
         ];
     }
 

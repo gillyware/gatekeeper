@@ -137,7 +137,7 @@ return [
                 ],
                 'displayable' => [
                     ['column' => 'name', 'label' => 'Name', 'cli_width' => 20],
-                    ['column' => 'default_enabled', 'label' => 'On By Default', 'cli_width' => 20],
+                    ['column' => 'grant_by_default', 'label' => 'On By Default', 'cli_width' => 20],
                     ['column' => 'is_active', 'label' => 'Active', 'cli_width' => 15],
                 ],
             ],

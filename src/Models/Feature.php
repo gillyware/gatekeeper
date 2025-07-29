@@ -10,25 +10,10 @@ use Illuminate\Support\Facades\Config;
 
 /**
  * @extends AbstractBaseEntityModel<FeatureFactory, FeaturePacket>
- *
- * @property bool $default_enabled
  */
 class Feature extends AbstractBaseEntityModel
 {
     use HasPermissions;
-
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'is_active' => 'boolean',
-        'default_enabled' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
-    ];
 
     protected static function newFactory(): FeatureFactory
     {

@@ -12,7 +12,7 @@ class CacheService implements CacheServiceInterface
     public function __construct(private readonly CacheRepository $cacheRepository) {}
 
     /**
-     * Clear the entire Gatekeeper cache.
+     * {@inheritDoc}
      */
     public function clear(): void
     {
@@ -20,7 +20,7 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Retrieve all permissions from the cache.
+     * {@inheritDoc}
      */
     public function getAllPermissions(): ?Collection
     {
@@ -28,7 +28,7 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Store all permissions in the cache.
+     * {@inheritDoc}
      */
     public function putAllPermissions(Collection $permissions): void
     {
@@ -36,23 +36,23 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Retrieve permission names for a specific model from the cache.
+     * {@inheritDoc}
      */
-    public function getModelPermissionNames(Model $model): ?Collection
+    public function getModelPermissionLinks(Model $model): ?Collection
     {
         return $this->cacheRepository->get($this->getModelPermissionsCacheKey($model));
     }
 
     /**
-     * Store permission names for a specific model in the cache.
+     * {@inheritDoc}
      */
-    public function putModelPermissionNames(Model $model, Collection $permissionNames): void
+    public function putModelPermissionLinks(Model $model, Collection $permissionLinks): void
     {
-        $this->cacheRepository->put($this->getModelPermissionsCacheKey($model), $permissionNames);
+        $this->cacheRepository->put($this->getModelPermissionsCacheKey($model), $permissionLinks);
     }
 
     /**
-     * Invalidate the cache for all permissions.
+     * {@inheritDoc}
      */
     public function invalidateCacheForAllPermissions(): void
     {
@@ -60,15 +60,15 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Invalidate the cache for a specific model's permission names.
+     * {@inheritDoc}
      */
-    public function invalidateCacheForModelPermissionNames(Model $model): void
+    public function invalidateCacheForModelPermissionLinks(Model $model): void
     {
         $this->cacheRepository->forget($this->getModelPermissionsCacheKey($model));
     }
 
     /**
-     * Retrieve all roles from the cache.
+     * {@inheritDoc}
      */
     public function getAllRoles(): ?Collection
     {
@@ -76,7 +76,7 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Store all roles in the cache.
+     * {@inheritDoc}
      */
     public function putAllRoles(Collection $roles): void
     {
@@ -84,39 +84,39 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Retrieve role names for a specific model from the cache.
+     * {@inheritDoc}
      */
-    public function getModelRoleNames(Model $model): ?Collection
+    public function getModelRoleLinks(Model $model): ?Collection
     {
         return $this->cacheRepository->get($this->getModelRolesCacheKey($model));
     }
 
     /**
-     * Store role names for a specific model in the cache.
+     * {@inheritDoc}
      */
-    public function putModelRoleNames(Model $model, Collection $roleNames): void
+    public function putModelRoleLinks(Model $model, Collection $roleLinks): void
     {
-        $this->cacheRepository->put($this->getModelRolesCacheKey($model), $roleNames);
+        $this->cacheRepository->put($this->getModelRolesCacheKey($model), $roleLinks);
     }
 
     /**
-     * Invalidate the cache for all roles.
+     * {@inheritDoc}
      */
-    public function invalidateCacheForAllRoles(): void
+    public function invalidateCacheForAllLinks(): void
     {
         $this->cacheRepository->forget($this->getAllRolesCacheKey());
     }
 
     /**
-     * Invalidate the cache for a specific model's role names.
+     * {@inheritDoc}
      */
-    public function invalidateCacheForModelRoleNames(Model $model): void
+    public function invalidateCacheForModelRoleLinks(Model $model): void
     {
         $this->cacheRepository->forget($this->getModelRolesCacheKey($model));
     }
 
     /**
-     * Retrieve all features from the cache.
+     * {@inheritDoc}
      */
     public function getAllFeatures(): ?Collection
     {
@@ -124,7 +124,7 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Store all features in the cache.
+     * {@inheritDoc}
      */
     public function putAllFeatures(Collection $features): void
     {
@@ -132,23 +132,23 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Retrieve feature names for a specific model from the cache.
+     * {@inheritDoc}
      */
-    public function getModelFeatureNames(Model $model): ?Collection
+    public function getModelFeatureLinks(Model $model): ?Collection
     {
         return $this->cacheRepository->get($this->getModelFeaturesCacheKey($model));
     }
 
     /**
-     * Store feature names for a specific model in the cache.
+     * {@inheritDoc}
      */
-    public function putModelFeatureNames(Model $model, Collection $featureNames): void
+    public function putModelFeatureLinks(Model $model, Collection $featureLinks): void
     {
-        $this->cacheRepository->put($this->getModelFeaturesCacheKey($model), $featureNames);
+        $this->cacheRepository->put($this->getModelFeaturesCacheKey($model), $featureLinks);
     }
 
     /**
-     * Invalidate the cache for all features.
+     * {@inheritDoc}
      */
     public function invalidateCacheForAllFeatures(): void
     {
@@ -156,15 +156,15 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Invalidate the cache for a specific model's feature names.
+     * {@inheritDoc}
      */
-    public function invalidateCacheForModelFeatureNames(Model $model): void
+    public function invalidateCacheForModelFeatureLinks(Model $model): void
     {
         $this->cacheRepository->forget($this->getModelFeaturesCacheKey($model));
     }
 
     /**
-     * Retrieve all teams from the cache.
+     * {@inheritDoc}
      */
     public function getAllTeams(): ?Collection
     {
@@ -172,7 +172,7 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Store all teams in the cache.
+     * {@inheritDoc}
      */
     public function putAllTeams(Collection $teams): void
     {
@@ -180,23 +180,23 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Retrieve team names for a specific model from the cache.
+     * {@inheritDoc}
      */
-    public function getModelTeamNames(Model $model): ?Collection
+    public function getModelTeamLinks(Model $model): ?Collection
     {
         return $this->cacheRepository->get($this->getModelTeamsCacheKey($model));
     }
 
     /**
-     * Store team names for a specific model in the cache.
+     * {@inheritDoc}
      */
-    public function putModelTeamNames(Model $model, Collection $teamNames): void
+    public function putModelTeamLinks(Model $model, Collection $teamLinks): void
     {
-        $this->cacheRepository->put($this->getModelTeamsCacheKey($model), $teamNames);
+        $this->cacheRepository->put($this->getModelTeamsCacheKey($model), $teamLinks);
     }
 
     /**
-     * Invalidate the cache for all teams.
+     * {@inheritDoc}
      */
     public function invalidateCacheForAllTeams(): void
     {
@@ -204,9 +204,9 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Invalidate the cache for a specific model's team names.
+     * {@inheritDoc}
      */
-    public function invalidateCacheForModelTeamNames(Model $model): void
+    public function invalidateCacheForModelTeamLinks(Model $model): void
     {
         $this->cacheRepository->forget($this->getModelTeamsCacheKey($model));
     }

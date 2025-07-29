@@ -101,14 +101,14 @@ class TeamRepositoryTest extends TestCase
         $this->assertTrue($this->repository->exists($name));
     }
 
-    public function test_update_team_updates_name_and_clears_cache()
+    public function test_update_team_name_updates_name_and_clears_cache()
     {
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
 
         $this->cacheService->expects($this->once())->method('clear');
 
-        $updatedTeam = $this->repository->update($team, $newName);
+        $updatedTeam = $this->repository->updateName($team, $newName);
 
         $this->assertEquals($newName, $updatedTeam->name);
     }
@@ -181,170 +181,26 @@ class TeamRepositoryTest extends TestCase
         );
     }
 
-    public function test_active_returns_only_active_teams()
-    {
-        $inactive = Team::factory()->count(2)->inactive()->create();
-        $active = Team::factory()->count(2)->create();
-
-        $all = $inactive->concat($active);
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn($all);
-
-        $result = $this->repository->active();
-
-        $this->assertEqualsCanonicalizing(
-            $active->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_teams()
-    {
-        $teams = Team::factory()->count(3)->create();
-        $names = $teams->pluck('name');
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn($teams);
-
-        $result = $this->repository->whereNameIn($names);
-
-        $this->assertCount(3, $result);
-        $this->assertEqualsCanonicalizing(
-            $teams->pluck('id')->toArray(),
-            $result->pluck('id')->toArray()
-        );
-    }
-
-    public function test_where_name_in_returns_empty_collection_when_no_matches()
-    {
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect());
-
-        $result = $this->repository->whereNameIn(['nonexistent']);
-
-        $this->assertCount(0, $result);
-    }
-
-    public function test_get_all_team_names_for_model_caches_result()
+    public function test_get_assigned_teams_for_model_caches_result()
     {
         $user = User::factory()->create();
         $team = Team::factory()->create();
         $user->teams()->attach($team);
 
         $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
+            ->method('getModelTeamLinks')
             ->with($user)
             ->willReturn(null);
 
         $this->cacheService->expects($this->once())
-            ->method('putModelTeamNames')
-            ->with($user, collect([$team->name]));
+            ->method('putModelTeamLinks')
+            ->with($user, collect([[
+                'name' => $team->name,
+                'denied' => 0,
+            ]]));
 
-        $names = $this->repository->namesForModel($user);
+        $teams = $this->repository->assignedToModel($user);
 
-        $this->assertContains($team->name, $names->toArray());
-    }
-
-    public function test_get_all_teams_for_model_returns_teams()
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $user->teams()->attach($team);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
-            ->with($user)
-            ->willReturn(collect([$team->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect([$team->name => $team]));
-
-        $teams = $this->repository->forModel($user);
-
-        $this->assertCount(1, $teams);
-        $this->assertTrue($teams->first()->is($team));
-    }
-
-    public function test_get_all_teams_for_model_returns_empty_when_no_teams()
-    {
-        $user = User::factory()->create();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect());
-
-        $teams = $this->repository->forModel($user);
-
-        $this->assertCount(0, $teams);
-    }
-
-    public function test_active_for_model_returns_active_teams()
-    {
-        $user = User::factory()->create();
-        $activeTeam = Team::factory()->create();
-        $inactiveTeam = Team::factory()->inactive()->create();
-
-        $user->teams()->attach([$activeTeam->id, $inactiveTeam->id]);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
-            ->with($user)
-            ->willReturn(collect([$activeTeam->name, $inactiveTeam->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect([$activeTeam, $inactiveTeam]));
-
-        $teams = $this->repository->activeForModel($user);
-
-        $this->assertCount(1, $teams);
-        $this->assertTrue($teams->first()->is($activeTeam));
-    }
-
-    public function test_find_by_name_for_model_returns_team()
-    {
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $user->teams()->attach($team);
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
-            ->with($user)
-            ->willReturn(collect([$team->name]));
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect([$team->name => $team]));
-
-        $result = $this->repository->findByNameForModel($user, $team->name);
-        $this->assertTrue($result->is($team));
-    }
-
-    public function test_find_by_name_for_model_returns_null_if_not_found()
-    {
-        $user = User::factory()->create();
-        $teamName = fake()->unique()->word();
-
-        $this->cacheService->expects($this->once())
-            ->method('getModelTeamNames')
-            ->with($user)
-            ->willReturn(collect());
-
-        $this->cacheService->expects($this->once())
-            ->method('getAllTeams')
-            ->willReturn(collect());
-
-        $result = $this->repository->findByNameForModel($user, $teamName);
-        $this->assertNull($result);
+        $this->assertEquals($team->name, $teams->first()->name);
     }
 }

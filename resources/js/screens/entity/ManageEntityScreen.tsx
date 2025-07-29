@@ -2,16 +2,15 @@ import DeactivateEntity from '@/components/entity/DeactivateEntity';
 import DeleteEntity from '@/components/entity/DeleteEntity';
 import EntityForm from '@/components/entity/EntityForm';
 import EntitySummary from '@/components/entity/EntitySummary';
+import GrantEntityByDefault from '@/components/entity/GrantEntityByDefault';
 import ReactivateEntity from '@/components/entity/ReactivateEntity';
-import TurnOffByDefaultEntity from '@/components/entity/TurnOffByDefaultEntity';
-import TurnOnByDefaultEntity from '@/components/entity/TurnOnByDefaultEntity';
+import RevokeEntityDefaultGrant from '@/components/entity/RevokeEntityDefaultGrant';
 import EntityLayout from '@/layouts/entity-layout';
 import GatekeeperLayout from '@/layouts/gatekeeper-layout';
 import { useApi } from '@/lib/api';
 import { getEntity } from '@/lib/entities';
 import { manageEntityText, type ManageEntityText } from '@/lib/lang/en/entity/manage';
-import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
-import { type Feature } from '@/types/models';
+import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { Loader } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
@@ -55,20 +54,11 @@ export default function ManageEntityScreen<E extends GatekeeperEntity>({ entity 
                     <EntityForm<E> formType="update" entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
                 </div>
 
-                {entity === 'feature' &&
-                    ((entityModel as Feature).default_enabled ? (
-                        <TurnOffByDefaultEntity<GatekeeperFeature>
-                            entity={entity}
-                            entityModel={entityModel as Feature}
-                            updateEntity={setEntityModel}
-                        />
-                    ) : (
-                        <TurnOnByDefaultEntity<GatekeeperFeature>
-                            entity={entity}
-                            entityModel={entityModel as Feature}
-                            updateEntity={setEntityModel}
-                        />
-                    ))}
+                {entityModel.grant_by_default ? (
+                    <RevokeEntityDefaultGrant<E> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
+                ) : (
+                    <GrantEntityByDefault<E> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />
+                )}
 
                 {entityModel.is_active ? (
                     <DeactivateEntity<E> entity={entity} entityModel={entityModel} updateEntity={setEntityModel} />

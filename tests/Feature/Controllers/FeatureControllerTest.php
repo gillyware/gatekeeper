@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
@@ -41,6 +42,7 @@ class FeatureControllerTest extends TestCase
             'search_term' => '',
             'prioritized_attribute' => 'name',
             'name_order' => 'asc',
+            'grant_by_default_order' => 'asc',
             'is_active_order' => 'desc',
         ]))
             ->assertStatus(Response::HTTP_OK)
@@ -79,37 +81,46 @@ class FeatureControllerTest extends TestCase
             ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function test_update_feature()
+    public function test_update_feature_name()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $feature = Feature::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
-        $this->putJson(route('gatekeeper.api.features.update', ['feature' => $feature]), ['name' => 'new.name'])
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), [
+            'action' => EntityUpdateAction::Name->value,
+            'value' => 'new.name',
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['name' => 'new.name']);
     }
 
-    public function test_turn_feature_off_by_default()
-    {
-        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
-        $feature = Feature::factory()->defaultOn()->create();
-        $this->cacheRepository->clear();
-
-        $this->patchJson(route('gatekeeper.api.features.default-off', ['feature' => $feature]))
-            ->assertStatus(Response::HTTP_OK)
-            ->assertJson(['default_enabled' => false]);
-    }
-
-    public function test_turn_feature_on_by_default()
+    public function test_grant_feature_by_default()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $feature = Feature::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.features.default-on', ['feature' => $feature]))
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => true,
+        ])
             ->assertStatus(Response::HTTP_OK)
-            ->assertJson(['default_enabled' => true]);
+            ->assertJson(['grant_by_default' => true]);
+    }
+
+    public function test_revoke_feature_default_grant()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $feature = Feature::factory()->grantByDefault()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => false,
+        ])
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['grant_by_default' => false]);
     }
 
     public function test_deactivate_feature()
@@ -118,7 +129,10 @@ class FeatureControllerTest extends TestCase
         $feature = Feature::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.features.deactivate', ['feature' => $feature]))
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => false,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => false]);
     }
@@ -129,7 +143,10 @@ class FeatureControllerTest extends TestCase
         $feature = Feature::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.features.reactivate', ['feature' => $feature]))
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => true,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => true]);
     }
@@ -152,9 +169,7 @@ class FeatureControllerTest extends TestCase
         $this->cacheRepository->clear();
 
         $this->postJson(route('gatekeeper.api.features.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->putJson(route('gatekeeper.api.features.update', ['feature' => $feature]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.features.deactivate', ['feature' => $feature]))->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.features.reactivate', ['feature' => $feature]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.features.update', ['feature' => $feature]), ['action' => EntityUpdateAction::Name->value, 'value' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
         $this->deleteJson(route('gatekeeper.api.features.delete', ['feature' => $feature]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

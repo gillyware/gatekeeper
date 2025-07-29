@@ -2,7 +2,7 @@ import { type EntityFormType } from '@/components/entity/EntityForm';
 import { useApi } from '@/lib/api';
 import { apiText } from '@/lib/lang/en/api';
 import { flattenStrings } from '@/lib/utils';
-import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperFeature } from '@/types';
+import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import { type EntityPageRequest, type ShowEntityRequest } from '@/types/api/entity';
 import { type ConfiguredModelMetadata } from '@/types/api/model';
@@ -108,10 +108,10 @@ export async function persistEntity<E extends GatekeeperEntity>(
             team: () => api.storeTeam({ name }),
         },
         update: {
-            permission: () => api.updatePermission({ id: entityId, name }),
-            role: () => api.updateRole({ id: entityId, name }),
-            feature: () => api.updateFeature({ id: entityId, name }),
-            team: () => api.updateTeam({ id: entityId, name }),
+            permission: () => api.updatePermissionName({ id: entityId, name }),
+            role: () => api.updateRoleName({ id: entityId, name }),
+            feature: () => api.updateFeatureName({ id: entityId, name }),
+            team: () => api.updateTeamName({ id: entityId, name }),
         },
     };
 
@@ -129,9 +129,9 @@ export async function persistEntity<E extends GatekeeperEntity>(
     setProcessing(false);
 }
 
-export async function turnEntityOffByDefault<E extends GatekeeperFeature>(
+export async function revokeEntityDefaultGrant<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,
-    entity: GatekeeperFeature,
+    entity: GatekeeperEntity,
     entityId: number,
     setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
     setProcessing: (processing: boolean) => void,
@@ -140,15 +140,18 @@ export async function turnEntityOffByDefault<E extends GatekeeperFeature>(
     setProcessing(true);
     setError(null);
 
-    const turnOffByDefault = {
-        feature: () => api.turnFeatureOffByDefault({ id: entityId }),
+    const revokeDefaultGrant = {
+        permission: () => api.revokePermissionDefaultGrant({ id: entityId }),
+        role: () => api.revokeRoleDefaultGrant({ id: entityId }),
+        feature: () => api.revokeFeatureDefaultGrant({ id: entityId }),
+        team: () => api.revokeTeamDefaultGrant({ id: entityId }),
     };
 
-    const response = await turnOffByDefault[entity]();
+    const response = await revokeDefaultGrant[entity]();
 
     if (response.status >= 400) {
         const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
-        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOffByDefaultError);
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].revokeDefaultGrantError);
         setProcessing(false);
         return;
     }
@@ -158,9 +161,9 @@ export async function turnEntityOffByDefault<E extends GatekeeperFeature>(
     setProcessing(false);
 }
 
-export async function turnEntityOnByDefault<E extends GatekeeperFeature>(
+export async function grantEntityByDefault<E extends GatekeeperEntity>(
     api: ReturnType<typeof useApi>,
-    entity: GatekeeperFeature,
+    entity: GatekeeperEntity,
     entityId: number,
     setEntityModel: (entityModel: GatekeeperEntityModelMap[E]) => void,
     setProcessing: (processing: boolean) => void,
@@ -169,15 +172,18 @@ export async function turnEntityOnByDefault<E extends GatekeeperFeature>(
     setProcessing(true);
     setError(null);
 
-    const turnOnByDefault = {
-        feature: () => api.turnFeatureOnByDefault({ id: entityId }),
+    const grantByDefault = {
+        permission: () => api.grantPermissionByDefault({ id: entityId }),
+        role: () => api.grantRoleByDefault({ id: entityId }),
+        feature: () => api.grantFeatureByDefault({ id: entityId }),
+        team: () => api.grantTeamByDefault({ id: entityId }),
     };
 
-    const response = await turnOnByDefault[entity]();
+    const response = await grantByDefault[entity]();
 
     if (response.status >= 400) {
         const errors: GatekeeperErrors = response.errors as GatekeeperErrors;
-        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].turnOnByDefaultError);
+        setError(flattenStrings(errors['name']) || errors['general'] || apiText.entities[entity].grantByDefaultError);
         setProcessing(false);
         return;
     }

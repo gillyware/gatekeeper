@@ -3,6 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Feature\Controllers;
 
 use Gillyware\Gatekeeper\Database\Seeders\GatekeeperPermissionsSeeder;
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
@@ -41,6 +42,7 @@ class TeamControllerTest extends TestCase
             'search_term' => '',
             'prioritized_attribute' => 'name',
             'name_order' => 'asc',
+            'grant_by_default_order' => 'asc',
             'is_active_order' => 'desc',
         ]))
             ->assertStatus(Response::HTTP_OK)
@@ -79,15 +81,46 @@ class TeamControllerTest extends TestCase
             ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function test_update_team()
+    public function test_update_team_name()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
         $team = Team::factory()->create(['name' => 'old.name']);
         $this->cacheRepository->clear();
 
-        $this->putJson(route('gatekeeper.api.teams.update', ['team' => $team]), ['name' => 'new.name'])
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), [
+            'action' => EntityUpdateAction::Name->value,
+            'value' => 'new.name',
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['name' => 'new.name']);
+    }
+
+    public function test_grant_team_by_default()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $team = Team::factory()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => true,
+        ])
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['grant_by_default' => true]);
+    }
+
+    public function test_revoke_team_default_grant()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+        $team = Team::factory()->grantByDefault()->create();
+        $this->cacheRepository->clear();
+
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), [
+            'action' => EntityUpdateAction::DefaultGrant->value,
+            'value' => false,
+        ])
+            ->assertStatus(Response::HTTP_OK)
+            ->assertJson(['grant_by_default' => false]);
     }
 
     public function test_deactivate_team()
@@ -96,7 +129,10 @@ class TeamControllerTest extends TestCase
         $team = Team::factory()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.teams.deactivate', ['team' => $team]))
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => false,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => false]);
     }
@@ -107,7 +143,10 @@ class TeamControllerTest extends TestCase
         $team = Team::factory()->inactive()->create();
         $this->cacheRepository->clear();
 
-        $this->patchJson(route('gatekeeper.api.teams.reactivate', ['team' => $team]))
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), [
+            'action' => EntityUpdateAction::Status->value,
+            'value' => true,
+        ])
             ->assertStatus(Response::HTTP_OK)
             ->assertJson(['is_active' => true]);
     }
@@ -130,9 +169,7 @@ class TeamControllerTest extends TestCase
         $this->cacheRepository->clear();
 
         $this->postJson(route('gatekeeper.api.teams.store'), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->putJson(route('gatekeeper.api.teams.update', ['team' => $team]), ['name' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.teams.deactivate', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
-        $this->patchJson(route('gatekeeper.api.teams.reactivate', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
+        $this->patchJson(route('gatekeeper.api.teams.update', ['team' => $team]), ['action' => EntityUpdateAction::Name->value, 'value' => fake()->word()])->assertStatus(Response::HTTP_BAD_REQUEST);
         $this->deleteJson(route('gatekeeper.api.teams.delete', ['team' => $team]))->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 }

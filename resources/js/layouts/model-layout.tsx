@@ -33,7 +33,7 @@ export default function ModelLayout({ children }: PropsWithChildren) {
     ].filter((x) => Boolean(x)) as NavItem[];
 
     return (
-        <div className="px-4 py-6">
+        <div className="px-2 py-6 sm:px-4">
             <Heading title={language.title} description={language.description} />
 
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">

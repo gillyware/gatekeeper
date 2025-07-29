@@ -52,66 +52,10 @@ class FeatureController extends AbstractBaseController
     /**
      * Update an existing feature.
      */
-    public function update(UpdateFeaturePacket $packet, Feature $feature): HttpFoundationResponse
+    public function update(Feature $feature, UpdateFeaturePacket $packet): HttpFoundationResponse
     {
         try {
-            $feature = $this->featureService->update($feature, $packet->name);
-
-            return Response::json($feature);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Turn feature off by default.
-     */
-    public function turnOffByDefault(Feature $feature): HttpFoundationResponse
-    {
-        try {
-            $feature = $this->featureService->turnOffByDefault($feature);
-
-            return Response::json($feature);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Turn feature on by default.
-     */
-    public function turnOnByDefault(Feature $feature): HttpFoundationResponse
-    {
-        try {
-            $feature = $this->featureService->turnOnByDefault($feature);
-
-            return Response::json($feature);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Deactivate a feature.
-     */
-    public function deactivate(Feature $feature): HttpFoundationResponse
-    {
-        try {
-            $feature = $this->featureService->deactivate($feature);
-
-            return Response::json($feature);
-        } catch (GatekeeperException $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
-
-    /**
-     * Reactivate a feature.
-     */
-    public function reactivate(Feature $feature): HttpFoundationResponse
-    {
-        try {
-            $feature = $this->featureService->reactivate($feature);
+            $feature = $this->featureService->update($feature, $packet);
 
             return Response::json($feature);
         } catch (GatekeeperException $e) {

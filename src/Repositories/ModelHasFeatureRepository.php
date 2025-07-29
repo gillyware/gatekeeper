@@ -2,7 +2,6 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\ModelHasFeature;
@@ -11,7 +10,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Config;
 
 /**
  * @implements ModelHasEntityRepositoryInterface<Feature, ModelHasFeature>
@@ -34,21 +32,77 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
     }
 
     /**
-     * Create a new model feature assigment.
+     * Assign a feature to a model.
      *
      * @param  Feature  $feature
      */
-    public function create(Model $model, $feature): ModelHasFeature
+    public function assignToModel(Model $model, $feature): ModelHasFeature
     {
-        $modelHasFeature = ModelHasFeature::create([
+        $modelHasFeature = ModelHasFeature::query()->updateOrCreate([
             'feature_id' => $feature->id,
             'model_type' => $model->getMorphClass(),
             'model_id' => $model->getKey(),
+        ], [
+            'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelFeatureNames($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
 
         return $modelHasFeature;
+    }
+
+    /**
+     * Delete all non-denied feature assignments for a given model and feature.
+     *
+     * @param  Feature  $feature
+     */
+    public function unassignFromModel(Model $model, $feature): bool
+    {
+        ModelHasFeature::forModel($model)
+            ->where('feature_id', $feature->id)
+            ->where('denied', false)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+
+        return true;
+    }
+
+    /**
+     * Deny a feature from a model.
+     *
+     * @param  Feature  $feature
+     */
+    public function denyFromModel(Model $model, $feature): ModelHasFeature
+    {
+        $modelHasFeature = ModelHasFeature::query()->updateOrCreate([
+            'feature_id' => $feature->id,
+            'model_type' => $model->getMorphClass(),
+            'model_id' => $model->getKey(),
+        ], [
+            'denied' => true,
+        ]);
+
+        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+
+        return $modelHasFeature;
+    }
+
+    /**
+     * Delete all denied feature assignments for a given model and feature.
+     *
+     * @param  Feature  $feature
+     */
+    public function undenyFromModel(Model $model, $feature): bool
+    {
+        ModelHasFeature::forModel($model)
+            ->where('feature_id', $feature->id)
+            ->where('denied', true)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+
+        return true;
     }
 
     /**
@@ -58,7 +112,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasFeature::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelFeatureNames($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
 
         return true;
     }
@@ -77,23 +131,9 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
                 $modelHasFeature->delete();
 
                 if ($modelHasFeature->model) {
-                    $this->cacheService->invalidateCacheForModelFeatureNames($modelHasFeature->model);
+                    $this->cacheService->invalidateCacheForModelFeatureLinks($modelHasFeature->model);
                 }
             });
-
-        return true;
-    }
-
-    /**
-     * Delete all feature assignments for a given model and feature.
-     *
-     * @param  Feature  $feature
-     */
-    public function deleteForModelAndEntity(Model $model, $feature): bool
-    {
-        ModelHasFeature::forModel($model)->where('feature_id', $feature->id)->delete();
-
-        $this->cacheService->invalidateCacheForModelFeatureNames($model);
 
         return true;
     }
@@ -103,23 +143,20 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $featuresTable = Config::get('gatekeeper.tables.features', GatekeeperConfigDefault::TABLES_FEATURES);
-        $modelFeaturesTable = Config::get('gatekeeper.tables.model_has_features', GatekeeperConfigDefault::TABLES_MODEL_HAS_FEATURES);
-
-        $query = ModelHasFeature::query()
-            ->select("$modelFeaturesTable.*")
-            ->join($featuresTable, "$featuresTable.id", '=', "$modelFeaturesTable.feature_id")
+        return ModelHasFeature::query()
+            ->select((new ModelHasFeature)->qualifyColumn('*'))
+            ->join((new Feature)->getTable(), (new Feature)->qualifyColumn('id'), '=', (new ModelHasFeature)->qualifyColumn('feature_id'))
             ->forModel($model)
-            ->whereIn('feature_id', function ($sub) use ($featuresTable, $packet) {
+            ->where('denied', false)
+            ->whereIn('feature_id', function ($sub) use ($packet) {
                 $sub->select('id')
-                    ->from($featuresTable)
+                    ->from((new Feature)->getTable())
                     ->whereLike('name', "%{$packet->searchTerm}%");
             })
-            ->orderByDesc("$featuresTable.is_active")
-            ->orderBy("$featuresTable.name")
-            ->with('feature:id,name,is_active');
-
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('feature:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
@@ -127,20 +164,38 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $modelFeaturesTable = Config::get('gatekeeper.tables.model_has_features', GatekeeperConfigDefault::TABLES_MODEL_HAS_FEATURES);
-
-        $query = Feature::query()
+        return Feature::query()
             ->whereLike('name', "%{$packet->searchTerm}%")
-            ->whereNotIn('id', function ($subquery) use ($model, $modelFeaturesTable) {
+            ->whereNotIn('id', function ($subquery) use ($model) {
                 $subquery->select('feature_id')
-                    ->from($modelFeaturesTable)
+                    ->from((new ModelHasFeature)->getTable())
                     ->where('model_type', $model->getMorphClass())
                     ->where('model_id', $model->getKey())
-                    ->whereNull("$modelFeaturesTable.deleted_at");
+                    ->whereNull((new ModelHasFeature)->qualifyColumn('deleted_at'));
             })
             ->orderByDesc('is_active')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->paginate(10, ['*'], 'page', $packet->page);
+    }
 
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+    /**
+     * Search denied features by feature name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        return ModelHasFeature::query()
+            ->select((new ModelHasFeature)->qualifyColumn('*'))
+            ->join((new Feature)->getTable(), (new Feature)->qualifyColumn('id'), '=', (new ModelHasFeature)->qualifyColumn('feature_id'))
+            ->forModel($model)
+            ->where('denied', true)
+            ->whereIn('feature_id', function ($sub) use ($packet) {
+                $sub->select('id')
+                    ->from((new Feature)->getTable())
+                    ->whereLike('name', "%{$packet->searchTerm}%");
+            })
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('feature:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 }

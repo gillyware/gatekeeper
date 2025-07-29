@@ -34,7 +34,6 @@ class TeamServiceTest extends TestCase
         Gatekeeper::setActor($this->user);
 
         $this->service = app(TeamService::class);
-        $this->service->actingAs($this->user);
     }
 
     public function test_create_team()
@@ -95,28 +94,28 @@ class TeamServiceTest extends TestCase
         $this->assertCount(0, AuditLog::all());
     }
 
-    public function test_update_team()
+    public function test_update_team_name()
     {
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedTeam = $this->service->update($team, $newName);
+        $updatedTeam = $this->service->updateName($team, $newName);
 
         $this->assertInstanceOf(TeamPacket::class, $updatedTeam);
         $this->assertEquals($newName, $updatedTeam->name);
     }
 
-    public function test_update_team_fails_if_teams_feature_disabled()
+    public function test_update_team_name_fails_if_teams_feature_disabled()
     {
         Config::set('gatekeeper.features.teams.enabled', false);
 
         $this->expectException(TeamsFeatureDisabledException::class);
 
         $team = Team::factory()->create();
-        $this->service->update($team, fake()->unique()->word());
+        $this->service->updateName($team, fake()->unique()->word());
     }
 
-    public function test_audit_log_inserted_on_team_update_when_auditing_enabled()
+    public function test_audit_log_inserted_on_team_name_update_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -124,28 +123,154 @@ class TeamServiceTest extends TestCase
         $team = Team::factory()->withName($name)->create();
         $newName = fake()->unique()->word();
 
-        $this->service->update($team, $newName);
+        $this->service->updateName($team, $newName);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
         /** @var AuditLog<User, Team> $updateTeamLog */
         $updateTeamLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::UpdateTeam->value, $updateTeamLog->action);
+        $this->assertEquals(AuditLogAction::UpdateTeamName->value, $updateTeamLog->action);
         $this->assertEquals($newName, $updateTeamLog->metadata['name']);
         $this->assertEquals($name, $updateTeamLog->metadata['old_name']);
         $this->assertTrue($this->user->is($updateTeamLog->actionBy));
         $this->assertTrue($team->is($updateTeamLog->actionTo));
     }
 
-    public function test_audit_log_not_inserted_on_team_update_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_team_name_update_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $team = Team::factory()->create();
         $newName = fake()->unique()->word();
 
-        $this->service->update($team, $newName);
+        $this->service->updateName($team, $newName);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_grant_team_by_default()
+    {
+        $team = Team::factory()->create();
+
+        $team = $this->service->grantByDefault($team);
+
+        $this->assertInstanceOf(TeamPacket::class, $team);
+        $this->assertTrue($team->grantedByDefault);
+    }
+
+    public function test_grant_team_by_default_fails_if_teams_feature_disabled()
+    {
+        Config::set('gatekeeper.features.teams.enabled', false);
+
+        $team = Team::factory()->create();
+
+        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->service->grantByDefault($team);
+
+        $this->assertFalse($team->fresh()->grant_by_default);
+    }
+
+    public function test_grant_team_by_default_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $team = Team::factory()->create();
+
+        $this->service->grantByDefault($team);
+        $this->service->grantByDefault($team);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_grant_team_by_default_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $team = Team::factory()->create();
+
+        $this->service->grantByDefault($team);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Team> $grantByDefaultTeamLog */
+        $grantByDefaultTeamLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::GrantTeamByDefault->value, $grantByDefaultTeamLog->action);
+        $this->assertEquals($team->name, $grantByDefaultTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $grantByDefaultTeamLog->actionBy->id);
+        $this->assertEquals($team->id, $grantByDefaultTeamLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_grant_team_by_default_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $team = Team::factory()->create();
+
+        $this->service->grantByDefault($team);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_revoke_team_default_grant()
+    {
+        $team = Team::factory()->grantByDefault()->create();
+
+        $team = $this->service->revokeDefaultGrant($team);
+
+        $this->assertInstanceOf(TeamPacket::class, $team);
+        $this->assertFalse($team->grantedByDefault);
+    }
+
+    public function test_revoke_team_default_grant_succeeds_if_teams_feature_disabled()
+    {
+        Config::set('gatekeeper.features.teams.enabled', false);
+
+        $team = Team::factory()->grantByDefault()->create();
+        $team = $this->service->revokeDefaultGrant($team);
+
+        $this->assertFalse($team->grantedByDefault);
+    }
+
+    public function test_revoke_team_default_grant_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $team = Team::factory()->grantByDefault()->create();
+
+        $team = $this->service->revokeDefaultGrant($team);
+        $team = $this->service->revokeDefaultGrant($team);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_revoke_team_default_grant_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $team = Team::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($team);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Team> $revokeDefaultGrantAuditLog */
+        $revokeDefaultGrantAuditLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RevokeTeamDefaultGrant->value, $revokeDefaultGrantAuditLog->action);
+        $this->assertEquals($team->name, $revokeDefaultGrantAuditLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeDefaultGrantAuditLog->actionBy->id);
+        $this->assertEquals($team->id, $revokeDefaultGrantAuditLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_revoke_team_default_grant_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $team = Team::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($team);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -442,7 +567,7 @@ class TeamServiceTest extends TestCase
         $team = Team::factory()->create();
 
         $this->service->assignToModel($user, $team);
-        $result = $this->service->revokeFromModel($user, $team);
+        $result = $this->service->unassignFromModel($user, $team);
 
         $this->assertTrue($result);
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_teams', GatekeeperConfigDefault::TABLES_MODEL_HAS_TEAMS), [
@@ -451,7 +576,7 @@ class TeamServiceTest extends TestCase
         ]);
     }
 
-    public function test_audit_log_inserted_on_team_revocation_when_auditing_enabled()
+    public function test_audit_log_inserted_on_team_unassignment_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -459,20 +584,20 @@ class TeamServiceTest extends TestCase
         $team = Team::factory()->create();
 
         $this->service->assignToModel($user, $team);
-        $this->service->revokeFromModel($user, $team);
+        $this->service->unassignFromModel($user, $team);
 
         $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        /** @var AuditLog<User, User> $revokeTeamLog */
-        $revokeTeamLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::RemoveTeam->value, $revokeTeamLog->action);
-        $this->assertEquals($team->name, $revokeTeamLog->metadata['name']);
-        $this->assertEquals($this->user->id, $revokeTeamLog->actionBy->id);
-        $this->assertEquals($user->id, $revokeTeamLog->actionTo->id);
+        /** @var AuditLog<User, User> $unassignTeamLog */
+        $unassignTeamLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RemoveTeam->value, $unassignTeamLog->action);
+        $this->assertEquals($team->name, $unassignTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $unassignTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $unassignTeamLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_team_revocation_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_team_unassignment_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
@@ -480,7 +605,7 @@ class TeamServiceTest extends TestCase
         $team = Team::factory()->create();
 
         $this->service->assignToModel($user, $team);
-        $this->service->revokeFromModel($user, $team);
+        $this->service->unassignFromModel($user, $team);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -491,7 +616,7 @@ class TeamServiceTest extends TestCase
         $teams = Team::factory()->count(2)->create();
 
         $this->service->assignAllToModel($user, $teams);
-        $result = $this->service->revokeAllFromModel($user, $teams);
+        $result = $this->service->unassignAllFromModel($user, $teams);
 
         $this->assertTrue($result);
         $teams->each(function (Team $team) use ($user) {
@@ -502,7 +627,7 @@ class TeamServiceTest extends TestCase
         });
     }
 
-    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_revocation()
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_unassignment()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -511,9 +636,157 @@ class TeamServiceTest extends TestCase
 
         $this->service->assignAllToModel($user, $teams);
 
-        $this->service->revokeAllFromModel($user, $teams);
+        $this->service->unassignAllFromModel($user, $teams);
 
         $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_deny_team()
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+
+        $this->service->assignToModel($user, $team);
+
+        $this->assertTrue($this->service->denyFromModel($user, $team));
+        $this->assertDatabaseHas((new ModelHasTeam)->getTable(), [
+            'model_id' => $user->id,
+            'denied' => true,
+        ]);
+        $this->assertFalse($user->onTeam($team));
+    }
+
+    public function test_audit_log_inserted_on_team_denial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+
+        $this->service->denyFromModel($user, $team);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyTeam->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $denyTeamLog */
+        $denyTeamLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::DenyTeam->value, $denyTeamLog->action);
+        $this->assertEquals($team->name, $denyTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $denyTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $denyTeamLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_team_denial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+
+        $this->service->denyFromModel($user, $team);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_deny_multiple_teams()
+    {
+        $user = User::factory()->create();
+        $teams = Team::factory()->count(3)->create();
+
+        $this->service->assignAllToModel($user, $teams);
+        $this->service->denyAllFromModel($user, $teams);
+
+        $this->assertFalse($user->onAnyTeam($teams));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_denial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $teams = Team::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $teams);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyTeam->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_undeny_team()
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->grantByDefault()->create();
+
+        $this->service->denyFromModel($user, $team);
+        $this->service->undenyFromModel($user, $team);
+
+        $this->assertTrue($this->service->undenyFromModel($user, $team));
+
+        $this->assertEmpty(ModelHasTeam::query()->where([
+            'model_id' => $user->id,
+            'denied' => true,
+        ])->get());
+
+        $this->assertTrue($user->onTeam($team));
+    }
+
+    public function test_audit_log_inserted_on_team_undenial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+
+        $this->service->undenyFromModel($user, $team);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyTeam->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $undenyTeamLog */
+        $undenyTeamLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::UndenyTeam->value, $undenyTeamLog->action);
+        $this->assertEquals($team->name, $undenyTeamLog->metadata['name']);
+        $this->assertEquals($this->user->id, $undenyTeamLog->actionBy->id);
+        $this->assertEquals($user->id, $undenyTeamLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_team_undenial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $team = Team::factory()->create();
+
+        $this->service->undenyFromModel($user, $team);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_undeny_multiple_teams()
+    {
+        $user = User::factory()->create();
+        $teams = Team::factory()->grantByDefault()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $teams);
+        $this->service->undenyAllFromModel($user, $teams);
+
+        $this->assertTrue($user->onAnyTeam($teams));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_team_undenial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $teams = Team::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $teams);
+        $this->service->undenyAllFromModel($user, $teams);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyTeam->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -536,6 +809,24 @@ class TeamServiceTest extends TestCase
         $this->service->assignToModel($user, $team);
 
         $this->assertFalse($this->service->modelHas($user, $team));
+    }
+
+    public function test_model_is_not_on_team_granted_by_default_when_denied()
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->grantByDefault()->create();
+
+        $user->denyTeam($team);
+
+        $this->assertFalse($this->service->modelHas($user, $team));
+    }
+
+    public function test_model_on_team_when_granted_by_default()
+    {
+        $user = User::factory()->create();
+        $team = Team::factory()->grantByDefault()->create();
+
+        $this->assertTrue($this->service->modelHas($user, $team));
     }
 
     public function test_model_on_any_team()

@@ -47,7 +47,7 @@ export default function AuditLogTable() {
                     <tbody>
                         {loadingLogs ? (
                             <tr>
-                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={2} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     <div className="inline-flex items-center gap-2">
                                         <Loader className="mx-auto h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
                                     </div>
@@ -55,21 +55,21 @@ export default function AuditLogTable() {
                             </tr>
                         ) : errorLoadingLogs ? (
                             <tr>
-                                <td colSpan={2} className="px-4 py-6 text-center text-red-500">
+                                <td colSpan={2} className="px-2 py-6 text-center text-red-500 sm:px-4">
                                     {errorLoadingLogs}
                                 </td>
                             </tr>
                         ) : (logs?.data?.length || 0) === 0 ? (
                             <tr>
-                                <td colSpan={2} className="text-muted-foreground px-4 py-6 text-center">
+                                <td colSpan={2} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
                                     {language.empty}
                                 </td>
                             </tr>
                         ) : (
                             logs?.data.map((log) => (
                                 <tr key={log.id} className="border-t transition-colors dark:border-gray-700">
-                                    <td className="px-4 py-2" dangerouslySetInnerHTML={{ __html: log.message }} />
-                                    <td className="px-4 py-2">{log.created_at}</td>
+                                    <td className="px-2 py-2 sm:px-4" dangerouslySetInnerHTML={{ __html: log.message }} />
+                                    <td className="px-2 py-2 sm:px-4">{log.created_at}</td>
                                 </tr>
                             ))
                         )}
@@ -86,8 +86,8 @@ function AuditLogTableHeader({ language, setPageRequest }: AuditLogTableHeaderPr
     return (
         <thead className="bg-muted">
             <tr>
-                <th className="px-4 py-2 text-left font-semibold">{language.actionColumn}</th>
-                <th className="px-4 py-2 text-left font-semibold">
+                <th className="px-2 py-2 text-left font-semibold sm:px-4">{language.actionColumn}</th>
+                <th className="px-2 py-2 text-left font-semibold sm:px-4">
                     <span className="inline-flex items-center gap-1">
                         {language.dateTimeColumn}
                         <ArrowUpDown

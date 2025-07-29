@@ -57,7 +57,7 @@ class ModelControllerTest extends TestCase
             ->assertJsonFragment(['model_label' => 'User']);
     }
 
-    public function test_assign_and_revoke_permission_to_model()
+    public function test_assign_and_unassign_permission_to_model()
     {
         $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
 
@@ -74,14 +74,41 @@ class ModelControllerTest extends TestCase
         ])->assertStatus(Response::HTTP_OK)
             ->assertJsonFragment(['message' => 'Permission assigned successfully']);
 
-        $this->deleteJson(route('gatekeeper.api.models.revoke', [
+        $this->deleteJson(route('gatekeeper.api.models.unassign', [
             'modelLabel' => 'User',
             'modelPk' => (string) $target->getKey(),
             'entity' => GatekeeperEntity::Permission->value,
         ]), [
             'entity_name' => $permission->name,
         ])->assertStatus(Response::HTTP_OK)
-            ->assertJsonFragment(['message' => 'Permission revoked successfully']);
+            ->assertJsonFragment(['message' => 'Permission unassigned successfully']);
+    }
+
+    public function test_deny_and_undeny_permission_to_model()
+    {
+        $this->user->assignAllPermissions([GatekeeperPermission::View, GatekeeperPermission::Manage]);
+
+        $target = User::factory()->create();
+        $permission = Permission::factory()->create();
+        $this->cacheRepository->clear();
+
+        $this->postJson(route('gatekeeper.api.models.deny', [
+            'modelLabel' => 'User',
+            'modelPk' => (string) $target->getKey(),
+            'entity' => GatekeeperEntity::Permission->value,
+        ]), [
+            'entity_name' => $permission->name,
+        ])->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(['message' => 'Permission denied successfully']);
+
+        $this->deleteJson(route('gatekeeper.api.models.undeny', [
+            'modelLabel' => 'User',
+            'modelPk' => (string) $target->getKey(),
+            'entity' => GatekeeperEntity::Permission->value,
+        ]), [
+            'entity_name' => $permission->name,
+        ])->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(['message' => 'Permission undenied successfully']);
     }
 
     public function test_model_lookup_fails_for_missing_model()

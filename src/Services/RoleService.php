@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\RoleSourceType;
 use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Role;
@@ -10,11 +11,16 @@ use Gillyware\Gatekeeper\Packets\AuditLog\Role\AssignRoleAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Role\CreateRoleAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Role\DeactivateRoleAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Role\DeleteRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\DenyRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\GrantedRoleByDefaultAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Role\ReactivateRoleAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Role\RevokeRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\RevokedRoleDefaultGrantAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\UnassignRoleAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\Role\UndenyRoleAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\AuditLog\Role\UpdateRoleAuditLogPacket;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket;
+use Gillyware\Gatekeeper\Packets\Entities\Role\UpdateRolePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasRoleRepository;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
@@ -23,6 +29,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -82,8 +89,24 @@ class RoleService extends AbstractBaseEntityService
      * Update an existing role.
      *
      * @param  Role|RolePacket|string|UnitEnum  $role
+     * @param UpdateRolePacket
      */
-    public function update($role, string|UnitEnum $newRoleName): RolePacket
+    public function update($role, $packet): RolePacket
+    {
+        return match ($packet->action) {
+            EntityUpdateAction::Name->value => $this->updateName($role, $packet->value),
+            EntityUpdateAction::Status->value => $packet->value ? $this->reactivate($role) : $this->deactivate($role),
+            EntityUpdateAction::DefaultGrant->value => $packet->value ? $this->grantByDefault($role) : $this->revokeDefaultGrant($role),
+            default => throw new InvalidArgumentException('Invalid update action.'),
+        };
+    }
+
+    /**
+     * Update an existing role name.
+     *
+     * @param  Role|RolePacket|string|UnitEnum  $role
+     */
+    public function updateName($role, string|UnitEnum $newRoleName): RolePacket
     {
         $this->enforceAuditFeature();
         $this->enforceRolesFeature();
@@ -97,13 +120,62 @@ class RoleService extends AbstractBaseEntityService
         }
 
         $oldRoleName = $currentRole->name;
-        $updatedRole = $this->roleRepository->update($currentRole, $newRoleName);
+        $updatedRole = $this->roleRepository->updateName($currentRole, $newRoleName);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(UpdateRoleAuditLogPacket::make($updatedRole, $oldRoleName));
         }
 
         return $updatedRole->toPacket();
+    }
+
+    /**
+     * Grant a role to all models that are not explicitly denying it.
+     *
+     * @param  Role|RolePacket|string|UnitEnum  $role
+     */
+    public function grantByDefault($role): RolePacket
+    {
+        $this->enforceAuditFeature();
+        $this->enforceRolesFeature();
+
+        $currentRole = $this->resolveEntity($role, orFail: true);
+
+        if ($currentRole->grant_by_default) {
+            return $currentRole->toPacket();
+        }
+
+        $defaultedOnRole = $this->roleRepository->grantByDefault($currentRole);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(GrantedRoleByDefaultAuditLogPacket::make($defaultedOnRole));
+        }
+
+        return $defaultedOnRole->toPacket();
+    }
+
+    /**
+     * Revoke a role's default grant.
+     *
+     * @param  Role|RolePacket|string|UnitEnum  $role
+     */
+    public function revokeDefaultGrant($role): RolePacket
+    {
+        $this->enforceAuditFeature();
+
+        $currentRole = $this->resolveEntity($role, orFail: true);
+
+        if (! $currentRole->grant_by_default) {
+            return $currentRole->toPacket();
+        }
+
+        $defaultedOffRole = $this->roleRepository->revokeDefaultGrant($currentRole);
+
+        if ($this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(RevokedRoleDefaultGrantAuditLogPacket::make($defaultedOffRole));
+        }
+
+        return $defaultedOffRole->toPacket();
     }
 
     /**
@@ -204,7 +276,7 @@ class RoleService extends AbstractBaseEntityService
             return true;
         }
 
-        $this->modelHasRoleRepository->create($model, $role);
+        $this->modelHasRoleRepository->assignToModel($model, $role);
 
         if ($this->auditFeatureEnabled()) {
             $this->auditLogRepository->create(AssignRoleAuditLogPacket::make($model, $role));
@@ -230,36 +302,109 @@ class RoleService extends AbstractBaseEntityService
     }
 
     /**
-     * Revoke a role from a model.
+     * Unassign a role from a model.
      *
      * @param  Role|RolePacket|string|UnitEnum  $role
      */
-    public function revokeFromModel(Model $model, $role): bool
+    public function unassignFromModel(Model $model, $role): bool
     {
         $this->enforceAuditFeature();
 
         $role = $this->resolveEntity($role, orFail: true);
 
-        $revoked = $this->modelHasRoleRepository->deleteForModelAndEntity($model, $role);
+        $unassigned = $this->modelHasRoleRepository->unassignFromModel($model, $role);
 
-        if ($revoked && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokeRoleAuditLogPacket::make($model, $role));
+        if ($unassigned && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(UnassignRoleAuditLogPacket::make($model, $role));
         }
 
-        return $revoked;
+        return $unassigned;
     }
 
     /**
-     * Revoke multiple roles from a model.
+     * Unassign multiple roles from a model.
      *
      * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
-    public function revokeAllFromModel(Model $model, array|Arrayable $roles): bool
+    public function unassignAllFromModel(Model $model, array|Arrayable $roles): bool
     {
         $result = true;
 
         $this->resolveEntities($roles, orFail: true)->each(function (Role $role) use ($model, &$result) {
-            $result = $result && $this->revokeFromModel($model, $role);
+            $result = $result && $this->unassignFromModel($model, $role);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Deny a role from a model.
+     *
+     * @param  Role|RolePacket|string|UnitEnum  $role
+     */
+    public function denyFromModel(Model $model, $role): bool
+    {
+        $this->enforceAuditFeature();
+
+        $role = $this->resolveEntity($role, orFail: true);
+
+        $denied = $this->modelHasRoleRepository->denyFromModel($model, $role);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(DenyRoleAuditLogPacket::make($model, $role));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Deny multiple roles from a model.
+     *
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $features
+     */
+    public function denyAllFromModel(Model $model, array|Arrayable $roles): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($roles, orFail: true)->each(function (Role $role) use ($model, &$result) {
+            $result = $result && $this->denyFromModel($model, $role);
+        });
+
+        return $result;
+    }
+
+    /**
+     * Undeny a role from a model.
+     *
+     * @param  Role|RolePacket|string|UnitEnum  $role
+     */
+    public function undenyFromModel(Model $model, $role): bool
+    {
+        $this->enforceRolesFeature();
+        $this->enforceAuditFeature();
+
+        $role = $this->resolveEntity($role, orFail: true);
+
+        $denied = $this->modelHasRoleRepository->undenyFromModel($model, $role);
+
+        if ($denied && $this->auditFeatureEnabled()) {
+            $this->auditLogRepository->create(UndenyRoleAuditLogPacket::make($model, $role));
+        }
+
+        return (bool) $denied;
+    }
+
+    /**
+     * Undeny multiple roles from a model.
+     *
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $features
+     */
+    public function undenyAllFromModel(Model $model, array|Arrayable $roles): bool
+    {
+        $result = true;
+
+        $this->resolveEntities($roles, orFail: true)->each(function (Role $role) use ($model, &$result) {
+            $result = $result && $this->undenyFromModel($model, $role);
         });
 
         return $result;
@@ -284,6 +429,11 @@ class RoleService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the role is denied from the model, return false.
+        if ($this->roleRepository->deniedFromModel($model)->has($role->name)) {
+            return false;
+        }
+
         // If the role is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $role)) {
             return true;
@@ -291,8 +441,8 @@ class RoleService extends AbstractBaseEntityService
 
         // If teams are enabled and the model interacts with teams, check if the model has the role through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithRole = $this->teamRepository
-                ->activeForModel($model)
+            $onTeamWithRole = $this->teamRepository->assignedToModel($model)
+                ->filter(fn (Team $team) => $team->is_active)
                 ->some(fn (Team $team) => $team->hasRole($role));
 
             if ($onTeamWithRole) {
@@ -300,7 +450,7 @@ class RoleService extends AbstractBaseEntityService
             }
         }
 
-        return false;
+        return $role->grant_by_default;
     }
 
     /**
@@ -312,7 +462,13 @@ class RoleService extends AbstractBaseEntityService
     {
         $role = $this->resolveEntity($role);
 
-        return $role && $this->roleRepository->activeForModel($model)->some(fn (Role $r) => $role->name === $r->name);
+        if (! $role) {
+            return false;
+        }
+
+        $foundAssignment = $this->roleRepository->assignedToModel($model)->get($role->name);
+
+        return $foundAssignment && $foundAssignment->is_active;
     }
 
     /**
@@ -350,7 +506,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Get all roles.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getAll(): Collection
     {
@@ -361,7 +517,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Get all roles assigned directly or indirectly to a model.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getForModel(Model $model): Collection
     {
@@ -373,11 +529,11 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Get all roles directly assigned to a model.
      *
-     * @return Collection<RolePacket>
+     * @return Collection<string, RolePacket>
      */
     public function getDirectForModel(Model $model): Collection
     {
-        return $this->roleRepository->forModel($model)
+        return $this->roleRepository->assignedToModel($model)
             ->map(fn (Role $role) => $role->toPacket());
     }
 
@@ -389,21 +545,34 @@ class RoleService extends AbstractBaseEntityService
         $result = collect();
         $sourcesMap = [];
 
-        if (! $this->rolesFeatureEnabled()) {
+        if (! $this->rolesFeatureEnabled() || ! $this->modelInteractsWithRoles($model)) {
             return $result;
         }
 
-        if ($this->modelInteractsWithRoles($model)) {
-            $this->roleRepository->activeForModel($model)
-                ->each(function (Role $role) use (&$sourcesMap) {
-                    $sourcesMap[$role->name][] = ['type' => RoleSourceType::DIRECT];
-                });
-        }
+        $this->roleRepository->all()
+            ->filter(function (Role $role) use ($model) {
+                $denied = $this->roleRepository->deniedFromModel($model)->has($role->name);
+
+                return $role->grant_by_default && ! $denied;
+            })
+            ->each(function (Role $role) use (&$sourcesMap) {
+                $sourcesMap[$role->name][] = [
+                    'type' => RoleSourceType::DEFAULT,
+                ];
+            });
+
+        $this->roleRepository->assignedToModel($model)
+            ->filter(fn (Role $role) => $role->is_active)
+            ->each(function (Role $role) use (&$sourcesMap) {
+                $sourcesMap[$role->name][] = ['type' => RoleSourceType::DIRECT];
+            });
 
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $this->teamRepository->activeForModel($model)
+            $this->teamRepository->assignedToModel($model)
+                ->filter(fn (Team $team) => $team->is_active)
                 ->each(function (Team $team) use (&$sourcesMap) {
-                    $this->roleRepository->activeForModel($team)
+                    $this->roleRepository->assignedToModel($team)
+                        ->filter(fn (Role $role) => $role->is_active)
                         ->each(function (Role $role) use (&$sourcesMap, $team) {
                             $sourcesMap[$role->name][] = [
                                 'type' => RoleSourceType::TEAM,

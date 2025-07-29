@@ -39,7 +39,7 @@ class ModelHasRoleRepositoryTest extends TestCase
         $this->assertFalse($this->repository->existsForEntity($role));
 
         $user = User::factory()->create();
-        $this->repository->create($user, $role);
+        $this->repository->assignToModel($user, $role);
 
         $this->assertTrue($this->repository->existsForEntity($role));
     }
@@ -50,10 +50,10 @@ class ModelHasRoleRepositoryTest extends TestCase
         $role = Role::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelRoleNames')
+            ->method('invalidateCacheForModelRoleLinks')
             ->with($user);
 
-        $record = $this->repository->create($user, $role);
+        $record = $this->repository->assignToModel($user, $role);
 
         $this->assertInstanceOf(ModelHasRole::class, $record);
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), [
@@ -69,12 +69,12 @@ class ModelHasRoleRepositoryTest extends TestCase
         $role = Role::factory()->create();
 
         $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelRoleNames')
+            ->method('invalidateCacheForModelRoleLinks')
             ->with($user);
 
-        $this->repository->create($user, $role);
+        $this->repository->assignToModel($user, $role);
 
-        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $role));
+        $this->assertTrue($this->repository->unassignFromModel($user, $role));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES), [
             'model_type' => $user->getMorphClass(),

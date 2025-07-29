@@ -63,19 +63,19 @@ class CacheServiceTest extends TestCase
             ->with($key)
             ->willReturn($collection);
 
-        $this->assertSame($collection, $this->service->getModelPermissionNames($this->model));
+        $this->assertSame($collection, $this->service->getModelPermissionLinks($this->model));
 
         $this->cacheRepository->expects($this->once())
             ->method('put')
             ->with($key, $collection);
 
-        $this->service->putModelPermissionNames($this->model, $collection);
+        $this->service->putModelPermissionLinks($this->model, $collection);
 
         $this->cacheRepository->expects($this->once())
             ->method('forget')
             ->with($key);
 
-        $this->service->invalidateCacheForModelPermissionNames($this->model);
+        $this->service->invalidateCacheForModelPermissionLinks($this->model);
     }
 
     public function test_all_roles_cache(): void
@@ -99,7 +99,7 @@ class CacheServiceTest extends TestCase
             ->method('forget')
             ->with('roles');
 
-        $this->service->invalidateCacheForAllRoles();
+        $this->service->invalidateCacheForAllLinks();
     }
 
     public function test_model_roles_cache(): void
@@ -112,19 +112,19 @@ class CacheServiceTest extends TestCase
             ->with($key)
             ->willReturn($collection);
 
-        $this->assertSame($collection, $this->service->getModelRoleNames($this->model));
+        $this->assertSame($collection, $this->service->getModelRoleLinks($this->model));
 
         $this->cacheRepository->expects($this->once())
             ->method('put')
             ->with($key, $collection);
 
-        $this->service->putModelRoleNames($this->model, $collection);
+        $this->service->putModelRoleLinks($this->model, $collection);
 
         $this->cacheRepository->expects($this->once())
             ->method('forget')
             ->with($key);
 
-        $this->service->invalidateCacheForModelRoleNames($this->model);
+        $this->service->invalidateCacheForModelRoleLinks($this->model);
     }
 
     public function test_all_teams_cache(): void
@@ -161,18 +161,18 @@ class CacheServiceTest extends TestCase
             ->with($key)
             ->willReturn($collection);
 
-        $this->assertSame($collection, $this->service->getModelTeamNames($this->model));
+        $this->assertSame($collection, $this->service->getModelTeamLinks($this->model));
 
         $this->cacheRepository->expects($this->once())
             ->method('put')
             ->with($key, $collection);
 
-        $this->service->putModelTeamNames($this->model, $collection);
+        $this->service->putModelTeamLinks($this->model, $collection);
 
         $this->cacheRepository->expects($this->once())
             ->method('forget')
             ->with($key);
 
-        $this->service->invalidateCacheForModelTeamNames($this->model);
+        $this->service->invalidateCacheForModelTeamLinks($this->model);
     }
 }

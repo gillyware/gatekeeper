@@ -3,17 +3,23 @@
 - [Role Entities](#role-entities)
     - [Check Role Existence](#check-role-existence)
     - [Create Role](#create-role)
-    - [Update Role](#update-role)
+    - [Update Role Name](#update-role-name)
+    - [Grant Role by Default](#grant-role-by-default)
+    - [Revoke Role Default Grant](#revoke-role-default-grant)
     - [Deactivate Role](#deactivate-role)
     - [Reactivate Role](#reactivate-role)
     - [Delete Role](#delete-role)
     - [Find Role by Name](#find-role-by-name)
     - [Get All Roles](#get-all-roles)
-- [Model Role Assignments](#model-role-assignments)
+- [Model Role Relationships](#model-role-relationships)
     - [Assign Role to Model](#assign-role-to-model)
     - [Assign Multiple Roles to Model](#assign-multiple-roles-to-model)
-    - [Revoke Role from Model](#revoke-role-from-model)
-    - [Revoke Multiple Roles from Model](#revoke-multiple-roles-from-model)
+    - [Unassign Role from Model](#unassign-role-from-model)
+    - [Unassign Multiple Roles from Model](#unassign-multiple-roles-from-model)
+    - [Deny Role from Model](#deny-role-from-model)
+    - [Deny Multiple Roles from Model](#deny-multiple-roles-from-model)
+    - [Undeny Role from Model](#undeny-role-from-model)
+    - [Undeny Multiple Roles from Model](#undeny-multiple-roles-from-model)
     - [Check Model Has Role](#check-model-has-role)
     - [Check Model Has Any Role](#check-model-has-any-role)
     - [Check Model Has All Roles](#check-model-has-all-roles)
@@ -22,7 +28,11 @@
     - [Get Verbose Roles for Model](#get-verbose-roles-for-model)
 - [Next Steps](#next-steps)
 
-A role is a named grouping of permissions. You can assign roles directly to any (configured) model and to any team. A model’s effective roles include those from roles assigned to it directly and from roles attached to its teams.
+A role is a named grouping of permissions. You can assign roles directly to any (configured) model and any team.
+
+By default, created roles are active and not granted by default. 'Active' means the role is actively granting access, and 'not granted by default' means a role must be explicitly assigned to models, either directly or through another entity directly assigned to the model.
+
+A model’s effective roles are the union of its roles granted by default, direct roles, and those inherited through its teams, excluding the roles directly denied from the model. Keep in mind, a model will effectively have no roles (granted by default, direct, or inherited) if the model is not using the `HasRoles` trait.
 
 Gatekeeper exposes a variety of role-related methods through its facade and `HasRoles` trait. This section documents each of them with accompanying code examples.
 
@@ -43,12 +53,12 @@ The `roleExists` method accepts a string or a string-backed enum.
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$exists = Gatekeeper::roleExists('users.manager');
+$exists = Gatekeeper::roleExists('user_manager');
 
 // or using an enum...
 
 enum Role: string {
-    case UserManager = 'users.manager';
+    case UserManager = 'user_manager';
 }
 
 $exists = Gatekeeper::roleExists(Role::UserManager);
@@ -68,23 +78,23 @@ The `createRole` method accepts a string or a string-backed enum.
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$role = Gatekeeper::createRole('product.manager');
+$role = Gatekeeper::createRole('product_manager');
 
 // or using an enum...
 
 enum Role: string {
-    case ProductManager = 'product.manager';
+    case ProductManager = 'product_manager';
 }
 
 $role = Gatekeeper::createRole(Role::ProductManager);
 ```
 
-<a name="update-role"></a>
-### Update Role
+<a name="update-role-name"></a>
+### Update Role Name
 
 You may update the name of an existing role.
 
-The `updateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum as the first argument (the existing role), and a string or string-backed enum as the second argument (the new name).
+The `updateRoleName` method accepts a `RolePacket` instance, a string, or a string-backed enum as the first argument (the existing role), and a string or string-backed enum as the second argument (the new name).
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
@@ -95,22 +105,76 @@ If a role with the new name already exists, a `RoleAlreadyExistsException` will 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$updatedRole = Gatekeeper::updateRole('product.manager', 'product.owner');
+$updatedRole = Gatekeeper::updateRoleName('product_manager', 'product_owner');
 
 // or using enums...
 
 enum Role: string {
-    case ProductManager = 'product.manager';
-    case ProductOwner = 'product.owner';
+    case ProductManager = 'product_manager';
+    case ProductOwner = 'product_owner';
 }
 
-$updatedRole = Gatekeeper::updateRole(Role::ProductManager, Role::ProductOwner);
+$updatedRole = Gatekeeper::updateRoleName(Role::ProductManager, Role::ProductOwner);
+```
+
+<a name="grant-role-by-default"></a>
+### Grant Role by Default
+
+You may want a role that most, if not all, models should have by default. Granting the role by default effectively assigns it to all models that are not denying it.
+
+The `grantRoleByDefault` method accepts a `RolePacket` instance, a string, or a string-backed enum.
+
+If the role does not exist, a `RoleNotFoundException` will be thrown.
+
+If the role is already granted by default, it will simply be returned without raising an exception.
+
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+$grantedByDefaultRole = Gatekeeper::grantRoleByDefault('product_manager');
+
+// or using an enum...
+
+enum Role: string {
+    case ProductManager = 'product_manager';
+}
+
+$grantedByDefaultRole = Gatekeeper::grantRoleByDefault(Role::DeleteUsers);
+```
+
+<a name="revoke-role-default-grant"></a>
+### Revoke Role Default Grant
+
+You may decide that a role should not be [granted by default](#grant-role-by-default). You can easily revoke a role's default grant.
+
+The `revokeRoleDefaultGrant` method accepts a `RolePacket` instance, a string, or a string-backed enum.
+
+If the role does not exist, a `RoleNotFoundException` will be thrown.
+
+If the role is not granted by default, it will simply be returned without raising an exception.
+
+**Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+$nonGrantedByDefaultRole = Gatekeeper::revokeRoleDefaultGrant('product_manager');
+
+// or using an enum...
+
+enum Role: string {
+    case ProductManager = 'product_manager';
+}
+
+$nonGrantedByDefaultRole = Gatekeeper::revokeRoleDefaultGrant(Role::DeleteUsers);
 ```
 
 <a name="deactivate-role"></a>
 ### Deactivate Role
 
-You may temporarily deactivate a role if you want it to stop granting access without revoking it from models.
+You may temporarily deactivate a role if you want it to stop granting access without unassigning it from models.
 
 Deactivated roles remain in the database but are ignored by role checks until reactivated. The permissions attached to roles will also be ignored until the role is reactivated.
 
@@ -125,12 +189,12 @@ If the role is already inactive, it will simply be returned without raising an e
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$deactivatedRole = Gatekeeper::deactivateRole('projects.manager');
+$deactivatedRole = Gatekeeper::deactivateRole('product_manager');
 
 // or using an enum...
 
 enum Role: string {
-    case ProjectManager = 'projects.manager';
+    case ProjectManager = 'product_manager';
 }
 
 $deactivatedRole = Gatekeeper::deactivateRole(Role::ProjectManager);
@@ -152,12 +216,12 @@ If the role is already active, it will simply be returned without raising an exc
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$reactivatedRole = Gatekeeper::reactivateRole('users.manager');
+$reactivatedRole = Gatekeeper::reactivateRole('user_manager');
 
 // or using an enum...
 
 enum Role: string {
-    case UserManager = 'users.manager';
+    case UserManager = 'user_manager';
 }
 
 $reactivatedRole = Gatekeeper::reactivateRole(Role::UserManager);
@@ -173,8 +237,6 @@ You may delete a role to remove it from your application.
 
 The `deleteRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
-
 If the role is already deleted, the method will return `true` without raising an exception.
 
 **Returns:** `bool`
@@ -182,12 +244,12 @@ If the role is already deleted, the method will return `true` without raising an
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$roleDeleted = Gatekeeper::deleteRole('projects.supervisor');
+$roleDeleted = Gatekeeper::deleteRole('product_supervisor');
 
 // or using an enum...
 
 enum Role: string {
-    case ProjectsSupervisor = 'projects.supervisor';
+    case ProjectsSupervisor = 'product_supervisor';
 }
 
 $roleDeleted = Gatekeeper::deleteRole(Role::ProjectsSupervisor);
@@ -205,12 +267,12 @@ The `findRoleByName` method accepts a string or a string-backed enum.
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
-$role = Gatekeeper::findRoleByName('projects.manager');
+$role = Gatekeeper::findRoleByName('product_manager');
 
 // or using an enum...
 
 enum Role: string {
-    case ProjectManager = 'projects.manager';
+    case ProjectManager = 'product_manager';
 }
 
 $role = Gatekeeper::findRoleByName(Role::ProjectManager);
@@ -223,7 +285,7 @@ You may retrieve a collection of all roles defined in your application, regardle
 
 The `getAllRoles` method does not take any arguments.
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -231,10 +293,10 @@ use Gillyware\Gatekeeper\Facades\Gatekeeper;
 $roles = Gatekeeper::getAllRoles();
 ```
 
-<a name="model-role-assignments"></a>
-## Model Role Assignments
+<a name="model-role-relationships"></a>
+## Model Role Relationships
 
-The following methods allow you to assign, revoke, and inspect roles for models.
+The following methods allow you to assign, unassign, deny, undeny, and inspect roles for models.
 
 > [!NOTE]
 > Models passed to Gatekeeper must use the `\Gillyware\Gatekeeper\Traits\HasRoles` trait to enable the methods described below.
@@ -248,21 +310,19 @@ You may assign a role to a model using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->assignRole($role)` chain
 - Calling `$model->assignRole($role)` directly (available via the `HasRoles` trait)
 
-The `$role` argument can be a:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
-**Returns:** `bool` – `true` if the role was newly assigned or already present
+If the role is denied from a model, the denial will be removed before assigning.
+
+**Returns:** `bool` – `true` if the role is assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case ProjectManager = 'projects.manager';
+    case ProjectManager = 'product_manager';
 }
 
 $user = User::query()->findOrFail(1);
@@ -287,28 +347,26 @@ You may assign multiple roles to a model using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->assignAllRoles($roles)` chain
 - Calling `$model->assignAllRoles($roles)` directly (available via the `HasRoles` trait)
 
-The `$roles` argument must be an array or Arrayable containing any combination of:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
 
 If a role is already assigned, it will be skipped without raising an exception.
 
 If a role does not exist, a `RoleNotFoundException` will be thrown.
 
+If a role is denied from a model, the denial will be removed before assigning.
+
 > [!NOTE]
 > This method stops on the first failure.
 
-**Returns:** `bool` – `true` if all roles were successfully assigned or already present
+**Returns:** `bool` – `true` if all roles are assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case ProductManager = 'products.manager';
-    case ProductOwner = 'products.owner';
-    case UserManager = 'users.manager';
+    case ProductManager = 'product_manager';
+    case ProductOwner = 'product_owner';
+    case UserManager = 'user_manager';
 }
 
 $roles = [Role::ProductManager, Role::ProductOwner, Role::UserManager];
@@ -326,97 +384,259 @@ $rolesAssigned = Gatekeeper::for($user)->assignAllRoles($roles);
 $rolesAssigned = $user->assignAllRoles($roles);
 ```
 
-<a name="revoke-role-from-model"></a>
-### Revoke Role from Model
+<a name="unassign-role-from-model"></a>
+### Unassign Role from Model
 
-You may revoke a role from a model using one of the following approaches:
+You may unassign a role from a model using one of the following approaches:
 
-- Using the static `Gatekeeper::revokeRoleFromModel($model, $role)` method
-- Using the fluent `Gatekeeper::for($model)->revokeRole($role)` chain
-- Calling `$model->revokeRole($role)` directly (available via the `HasRoles` trait)
+- Using the static `Gatekeeper::unassignRoleFromModel($model, $role)` method
+- Using the fluent `Gatekeeper::for($model)->unassignRole($role)` chain
+- Calling `$model->unassignRole($role)` directly (available via the `HasRoles` trait)
 
-The `$role` argument can be a:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, a `RoleNotFoundException` will be thrown.
 
-**Returns:** bool – `true` if the role was removed or was not previously assigned
+If the role is denied from the model, the denial will remain intact.
+
+**Returns:** bool – `true` if the role is not assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case UserManager = 'users.manager';
+    case UserManager = 'user_manager';
 }
 
 $user = User::query()->findOrFail(1);
 
-$roleRevoked = Gatekeeper::revokeRoleFromModel($user, Role::UserManager);
+$roleUnassigned = Gatekeeper::unassignRoleFromModel($user, Role::UserManager);
 
 // or fluently...
 
-$roleRevoked = Gatekeeper::for($user)->revokeRole(Role::UserManager);
+$roleUnassigned = Gatekeeper::for($user)->unassignRole(Role::UserManager);
 
 // or via the trait method...
 
-$roleRevoked = $user->revokeRole(Role::UserManager);
+$roleUnassigned = $user->unassignRole(Role::UserManager);
 ```
 
-<a name="revoke-multiple-roles-from-model"></a>
-### Revoke Multiple Roles from Model
+<a name="unassign-multiple-roles-from-model"></a>
+### Unassign Multiple Roles from Model
 
-You may revoke multiple roles from a model using one of the following approaches:
+You may unassign multiple roles from a model using one of the following approaches:
 
-- Using the static `Gatekeeper::revokeAllRolesFromModel($model, $roles)` method
-- Using the fluent `Gatekeeper::for($model)->revokeAllRoles($roles)` chain
-- Calling `$model->revokeAllRoles($roles)` directly (available via the `HasRoles` trait)
+- Using the static `Gatekeeper::unassignAllRolesFromModel($model, $roles)` method
+- Using the fluent `Gatekeeper::for($model)->unassignAllRoles($roles)` chain
+- Calling `$model->unassignAllRoles($roles)` directly (available via the `HasRoles` trait)
 
-The `$roles` argument must be an array or Arrayable containing any combination of:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
 
 If a role is already unassigned, it will be skipped without raising an exception.
 
 If a role does not exist, a `RoleNotFoundException` will be thrown.
 
+If the role is denied from the model, the denial will remain intact.
+
 > [!NOTE]
 > This method stops on the first failure.
 
-**Returns:** bool – `true` if all roles were revoked or were not previously assigned
+**Returns:** bool – `true` if none of the roles are assigned
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case ProductManager = 'products.manager';
-    case ProductOwner = 'products.owner';
-    case UserManager = 'users.manager';
+    case ProductManager = 'product_manager';
+    case ProductOwner = 'product_owner';
+    case UserManager = 'user_manager';
 }
 
 $roles = [Role::ProductManager, Role::ProductOwner, Role::UserManager];
 
 $user = User::query()->findOrFail(1);
 
-$rolesRevoked = Gatekeeper::revokeAllRolesFromModel($user, $roles);
+$rolesUnassigned = Gatekeeper::unassignAllRolesFromModel($user, $roles);
 
 // or fluently...
 
-$rolesRevoked = Gatekeeper::for($user)->revokeAllRoles($roles);
+$rolesUnassigned = Gatekeeper::for($user)->unassignAllRoles($roles);
 
 // or via the trait method...
 
-$rolesRevoked = $user->revokeAllRoles($roles);
+$rolesUnassigned = $user->unassignAllRoles($roles);
+```
+
+<a name="deny-role-from-model"></a>
+### Deny Role from Model
+
+To deny a role from a model means to block access to a role even if the role is granted by default or inherited from a team.
+
+You may deny a role from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::denyRoleFromModel($model, $role)` method
+- Using the fluent `Gatekeeper::for($model)->denyRole($role)` chain
+- Calling `$model->denyRole($role)` directly (available via the `HasRoles` trait)
+
+The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
+
+If the role does not exist, a `RoleNotFoundException` will be thrown.
+
+If the role is assigned to the model, the role will be unassigned from the model before denying.
+
+**Returns:** bool – `true` if the role is denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Role: string {
+    case UserManager = 'user_manager';
+}
+
+$user = User::query()->findOrFail(1);
+
+$roleDenied = Gatekeeper::denyRoleFromModel($user, Role::UserManager);
+
+// or fluently...
+
+$roleDenied = Gatekeeper::for($user)->denyRole(Role::UserManager);
+
+// or via the trait method...
+
+$roleDenied = $user->denyRole(Role::UserManager);
+```
+
+<a name="deny-multiple-roles-from-model"></a>
+### Deny Multiple Roles from Model
+
+You may deny multiple roles from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::denyAllRolesFromModel($model, $roles)` method
+- Using the fluent `Gatekeeper::for($model)->denyAllRoles($roles)` chain
+- Calling `$model->denyAllRoles($roles)` directly (available via the `HasRoles` trait)
+
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
+
+If a role is already denied, it will be skipped without raising an exception.
+
+If a role does not exist, a `RoleNotFoundException` will be thrown.
+
+If the role is denied from the model, the denial will remain intact.
+
+> [!NOTE]
+> This method stops on the first failure.
+
+**Returns:** bool – `true` if all roles are denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Role: string {
+    case ProjectManager = 'project_manager';
+    case ProjectOwner = 'project_owner';
+    case ScrumMaster = 'scrum_master';
+}
+
+$roles = [Role::ProjectManager, Role::ProjectOwner, Role::ScrumMaster];
+
+$user = User::query()->findOrFail(1);
+
+$rolesDenied = Gatekeeper::denyAllRolesFromModel($user, $roles);
+
+// or fluently...
+
+$rolesDenied = Gatekeeper::for($user)->denyAllRoles($roles);
+
+// or via the trait method...
+
+$rolesDenied = $user->denyAllRoles($roles);
+```
+
+<a name="undeny-role-from-model"></a>
+### Undeny Role from Model
+
+To undeny a role from a model means to unblock access to a role, allowing acces if the role is granted by default, directly assigned, or inherited from a team.
+
+You may undeny a role from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::undenyRoleFromModel($model, $role)` method
+- Using the fluent `Gatekeeper::for($model)->undenyRole($role)` chain
+- Calling `$model->undenyRole($role)` directly (available via the `HasRoles` trait)
+
+The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
+
+If the role does not exist, a `RoleNotFoundException` will be thrown.
+
+**Returns:** bool – `true` if the role is not denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Role: string {
+    case UserManager = 'user_manager';
+}
+
+$user = User::query()->findOrFail(1);
+
+$roleUndenied = Gatekeeper::undenyRoleFromModel($user, Role::UserManager);
+
+// or fluently...
+
+$roleUndenied = Gatekeeper::for($user)->undenyRole(Role::UserManager);
+
+// or via the trait method...
+
+$roleUndenied = $user->undenyRole(Role::UserManager);
+```
+
+<a name="undeny-multiple-roles-from-model"></a>
+### Undeny Multiple Roles from Model
+
+You may undeny multiple roles from a model using one of the following approaches:
+
+- Using the static `Gatekeeper::undenyAllRolesFromModel($model, $roles)` method
+- Using the fluent `Gatekeeper::for($model)->undenyAllRoles($roles)` chain
+- Calling `$model->undenyAllRoles($roles)` directly (available via the `HasRoles` trait)
+
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
+
+If a role is not denied, it will be skipped without raising an exception.
+
+If a role does not exist, a `RoleNotFoundException` will be thrown.
+
+> [!NOTE]
+> This method stops on the first failure.
+
+**Returns:** bool – `true` if none of the roles are denied
+
+```php
+use Gillyware\Gatekeeper\Facades\Gatekeeper;
+
+enum Role: string {
+    case ProjectManager = 'project_manager';
+    case ProjectOwner = 'project_owner';
+    case ScrumMaster = 'scrum_master';
+}
+
+$roles = [Role::ProjectManager, Role::ProjectOwner, Role::ScrumMaster];
+
+$user = User::query()->findOrFail(1);
+
+$rolesUndenied = Gatekeeper::undenyAllRolesFromModel($user, $roles);
+
+// or fluently...
+
+$rolesUndenied = Gatekeeper::for($user)->undenyAllRoles($roles);
+
+// or via the trait method...
+
+$rolesUndenied = $user->undenyAllRoles($roles);
 ```
 
 <a name="check-model-has-role"></a>
 ### Check Model Has Role
 
-A model may have an active role directly assigned or indirectly assigned through a team. This method checks all sources to determine if the model has access to the role.
+A model may have an undenied, active role granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to the role.
 
 You may check if a model has a role using one of the following approaches:
 
@@ -424,21 +644,17 @@ You may check if a model has a role using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->hasRole($role)` chain
 - Calling `$model->hasRole($role)` directly (available via the `HasRoles` trait)
 
-The `$role` argument can be a:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
 If the role does not exist, `false` will be returned.
 
-**Returns:** bool – `true` if the model has access to the given role, `false` otherwise (including if the model is missing the `HasRoles` trait, the role does not exist, or the role is inactive)
+**Returns:** bool – `true` if the model has access to the given role
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case UserManager = 'users.manager';
+    case UserManager = 'user_manager';
 }
 
 $user = User::query()->findOrFail(1);
@@ -457,7 +673,7 @@ $hasRole = $user->hasRole(Role::UserManager);
 <a name="check-model-has-any-role"></a>
 ### Check Model Has Any Role
 
-A model may have an active role directly assigned or indirectly assigned through a team. This method checks all sources to determine if the model has access to any of the given roles.
+A model may have an undenied, active role granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to any of the given roles.
 
 You may check if a model has any of a set of roles using one of the following approaches:
 
@@ -465,23 +681,19 @@ You may check if a model has any of a set of roles using one of the following ap
 - Using the fluent `Gatekeeper::for($model)->hasAnyRole($roles)` chain
 - Calling `$model->hasAnyRole($roles)` directly (available via the `HasRoles` trait)
 
-The `$roles` argument must be an array or Arrayable containing any combination of:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
 
 If the role does not exist, it will be skipped.
 
-**Returns:** bool – `true` if the model has access to any of the given roles, `false` otherwise (including if none of the roles exist, are active, or are assigned)
+**Returns:** bool – `true` if the model has access to any of the given roles
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case ProductManager = 'products.manager';
-    case ProductOwner = 'products.owner';
-    case UserManager = 'users.manager';
+    case ProductManager = 'product_manager';
+    case ProductOwner = 'product_owner';
+    case UserManager = 'user_manager';
 }
 
 $roles = [Role::ProductManager, Role::ProductOwner, Role::UserManager];
@@ -502,7 +714,7 @@ $hasAnyRole = $user->hasAnyRole($roles);
 <a name="check-model-has-all-roles"></a>
 ### Check Model Has All Roles
 
-A model may have an active role directly assigned or indirectly assigned through a team. This method checks all sources to determine if the model has access to all of the given roles.
+A model may have an undenied, active role granted by default, directly assigned, or indirectly assigned through a team. This method checks all sources to determine if the model has access to all of the given roles.
 
 You may check if a model has all of a set of roles using one of the following approaches:
 
@@ -510,23 +722,19 @@ You may check if a model has all of a set of roles using one of the following ap
 - Using the fluent `Gatekeeper::for($model)->hasAllRoles($roles)` chain
 - Calling `$model->hasAllRoles($roles)` directly (available via the `HasRoles` trait)
 
-The `$roles` argument must be an array or Arrayable containing any combination of:
-
-- `RolePacket` instance
-- string (e.g. `'users.manager'`)
-- string-backed enum value
+The `$roles` argument must be an array or Arrayable containing any combination `RolePacket` instances, strings, or a string-backed enums.
 
 If the role does not exist, `false` will be returned.
 
-**Returns:** bool – `true` if the model has access to all of the given roles, `false` otherwise (including if any of the roles do not exist, are inactive, or are unassigned)
+**Returns:** bool – `true` if the model has access to all of the given roles
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 
 enum Role: string {
-    case ProductManager = 'products.manager';
-    case ProductOwner = 'products.owner';
-    case UserManager = 'users.manager';
+    case ProductManager = 'product_manager';
+    case ProductOwner = 'product_owner';
+    case UserManager = 'user_manager';
 }
 
 $roles = [Role::ProductManager, Role::ProductOwner, Role::UserManager];
@@ -555,7 +763,7 @@ You may get a model's direct roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getDirectRoles()` chain
 - Calling `$model->getDirectRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -584,7 +792,7 @@ You may get a model's effective roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getEffectiveRoles()` chain
 - Calling `$model->getEffectiveRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
+**Returns:** `\Illuminate\Support\Collection<string, \Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket>`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -605,7 +813,7 @@ $effectiveRoles = $user->getEffectiveRoles();
 <a name="get-verbose-roles-for-model"></a>
 ### Get Verbose Roles for Model
 
-You may retrieve a collection of all active roles effectively assigned to a given model, along with the source(s) of each role (e.g., direct or via team).
+You may retrieve a collection of all active roles effectively assigned to a given model, along with the source(s) of each role (ex., direct or via team).
 
 You may get a model's verbose roles using one of the following approaches:
 
@@ -613,7 +821,7 @@ You may get a model's verbose roles using one of the following approaches:
 - Using the fluent `Gatekeeper::for($model)->getVerboseRoles()` chain
 - Calling `$model->getVerboseRoles()` directly (available via the `HasRoles` trait)
 
-**Returns:** `\Illuminate\Support\Collection<array{name: string, sources: array}>`
+**Returns:** `\Illuminate\Support\Collection`
 
 ```php
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
@@ -647,4 +855,4 @@ Manage Entities and Assignments:
 - [Artisan Commands](artisan-commands.md)
 
 Track Entity and Entity Assignment Changes:
-- [Audit Logging]('audit-logging.md')
+- [Audit Logging](audit-logging.md)

@@ -2,7 +2,6 @@
 
 namespace Gillyware\Gatekeeper\Repositories;
 
-use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Contracts\ModelHasEntityRepositoryInterface;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
@@ -11,7 +10,6 @@ use Gillyware\Gatekeeper\Services\CacheService;
 use Gillyware\Gatekeeper\Services\ModelMetadataService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Config;
 
 /**
  * @implements ModelHasEntityRepositoryInterface<Role, ModelHasRole>
@@ -34,21 +32,77 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
     }
 
     /**
-     * Create a new model role assigment.
+     * Assign a role to a model.
      *
      * @param  Role  $role
      */
-    public function create(Model $model, $role): ModelHasRole
+    public function assignToModel(Model $model, $role): ModelHasRole
     {
-        $modelHasRole = ModelHasRole::create([
+        $modelHasRole = ModelHasRole::query()->updateOrCreate([
             'role_id' => $role->id,
             'model_type' => $model->getMorphClass(),
             'model_id' => $model->getKey(),
+        ], [
+            'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelRoleNames($model);
+        $this->cacheService->invalidateCacheForModelRoleLinks($model);
 
         return $modelHasRole;
+    }
+
+    /**
+     * Delete all un-denied role assignments for a given model and role.
+     *
+     * @param  Role  $role
+     */
+    public function unassignFromModel(Model $model, $role): bool
+    {
+        ModelHasRole::forModel($model)
+            ->where('role_id', $role->id)
+            ->where('denied', false)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+
+        return true;
+    }
+
+    /**
+     * Deny a role from a model.
+     *
+     * @param  Role  $role
+     */
+    public function denyFromModel(Model $model, $role): ModelHasRole
+    {
+        $modelHasRole = ModelHasRole::query()->updateOrCreate([
+            'role_id' => $role->id,
+            'model_type' => $model->getMorphClass(),
+            'model_id' => $model->getKey(),
+        ], [
+            'denied' => true,
+        ]);
+
+        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+
+        return $modelHasRole;
+    }
+
+    /**
+     * Delete all denied role assignments for a given model and role.
+     *
+     * @param  Role  $role
+     */
+    public function undenyFromModel(Model $model, $role): bool
+    {
+        ModelHasRole::forModel($model)
+            ->where('role_id', $role->id)
+            ->where('denied', true)
+            ->delete();
+
+        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+
+        return true;
     }
 
     /**
@@ -58,7 +112,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasRole::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelRoleNames($model);
+        $this->cacheService->invalidateCacheForModelRoleLinks($model);
 
         return true;
     }
@@ -77,23 +131,9 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
                 $modelHasRole->delete();
 
                 if ($modelHasRole->model) {
-                    $this->cacheService->invalidateCacheForModelRoleNames($modelHasRole->model);
+                    $this->cacheService->invalidateCacheForModelRoleLinks($modelHasRole->model);
                 }
             });
-
-        return true;
-    }
-
-    /**
-     * Delete all role assignments for a given model and role.
-     *
-     * @param  Role  $role
-     */
-    public function deleteForModelAndEntity(Model $model, $role): bool
-    {
-        ModelHasRole::forModel($model)->where('role_id', $role->id)->delete();
-
-        $this->cacheService->invalidateCacheForModelRoleNames($model);
 
         return true;
     }
@@ -103,23 +143,20 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchAssignmentsByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $rolesTable = Config::get('gatekeeper.tables.roles', GatekeeperConfigDefault::TABLES_ROLES);
-        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
-
-        $query = ModelHasRole::query()
-            ->select("$modelRolesTable.*")
-            ->join($rolesTable, "$rolesTable.id", '=', "$modelRolesTable.role_id")
+        return ModelHasRole::query()
+            ->select((new ModelHasRole)->qualifyColumn('*'))
+            ->join((new Role)->getTable(), (new Role)->qualifyColumn('id'), '=', (new ModelHasRole)->qualifyColumn('role_id'))
             ->forModel($model)
-            ->whereIn('role_id', function ($sub) use ($rolesTable, $packet) {
+            ->where('denied', false)
+            ->whereIn('role_id', function ($sub) use ($packet) {
                 $sub->select('id')
-                    ->from($rolesTable)
+                    ->from((new Role)->getTable())
                     ->whereLike('name', "%{$packet->searchTerm}%");
             })
-            ->orderByDesc("$rolesTable.is_active")
-            ->orderBy("$rolesTable.name")
-            ->with('role:id,name,is_active');
-
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('role:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 
     /**
@@ -127,20 +164,38 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
      */
     public function searchUnassignedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
     {
-        $modelRolesTable = Config::get('gatekeeper.tables.model_has_roles', GatekeeperConfigDefault::TABLES_MODEL_HAS_ROLES);
-
-        $query = Role::query()
+        return Role::query()
             ->whereLike('name', "%{$packet->searchTerm}%")
-            ->whereNotIn('id', function ($subquery) use ($model, $modelRolesTable) {
+            ->whereNotIn('id', function ($subquery) use ($model) {
                 $subquery->select('role_id')
-                    ->from($modelRolesTable)
+                    ->from((new ModelHasRole)->getTable())
                     ->where('model_type', $model->getMorphClass())
                     ->where('model_id', $model->getKey())
-                    ->whereNull("$modelRolesTable.deleted_at");
+                    ->whereNull((new ModelHasRole)->qualifyColumn('deleted_at'));
             })
             ->orderByDesc('is_active')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->paginate(10, ['*'], 'page', $packet->page);
+    }
 
-        return $query->paginate(10, ['*'], 'page', $packet->page);
+    /**
+     * Search denied roles by role name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        return ModelHasRole::query()
+            ->select((new ModelHasRole)->qualifyColumn('*'))
+            ->join((new Role)->getTable(), (new Role)->qualifyColumn('id'), '=', (new ModelHasRole)->qualifyColumn('role_id'))
+            ->forModel($model)
+            ->where('denied', true)
+            ->whereIn('role_id', function ($sub) use ($packet) {
+                $sub->select('id')
+                    ->from((new Role)->getTable())
+                    ->whereLike('name', "%{$packet->searchTerm}%");
+            })
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->with('role:id,name,grant_by_default,is_active')
+            ->paginate(10, ['*'], 'page', $packet->page);
     }
 }

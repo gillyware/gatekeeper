@@ -1,4 +1,9 @@
-import { type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperModelEntityAssignmentMap } from '@/types';
+import {
+    type GatekeeperEntity,
+    type GatekeeperEntityModelMap,
+    type GatekeeperModelEntityAssignmentMap,
+    type GatekeeperModelEntityDenialMap,
+} from '@/types';
 import { type GatekeeperResponse, type Pagination } from '@/types/api/index';
 
 export interface ConfiguredModelMetadata {
@@ -28,18 +33,14 @@ export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
 }
 
 export interface PermissionSource {
-    type: 'direct' | 'role' | 'team' | 'team-role';
+    type: 'default' | 'direct' | 'role' | 'feature' | 'team' | 'team-role';
     role?: string;
+    feature?: string;
     team?: string;
 }
 
-export interface VerbosePermission {
-    name: string;
-    sources: PermissionSource[];
-}
-
 export interface RoleSource {
-    type: 'direct' | 'team';
+    type: 'default' | 'direct' | 'team';
     team?: string;
 }
 
@@ -48,20 +49,35 @@ export interface FeatureSource {
     team?: string;
 }
 
-export interface VerboseRole {
+export interface TeamSource {
+    type: 'default' | 'direct';
+}
+
+export interface VerbosePermissions {
+    name: string;
+    sources: PermissionSource[];
+}
+
+export interface VerboseRoles {
     name: string;
     sources: RoleSource[];
 }
 
-export interface VerboseFeature {
+export interface VerboseFeatures {
     name: string;
     sources: FeatureSource[];
 }
 
+export interface VerboseTeams {
+    name: string;
+    sources: TeamSource[];
+}
+
 export interface AccessSources {
-    permissions: VerbosePermission[];
-    roles: VerboseRole[];
-    features: VerboseFeature[];
+    permissions: VerbosePermissions[];
+    roles: VerboseRoles[];
+    features: VerboseFeatures[];
+    teams: VerboseTeams[];
     direct_permissions_count: number;
     direct_roles_count: number;
     direct_features_count: number;
@@ -116,14 +132,14 @@ export interface ModelUnassignedEntitiesPageResponse<E extends GatekeeperEntity>
     data?: Pagination<GatekeeperEntityModelMap[E]>;
 }
 
+export interface ModelDeniedEntitiesPageResponse<E extends GatekeeperEntity> extends GatekeeperResponse {
+    data?: Pagination<GatekeeperModelEntityDenialMap[E]>;
+}
+
 export interface LookupModelResponse extends GatekeeperResponse {
     data?: ConfiguredModel;
 }
 
-export interface AssignEntityToModelResponse extends GatekeeperResponse {
-    data?: { message: string };
-}
-
-export interface RevokeEntityFromModelResponse extends GatekeeperResponse {
+export interface ModelEntityResponse extends GatekeeperResponse {
     data?: { message: string };
 }

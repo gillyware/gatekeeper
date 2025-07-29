@@ -1,7 +1,13 @@
 import { useApi } from '@/lib/api';
 import { apiText } from '@/lib/lang/en/api';
 import { manageModelText, type ModelEntitySupportText } from '@/lib/lang/en/model/manage';
-import { type GatekeeperConfig, type GatekeeperEntity, type GatekeeperEntityModelMap, type GatekeeperModelEntityAssignmentMap } from '@/types';
+import {
+    GatekeeperModelEntityDenialMap,
+    type GatekeeperConfig,
+    type GatekeeperEntity,
+    type GatekeeperEntityModelMap,
+    type GatekeeperModelEntityAssignmentMap,
+} from '@/types';
 import { type GatekeeperErrors, type Pagination } from '@/types/api';
 import {
     type ConfiguredModel,
@@ -111,6 +117,30 @@ export async function getUnassignedEntitiesForModel<E extends GatekeeperEntity>(
     setLoading(false);
 }
 
+export async function getDeniedEntitiesForModel<E extends GatekeeperEntity>(
+    api: ReturnType<typeof useApi>,
+    request: GetModelEntitiesPageRequest,
+    setEntityDenials: (entities: Pagination<GatekeeperModelEntityDenialMap[E]> | null) => void,
+    setLoading: (loading: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<void> {
+    setLoading(true);
+    setError(null);
+
+    const response = await api.getDeniedEntitiesForModel(request);
+
+    if (response.status >= 400) {
+        setError(response.errors?.general || `Failed to fetch denied ${request.entity}s.`);
+        setEntityDenials(null);
+        setLoading(false);
+        return;
+    }
+
+    const denials = response.data as Pagination<GatekeeperModelEntityDenialMap[E]>;
+    setEntityDenials(denials);
+    setLoading(false);
+}
+
 export async function assignEntityToModel(
     api: ReturnType<typeof useApi>,
     data: ModelEntityRequest,
@@ -132,7 +162,7 @@ export async function assignEntityToModel(
     return true;
 }
 
-export async function revokeEntityFromModel(
+export async function unassignEntityFromModel(
     api: ReturnType<typeof useApi>,
     data: ModelEntityRequest,
     setLoading: (loading: boolean) => void,
@@ -141,10 +171,52 @@ export async function revokeEntityFromModel(
     setLoading(true);
     setError(null);
 
-    const response = await api.revokeFromModel(data);
+    const response = await api.unassignFromModel(data);
 
     if (response.status >= 400) {
-        setError(response.errors?.general || `Failed to revoke ${data.entity} '${data.entity_name}'.`);
+        setError(response.errors?.general || `Failed to unassign ${data.entity} '${data.entity_name}'.`);
+        setLoading(false);
+        return false;
+    }
+
+    setLoading(false);
+    return true;
+}
+
+export async function denyEntityFromModel(
+    api: ReturnType<typeof useApi>,
+    data: ModelEntityRequest,
+    setLoading: (loading: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<boolean> {
+    setLoading(true);
+    setError(null);
+
+    const response = await api.denyFromModel(data);
+
+    if (response.status >= 400) {
+        setError(response.errors?.general || `Failed to deny ${data.entity} '${data.entity_name}'.`);
+        setLoading(false);
+        return false;
+    }
+
+    setLoading(false);
+    return true;
+}
+
+export async function undenyEntityFromModel(
+    api: ReturnType<typeof useApi>,
+    data: ModelEntityRequest,
+    setLoading: (loading: boolean) => void,
+    setError: (error: string | null) => void,
+): Promise<boolean> {
+    setLoading(true);
+    setError(null);
+
+    const response = await api.undenyFromModel(data);
+
+    if (response.status >= 400) {
+        setError(response.errors?.general || `Failed to undeny ${data.entity} '${data.entity_name}'.`);
         setLoading(false);
         return false;
     }

@@ -4,6 +4,7 @@ namespace Gillyware\Gatekeeper\Traits;
 
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\Feature;
+use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use UnitEnum;
@@ -15,45 +16,87 @@ trait HasFeatures
     /**
      * Assign a feature to the model.
      */
-    public function turnFeatureOn(Feature|string|UnitEnum $feature): bool
+    public function assignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::for($this)->turnFeatureOn($feature);
+        return Gatekeeper::for($this)->assignFeature($feature);
     }
 
     /**
      * Assign multiple features to the model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function turnAllFeaturesOn(array|Arrayable $features): bool
+    public function assignAllFeatures(array|Arrayable $features): bool
     {
-        return Gatekeeper::for($this)->turnAllFeaturesOn($features);
+        return Gatekeeper::for($this)->assignAllFeatures($features);
     }
 
     /**
-     * Revoke a feature from the model.
+     * Unassign a feature from the model.
      */
-    public function turnFeatureOff(Feature|string|UnitEnum $feature): bool
+    public function unassignFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
-        return Gatekeeper::for($this)->turnFeatureOff($feature);
+        return Gatekeeper::for($this)->unassignFeature($feature);
     }
 
     /**
-     * Revoke multiple features from the model.
+     * Unassign multiple features from the model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
-    public function turnAllFeaturesOff(array|Arrayable $features): bool
+    public function unassignAllFeatures(array|Arrayable $features): bool
     {
-        return Gatekeeper::for($this)->turnAllFeaturesOff($features);
+        return Gatekeeper::for($this)->unassignAllFeatures($features);
+    }
+
+    /**
+     * Deny a feature from the model.
+     */
+    public function denyFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::for($this)->denyFeature($feature);
+    }
+
+    /**
+     * Deny multiple features from the model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function denyAllFeatures(array|Arrayable $features): bool
+    {
+        return Gatekeeper::for($this)->denyAllFeatures($features);
+    }
+
+    /**
+     * Undeny a feature from the model.
+     */
+    public function undenyFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
+    {
+        return Gatekeeper::for($this)->undenyFeature($feature);
+    }
+
+    /**
+     * Undeny multiple features from the model.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
+     */
+    public function undenyAllFeatures(array|Arrayable $features): bool
+    {
+        return Gatekeeper::for($this)->undenyAllFeatures($features);
     }
 
     /**
      * Check if the model has a given feature.
      */
-    public function hasFeature(Feature|string|UnitEnum $feature): bool
+    public function hasFeature(Feature|FeaturePacket|string|UnitEnum $feature): bool
     {
         return Gatekeeper::for($this)->hasFeature($feature);
     }
 
     /**
      * Check if the model has any of the given features.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
     public function hasAnyFeature(array|Arrayable $features): bool
     {
@@ -62,6 +105,8 @@ trait HasFeatures
 
     /**
      * Check if the model has all of the given features.
+     *
+     * @param  array<Feature|FeaturePacket|string|UnitEnum>|Arrayable<Feature|FeaturePacket|string|UnitEnum>  $features
      */
     public function hasAllFeatures(array|Arrayable $features): bool
     {
@@ -71,7 +116,7 @@ trait HasFeatures
     /**
      * Get all features assigned directly to a model.
      *
-     * @return Collection<Feature>
+     * @return Collection<string, FeaturePacket>
      */
     public function getDirectFeatures(): Collection
     {
@@ -81,7 +126,7 @@ trait HasFeatures
     /**
      * Get all features assigned directly or indirectly to a model.
      *
-     * @return Collection<Feature>
+     * @return Collection<string, FeaturePacket>
      */
     public function getEffectiveFeatures(): Collection
     {

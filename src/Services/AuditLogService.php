@@ -45,13 +45,20 @@ class AuditLogService implements AuditLogServiceInterface
             AuditLogAction::CreateFeature->value => '{actor} created a new {entity} named {name}',
             AuditLogAction::CreateTeam->value => '{actor} created a new {entity} named {name}',
 
-            AuditLogAction::UpdatePermission->value => '{actor} updated {entity} name from {old_name} to {name}',
-            AuditLogAction::UpdateRole->value => '{actor} updated {entity} name from {old_name} to {name}',
-            AuditLogAction::UpdateFeature->value => '{actor} updated {entity} name from {old_name} to {name}',
-            AuditLogAction::UpdateTeam->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdatePermissionName->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateRoleName->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateFeatureName->value => '{actor} updated {entity} name from {old_name} to {name}',
+            AuditLogAction::UpdateTeamName->value => '{actor} updated {entity} name from {old_name} to {name}',
 
-            AuditLogAction::TurnFeatureOffByDefault->value => '{actor} turned {entity} named {name} off by default',
-            AuditLogAction::TurnFeatureOnByDefault->value => '{actor} turned {entity} named {name} on by default',
+            AuditLogAction::GrantPermissionByDefault->value => '{actor} granted {entity} named {name} by default',
+            AuditLogAction::GrantRoleByDefault->value => '{actor} granted {entity} named {name} by default',
+            AuditLogAction::GrantFeatureByDefault->value => '{actor} granted {entity} named {name} by default',
+            AuditLogAction::GrantTeamByDefault->value => '{actor} granted {entity} named {name} by default',
+
+            AuditLogAction::RevokePermissionDefaultGrant->value => '{actor} revoked the default grant from {entity} named {name}',
+            AuditLogAction::RevokeRoleDefaultGrant->value => '{actor} revoked the default grant from {entity} named {name}',
+            AuditLogAction::RevokeFeatureDefaultGrant->value => '{actor} revoked the default grant from {entity} named {name}',
+            AuditLogAction::RevokeTeamDefaultGrant->value => '{actor} revoked the default grant from {entity} named {name}',
 
             AuditLogAction::DeactivatePermission->value => '{actor} deactivated {entity} named {name}',
             AuditLogAction::DeactivateRole->value => '{actor} deactivated {entity} named {name}',
@@ -70,13 +77,28 @@ class AuditLogService implements AuditLogServiceInterface
 
             AuditLogAction::AssignPermission->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::AssignRole->value => '{actor} assigned {entity} named {name} to {target}',
-            AuditLogAction::AssignFeature->value => '{actor} turned on {entity} named {name} for {target}',
-            AuditLogAction::RevokePermission->value => '{actor} revoked {entity} named {name} from {target}',
-            AuditLogAction::RevokeRole->value => '{actor} revoked {entity} named {name} from {target}',
-            AuditLogAction::RevokeFeature->value => '{actor} turned off {entity} named {name} for {target}',
+            AuditLogAction::AssignFeature->value => '{actor} assigned {entity} named {name} to {target}',
 
-            AuditLogAction::AddTeam->value => '{actor} added {target} to team {name}',
-            AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team {name}',
+            AuditLogAction::UnassignPermission->value => '{actor} unassigned {entity} named {name} from {target}',
+            AuditLogAction::UnassignRole->value => '{actor} unassigned {entity} named {name} from {target}',
+            AuditLogAction::UnassignFeature->value => '{actor} unassigned {entity} named {name} from {target}',
+
+            AuditLogAction::RevokePermission->value => '{actor} unassigned {entity} named {name} from {target}',
+            AuditLogAction::RevokeRole->value => '{actor} unassigned {entity} named {name} from {target}',
+            AuditLogAction::RevokeFeature->value => '{actor} unassigned {entity} named {name} from {target}',
+
+            AuditLogAction::AddTeam->value => '{actor} added {target} to team named {name}',
+            AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team named {name}',
+
+            AuditLogAction::DenyPermission->value => '{actor} denied {entity} named {name} from {target}',
+            AuditLogAction::DenyRole->value => '{actor} denied {entity} named {name} from {target}',
+            AuditLogAction::DenyFeature->value => '{actor} denied {entity} named {name} from {target}',
+            AuditLogAction::DenyTeam->value => '{actor} denied {entity} named {name} from {target}',
+
+            AuditLogAction::UndenyPermission->value => '{actor} undenied {entity} named {name} from {target}',
+            AuditLogAction::UndenyRole->value => '{actor} undenied {entity} named {name} from {target}',
+            AuditLogAction::UndenyFeature->value => '{actor} undenied {entity} named {name} from {target}',
+            AuditLogAction::UndenyTeam->value => '{actor} undenied {entity} named {name} from {target}',
         ];
 
         $template = $templates[$log->action] ?? '';

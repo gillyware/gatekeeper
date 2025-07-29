@@ -17,11 +17,14 @@ final class EntityPagePacket extends Packet
         #[Field('search_term'), Rule(['present', 'nullable', 'string'])]
         public readonly ?string $searchTerm,
 
-        #[Field('prioritized_attribute'), Rule(['required', 'string', 'in:name,is_active'])]
+        #[Field('prioritized_attribute'), Rule(['required', 'string', 'in:name,grant_by_default,is_active'])]
         public readonly string $prioritizedAttribute,
 
         #[Field('name_order'), Rule(['required', 'string', 'in:asc,desc'])]
         public readonly string $nameOrder,
+
+        #[Field('grant_by_default_order'), Rule(['required', 'string', 'in:asc,desc'])]
+        public readonly string $grantByDefaultOrder,
 
         #[Field('is_active_order'), Rule(['required', 'string', 'in:asc,desc'])]
         public readonly string $isActiveOrder,

@@ -42,4 +42,19 @@ class ModelHasRoleService implements ModelHasEntityServiceInterface
         return $this->modelHasRoleRepository->searchUnassignedByEntityNameForModel($model, $packet)
             ->through(fn (Role $role) => $role->toPacket());
     }
+
+    /**
+     * Search denied roles by role name for model.
+     */
+    public function searchDeniedByEntityNameForModel(Model $model, ModelEntitiesPagePacket $packet): LengthAwarePaginator
+    {
+        $paginator = $this->modelHasRoleRepository->searchDeniedByEntityNameForModel($model, $packet);
+        $displayTimezone = Config::get('gatekeeper.timezone', GatekeeperConfigDefault::TIMEZONE);
+
+        return $paginator->through(function (ModelHasRole $modelHasRole) use ($displayTimezone) {
+            $modelHasRole->offsetSet('denied_at', $modelHasRole->created_at->timezone($displayTimezone)->format('Y-m-d H:i:s T'));
+
+            return $modelHasRole;
+        });
+    }
 }

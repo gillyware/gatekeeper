@@ -1,183 +1,176 @@
+import { Button } from '@/components/ui/button';
 import { DebouncedInput } from '@/components/ui/debounced-input';
-import { useGatekeeper } from '@/context/GatekeeperContext';
+import HeadingSmall from '@/components/ui/heading-small';
 import { manageModelText, type ModelEntityTablesText } from '@/lib/lang/en/model/manage';
 import { type GatekeeperEntity, type GatekeeperEntityModelMap } from '@/types';
 import { type Pagination } from '@/types/api';
-import { type EntitySupported, type GetModelEntitiesPageRequest } from '@/types/api/model';
-import { Button } from '@components/ui/button';
-import HeadingSmall from '@components/ui/heading-small';
-import { CheckCircle, Loader, PauseCircle } from 'lucide-react';
-import { useMemo, type SetStateAction } from 'react';
+import { type GetModelEntitiesPageRequest } from '@/types/api/model';
+import { Ban, CheckCircle, Loader, PauseCircle } from 'lucide-react';
+import { type SetStateAction, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 interface ModelUnassignedEntitiesTableProps<E extends GatekeeperEntity> {
-    entity: GatekeeperEntity;
-    modelUnassignedEntities: Pagination<GatekeeperEntityModelMap[E]> | null;
-    searchTerm: string;
+    entity: E;
+    data: Pagination<GatekeeperEntityModelMap[E]> | null;
     pageRequest: GetModelEntitiesPageRequest;
-    setSearchTerm: (value: SetStateAction<string>) => void;
     setPageRequest: (value: SetStateAction<GetModelEntitiesPageRequest>) => void;
     refreshPages: () => Promise<void>;
-    assignEntityToModel: (entityName: string) => Promise<boolean>;
-    loadingModelUnassignedEntities: boolean;
-    processingEntityAssignment: boolean;
-    errorLoadingModelUnassignedEntities: string | null;
-    errorAssigningEntity: string | null;
-    numberOfColumns: number;
-    entitySupported: EntitySupported;
+    assignEntity: (entityName: string) => Promise<boolean>;
+    denyEntity: (entityName: string) => Promise<boolean>;
+    processing: boolean;
+    setProcessing: (value: boolean) => void;
+    error: string | null;
+    canManage: boolean;
+    entitySupported: boolean;
+    search: string;
+    setSearch: (val: string) => void;
 }
 
 export default function ModelUnassignedEntitiesTable<E extends GatekeeperEntity>({
     entity,
-    modelUnassignedEntities,
-    searchTerm,
+    data,
     pageRequest,
-    setSearchTerm,
     setPageRequest,
     refreshPages,
-    assignEntityToModel,
-    loadingModelUnassignedEntities,
-    processingEntityAssignment,
-    errorLoadingModelUnassignedEntities,
-    errorAssigningEntity,
-    numberOfColumns,
+    assignEntity,
+    denyEntity,
+    processing,
+    setProcessing,
+    error,
+    canManage,
     entitySupported,
+    search,
+    setSearch,
 }: ModelUnassignedEntitiesTableProps<E>) {
-    const { user } = useGatekeeper();
     const navigate = useNavigate();
     const language: ModelEntityTablesText = useMemo(() => manageModelText.modelEntityTablesText, []);
 
+    useEffect(() => {
+        setSearch(pageRequest.search_term);
+    }, [pageRequest.search_term]);
+
     return (
-        <div className="flex w-full flex-col gap-8">
-            <div className="flex flex-col gap-4">
-                <HeadingSmall title={language[entity].unassignedHeader} />
+        <div className="flex flex-col gap-4">
+            <HeadingSmall title={language[entity].unassignedHeader} />
 
-                <DebouncedInput
-                    value={searchTerm}
-                    placeholder={language[entity].searchPlaceholder}
-                    debounceTime={1000}
-                    setValue={setSearchTerm}
-                    onDebouncedChange={async (value: string) => {
-                        setPageRequest((prev) => ({
-                            ...prev,
-                            page: 1,
-                            search_term: value,
-                        }));
-                    }}
-                />
+            <DebouncedInput
+                value={search}
+                placeholder={language[entity].searchPlaceholder}
+                debounceTime={1000}
+                setValue={setSearch}
+                onDebouncedChange={async (val) => setPageRequest((prev) => ({ ...prev, search_term: val, page: 1 }))}
+            />
 
-                {errorAssigningEntity && <div className="w-full px-4 py-6 text-center text-sm text-red-500">{errorAssigningEntity}</div>}
+            {error && <div className="text-center text-sm text-red-500">{error}</div>}
 
-                <div className="overflow-auto rounded-lg border dark:border-gray-700">
-                    <table className="w-full text-sm">
-                        <thead className="bg-muted">
+            <div className="overflow-auto rounded-lg border dark:border-gray-700">
+                <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                        <tr>
+                            <th className="px-2 py-2 text-left font-semibold sm:px-4">{language.nameHeader}</th>
+                            <th className="px-2 py-2 text-center font-semibold sm:px-4">{language.grantedByDefaultHeader}</th>
+                            <th className="px-2 py-2 text-center font-semibold sm:px-4">{language.statusHeader}</th>
+                            {canManage && entitySupported && <th className="px-2 py-2 text-center font-semibold sm:px-4">{language.actionHeader}</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {!data ? (
                             <tr>
-                                <th className="px-4 py-2 text-left font-semibold">{language[entity].nameHeader}</th>
-                                <th className="px-4 py-2 text-center font-semibold">{language[entity].statusHeader}</th>
-                                {user.permissions.can_manage && entitySupported.supported && (
-                                    <th className="px-6 py-2 text-left font-semibold">{language.actionHeader}</th>
-                                )}
+                                <td colSpan={canManage && entitySupported ? 4 : 3} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
+                                    <Loader className="mx-auto h-4 w-4 animate-spin" />
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {loadingModelUnassignedEntities ? (
-                                <tr>
-                                    <td colSpan={numberOfColumns} className="text-muted-foreground px-4 py-6 text-center">
-                                        <div className="inline-flex items-center gap-2">
-                                            <Loader className="mx-auto h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
-                                        </div>
+                        ) : !data.data.length ? (
+                            <tr>
+                                <td colSpan={canManage && entitySupported ? 4 : 3} className="text-muted-foreground px-2 py-6 text-center sm:px-4">
+                                    {language[entity].unassignedEmpty}
+                                </td>
+                            </tr>
+                        ) : (
+                            data.data.map((entityModel) => (
+                                <tr key={entityModel.name} className="border-t dark:border-gray-700">
+                                    <td className="px-2 py-2 sm:px-4">
+                                        <Button className="px-0" variant="link" onClick={() => navigate(`/${entity}s/${entityModel.id}/manage`)}>
+                                            {entityModel.name}
+                                        </Button>
                                     </td>
-                                </tr>
-                            ) : errorLoadingModelUnassignedEntities ? (
-                                <tr>
-                                    <td colSpan={numberOfColumns} className="px-4 py-6 text-center text-red-500">
-                                        {errorLoadingModelUnassignedEntities}
+                                    <td className="px-2 py-2 text-center sm:px-4">
+                                        {entityModel.grant_by_default ? (
+                                            <CheckCircle className="mx-auto h-4 w-4 text-green-600 dark:text-green-400" />
+                                        ) : (
+                                            <Ban className="mx-auto h-4 w-4 text-red-600 dark:text-red-400" />
+                                        )}
                                     </td>
-                                </tr>
-                            ) : !modelUnassignedEntities?.data.length ? (
-                                <tr>
-                                    <td colSpan={numberOfColumns} className="text-muted-foreground px-4 py-6 text-center">
-                                        {language[entity].unassignedEmpty}
+                                    <td className="px-2 py-2 text-center sm:px-4">
+                                        {entityModel.is_active ? (
+                                            <CheckCircle className="mx-auto h-4 w-4 text-green-600 dark:text-green-400" />
+                                        ) : (
+                                            <PauseCircle className="mx-auto h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                                        )}
                                     </td>
-                                </tr>
-                            ) : (
-                                modelUnassignedEntities.data.map((entityModel) => (
-                                    <tr key={entityModel.name} className="border-t transition-colors dark:border-gray-700">
-                                        <td className="px-4 py-2">
-                                            <Button
-                                                className="px-0"
-                                                variant="link"
-                                                onClick={() => {
-                                                    navigate(`/${entity}s/${entityModel.id}/manage`);
-                                                }}
-                                            >
-                                                {entityModel.name}
-                                            </Button>
-                                        </td>
-                                        <td className="flex items-center justify-center px-4 py-2">
-                                            <div className="flex h-8 w-full items-center justify-center">
-                                                {entityModel.is_active ? (
-                                                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                ) : (
-                                                    <PauseCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                                                )}
-                                            </div>
-                                        </td>
-                                        {user.permissions.can_manage && entitySupported.supported && (
-                                            <td className="px-4 py-2">
+                                    {canManage && entitySupported && (
+                                        <td className="flex items-center justify-center px-2 py-2 sm:px-4">
+                                            <div className="flex flex-wrap items-center justify-center gap-1 p-0">
                                                 <Button
-                                                    className="px-2"
-                                                    variant="ghost"
                                                     size="sm"
-                                                    disabled={processingEntityAssignment}
+                                                    variant="ghost"
+                                                    disabled={processing}
                                                     onClick={async () => {
-                                                        const assigned = await assignEntityToModel(entityModel.name);
-                                                        if (assigned) {
-                                                            refreshPages();
-                                                        }
+                                                        setProcessing(true);
+                                                        const assigned = await assignEntity(entityModel.name);
+                                                        setProcessing(false);
+                                                        if (assigned) await refreshPages();
                                                     }}
                                                 >
-                                                    {language[entity].assign}
+                                                    {language.assign}
                                                 </Button>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
 
-                {modelUnassignedEntities && modelUnassignedEntities.total > 0 && (
-                    <div className="flex w-full items-center justify-end gap-2 pt-2">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={modelUnassignedEntities.current_page === 1}
-                            onClick={() => {
-                                setPageRequest((prev) => ({ ...prev, page: pageRequest.page - 1 }));
-                            }}
-                        >
-                            {language.previous}
-                        </Button>
-
-                        <span className="text-sm">
-                            {language.pagination(modelUnassignedEntities.from, modelUnassignedEntities.to, modelUnassignedEntities.total)}
-                        </span>
-
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={modelUnassignedEntities.current_page === modelUnassignedEntities.last_page}
-                            onClick={() => {
-                                setPageRequest((prev) => ({ ...prev, page: pageRequest.page + 1 }));
-                            }}
-                        >
-                            {language.next}
-                        </Button>
-                    </div>
-                )}
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    disabled={processing}
+                                                    onClick={async () => {
+                                                        setProcessing(true);
+                                                        const denied = await denyEntity(entityModel.name);
+                                                        setProcessing(false);
+                                                        if (denied) await refreshPages();
+                                                    }}
+                                                >
+                                                    {language.deny}
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
+
+            {data && data.total > 0 && (
+                <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={data.current_page === 1}
+                        onClick={() => setPageRequest((prev) => ({ ...prev, page: prev.page - 1 }))}
+                    >
+                        {language.previous}
+                    </Button>
+
+                    <span className="text-sm">{language.pagination(data.from, data.to, data.total)}</span>
+
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={data.current_page === data.last_page}
+                        onClick={() => setPageRequest((prev) => ({ ...prev, page: prev.page + 1 }))}
+                    >
+                        {language.next}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

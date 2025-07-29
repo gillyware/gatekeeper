@@ -21,6 +21,6 @@ final class UpdatePermissionAuditLogPacket extends AbstractBaseStoreAuditLogPack
 
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::UpdatePermission;
+        return AuditLogAction::UpdatePermissionName;
     }
 }

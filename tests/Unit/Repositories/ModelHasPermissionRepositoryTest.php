@@ -39,7 +39,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $this->assertFalse($this->repository->existsForEntity($permission));
 
         $user = User::factory()->create();
-        $this->repository->create($user, $permission);
+        $this->repository->assignToModel($user, $permission);
 
         $this->assertTrue($this->repository->existsForEntity($permission));
     }
@@ -50,10 +50,10 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $permission = Permission::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelPermissionNames')
+            ->method('invalidateCacheForModelPermissionLinks')
             ->with($user);
 
-        $record = $this->repository->create($user, $permission);
+        $record = $this->repository->assignToModel($user, $permission);
 
         $this->assertInstanceOf(ModelHasPermission::class, $record);
         $this->assertDatabaseHas(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
@@ -69,12 +69,12 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $permission = Permission::factory()->create();
 
         $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelPermissionNames')
+            ->method('invalidateCacheForModelPermissionLinks')
             ->with($user);
 
-        $this->repository->create($user, $permission);
+        $this->repository->assignToModel($user, $permission);
 
-        $this->assertTrue($this->repository->deleteForModelAndEntity($user, $permission));
+        $this->assertTrue($this->repository->unassignFromModel($user, $permission));
 
         $this->assertSoftDeleted(Config::get('gatekeeper.tables.model_has_permissions', GatekeeperConfigDefault::TABLES_MODEL_HAS_PERMISSIONS), [
             'model_type' => $user->getMorphClass(),

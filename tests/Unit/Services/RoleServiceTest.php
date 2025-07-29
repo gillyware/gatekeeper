@@ -34,7 +34,6 @@ class RoleServiceTest extends TestCase
         Gatekeeper::setActor($this->user);
 
         $this->service = app(RoleService::class);
-        $this->service->actingAs($this->user);
     }
 
     public function test_role_exists()
@@ -110,18 +109,18 @@ class RoleServiceTest extends TestCase
         $this->assertCount(0, AuditLog::all());
     }
 
-    public function test_update_role()
+    public function test_update_role_name()
     {
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
 
-        $updatedRole = $this->service->update($role, $newName);
+        $updatedRole = $this->service->updateName($role, $newName);
 
         $this->assertInstanceOf(RolePacket::class, $updatedRole);
         $this->assertEquals($newName, $updatedRole->name);
     }
 
-    public function test_update_role_fails_if_roles_feature_disabled()
+    public function test_update_role_name_fails_if_roles_feature_disabled()
     {
         Config::set('gatekeeper.features.roles.enabled', false);
 
@@ -129,12 +128,12 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->withName($name)->create();
 
         $this->expectException(RolesFeatureDisabledException::class);
-        $this->service->update($role, 'new-name');
+        $this->service->updateName($role, 'new-name');
 
         $this->assertSame($name, $role->fresh()->name);
     }
 
-    public function test_audit_log_inserted_on_role_update_when_auditing_enabled()
+    public function test_audit_log_inserted_on_role_name_update_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -142,28 +141,154 @@ class RoleServiceTest extends TestCase
         $oldName = $role->name;
         $newName = fake()->unique()->word();
 
-        $this->service->update($role, $newName);
+        $this->service->updateName($role, $newName);
 
         $auditLogs = AuditLog::all();
         $this->assertCount(1, $auditLogs);
 
         /** @var AuditLog<User, Role> $updateRoleLog */
         $updateRoleLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::UpdateRole->value, $updateRoleLog->action);
+        $this->assertEquals(AuditLogAction::UpdateRoleName->value, $updateRoleLog->action);
         $this->assertEquals($oldName, $updateRoleLog->metadata['old_name']);
         $this->assertEquals($newName, $updateRoleLog->metadata['name']);
         $this->assertEquals($this->user->id, $updateRoleLog->actionBy->id);
         $this->assertEquals($role->id, $updateRoleLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_role_update_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_role_name_update_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
         $role = Role::factory()->create();
         $newName = fake()->unique()->word();
 
-        $this->service->update($role, $newName);
+        $this->service->updateName($role, $newName);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_grant_role_by_default()
+    {
+        $role = Role::factory()->create();
+
+        $role = $this->service->grantByDefault($role);
+
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertTrue($role->grantedByDefault);
+    }
+
+    public function test_grant_role_by_default_fails_if_roles_feature_disabled()
+    {
+        Config::set('gatekeeper.features.roles.enabled', false);
+
+        $role = Role::factory()->create();
+
+        $this->expectException(RolesFeatureDisabledException::class);
+        $this->service->grantByDefault($role);
+
+        $this->assertFalse($role->fresh()->grant_by_default);
+    }
+
+    public function test_grant_role_by_default_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $role = Role::factory()->create();
+
+        $this->service->grantByDefault($role);
+        $this->service->grantByDefault($role);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_grant_role_by_default_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $role = Role::factory()->create();
+
+        $this->service->grantByDefault($role);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Role> $grantByDefaultRoleLog */
+        $grantByDefaultRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::GrantRoleByDefault->value, $grantByDefaultRoleLog->action);
+        $this->assertEquals($role->name, $grantByDefaultRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $grantByDefaultRoleLog->actionBy->id);
+        $this->assertEquals($role->id, $grantByDefaultRoleLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_grant_role_by_default_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $role = Role::factory()->create();
+
+        $this->service->grantByDefault($role);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_revoke_role_default_grant()
+    {
+        $role = Role::factory()->grantByDefault()->create();
+
+        $role = $this->service->revokeDefaultGrant($role);
+
+        $this->assertInstanceOf(RolePacket::class, $role);
+        $this->assertFalse($role->grantedByDefault);
+    }
+
+    public function test_revoke_role_default_grant_succeeds_if_roles_feature_disabled()
+    {
+        Config::set('gatekeeper.features.roles.enabled', false);
+
+        $role = Role::factory()->grantByDefault()->create();
+        $role = $this->service->revokeDefaultGrant($role);
+
+        $this->assertFalse($role->grantedByDefault);
+    }
+
+    public function test_revoke_role_default_grant_is_idempotent()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $role = Role::factory()->grantByDefault()->create();
+
+        $role = $this->service->revokeDefaultGrant($role);
+        $role = $this->service->revokeDefaultGrant($role);
+
+        $this->assertCount(1, AuditLog::all());
+    }
+
+    public function test_audit_log_inserted_on_revoke_role_default_grant_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $role = Role::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($role);
+
+        $auditLogs = AuditLog::all();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, Role> $revokeDefaultGrantAuditLog */
+        $revokeDefaultGrantAuditLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::RevokeRoleDefaultGrant->value, $revokeDefaultGrantAuditLog->action);
+        $this->assertEquals($role->name, $revokeDefaultGrantAuditLog->metadata['name']);
+        $this->assertEquals($this->user->id, $revokeDefaultGrantAuditLog->actionBy->id);
+        $this->assertEquals($role->id, $revokeDefaultGrantAuditLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_revoke_role_default_grant_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $role = Role::factory()->grantByDefault()->create();
+
+        $this->service->revokeDefaultGrant($role);
 
         $this->assertCount(0, AuditLog::all());
     }
@@ -435,18 +560,18 @@ class RoleServiceTest extends TestCase
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
 
-    public function test_revoke_role()
+    public function test_unassign_role()
     {
         $user = User::factory()->create();
         $role = Role::factory()->create();
 
         $this->service->assignToModel($user, $role);
 
-        $this->assertTrue($this->service->revokeFromModel($user, $role));
+        $this->assertTrue($this->service->unassignFromModel($user, $role));
         $this->assertFalse($user->hasRole($role));
     }
 
-    public function test_audit_log_inserted_on_role_revocation_when_auditing_enabled()
+    public function test_audit_log_inserted_on_role_unassignment_when_auditing_enabled()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -454,20 +579,20 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
 
         $this->service->assignToModel($user, $role);
-        $this->service->revokeFromModel($user, $role);
+        $this->service->unassignFromModel($user, $role);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeRole->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignRole->value)->get();
         $this->assertCount(1, $auditLogs);
 
-        /** @var AuditLog<User, Role> $revokeRoleLog */
-        $revokeRoleLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::RevokeRole->value, $revokeRoleLog->action);
-        $this->assertEquals($role->name, $revokeRoleLog->metadata['name']);
-        $this->assertEquals($this->user->id, $revokeRoleLog->actionBy->id);
-        $this->assertEquals($user->id, $revokeRoleLog->actionTo->id);
+        /** @var AuditLog<User, Role> $unassignRoleLog */
+        $unassignRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::UnassignRole->value, $unassignRoleLog->action);
+        $this->assertEquals($role->name, $unassignRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $unassignRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $unassignRoleLog->actionTo->id);
     }
 
-    public function test_audit_log_not_inserted_on_role_revocation_when_auditing_disabled()
+    public function test_audit_log_not_inserted_on_role_unassignment_when_auditing_disabled()
     {
         Config::set('gatekeeper.features.audit.enabled', false);
 
@@ -475,24 +600,24 @@ class RoleServiceTest extends TestCase
         $role = Role::factory()->create();
 
         $this->service->assignToModel($user, $role);
-        $this->service->revokeFromModel($user, $role);
+        $this->service->unassignFromModel($user, $role);
 
         $this->assertCount(0, AuditLog::all());
     }
 
-    public function test_revoke_multiple_roles()
+    public function test_unassign_multiple_roles()
     {
         $user = User::factory()->create();
         $roles = Role::factory()->count(3)->create();
 
         $this->service->assignAllToModel($user, $roles);
 
-        $this->assertTrue($this->service->revokeAllFromModel($user, $roles));
+        $this->assertTrue($this->service->unassignAllFromModel($user, $roles));
 
         $this->assertFalse($user->hasAnyRole($roles));
     }
 
-    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_revocation()
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_unassignment()
     {
         Config::set('gatekeeper.features.audit.enabled', true);
 
@@ -501,9 +626,157 @@ class RoleServiceTest extends TestCase
 
         $this->service->assignAllToModel($user, $roles);
 
-        $this->service->revokeAllFromModel($user, $roles);
+        $this->service->unassignAllFromModel($user, $roles);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RevokeRole->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignRole->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_deny_role()
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->service->assignToModel($user, $role);
+
+        $this->assertTrue($this->service->denyFromModel($user, $role));
+        $this->assertDatabaseHas((new ModelHasRole)->getTable(), [
+            'model_id' => $user->id,
+            'denied' => true,
+        ]);
+        $this->assertFalse($user->hasRole($role));
+    }
+
+    public function test_audit_log_inserted_on_role_denial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->service->denyFromModel($user, $role);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyRole->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $denyRoleLog */
+        $denyRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::DenyRole->value, $denyRoleLog->action);
+        $this->assertEquals($role->name, $denyRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $denyRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $denyRoleLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_role_denial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->service->denyFromModel($user, $role);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_deny_multiple_roles()
+    {
+        $user = User::factory()->create();
+        $roles = Role::factory()->count(3)->create();
+
+        $this->service->assignAllToModel($user, $roles);
+        $this->service->denyAllFromModel($user, $roles);
+
+        $this->assertFalse($user->hasAnyRole($roles));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_denial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $roles = Role::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $roles);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::DenyRole->value)->get();
+        $this->assertCount(3, $auditLogs);
+        $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
+    }
+
+    public function test_undeny_role()
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->grantByDefault()->create();
+
+        $this->service->denyFromModel($user, $role);
+        $this->service->undenyFromModel($user, $role);
+
+        $this->assertTrue($this->service->undenyFromModel($user, $role));
+
+        $this->assertEmpty(ModelHasRole::query()->where([
+            'model_id' => $user->id,
+            'denied' => true,
+        ])->get());
+
+        $this->assertTrue($user->hasRole($role));
+    }
+
+    public function test_audit_log_inserted_on_role_undenial_when_auditing_enabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->service->undenyFromModel($user, $role);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyRole->value)->get();
+        $this->assertCount(1, $auditLogs);
+
+        /** @var AuditLog<User, User> $undenyRoleLog */
+        $undenyRoleLog = $auditLogs->first();
+        $this->assertEquals(AuditLogAction::UndenyRole->value, $undenyRoleLog->action);
+        $this->assertEquals($role->name, $undenyRoleLog->metadata['name']);
+        $this->assertEquals($this->user->id, $undenyRoleLog->actionBy->id);
+        $this->assertEquals($user->id, $undenyRoleLog->actionTo->id);
+    }
+
+    public function test_audit_log_not_inserted_on_role_undenial_when_auditing_disabled()
+    {
+        Config::set('gatekeeper.features.audit.enabled', false);
+
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->service->undenyFromModel($user, $role);
+
+        $this->assertCount(0, AuditLog::all());
+    }
+
+    public function test_undeny_multiple_roles()
+    {
+        $user = User::factory()->create();
+        $roles = Role::factory()->grantByDefault()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $roles);
+        $this->service->undenyAllFromModel($user, $roles);
+
+        $this->assertTrue($user->hasAnyRole($roles));
+    }
+
+    public function test_all_audit_log_lifecycle_ids_match_on_bulk_role_undenial()
+    {
+        Config::set('gatekeeper.features.audit.enabled', true);
+
+        $user = User::factory()->create();
+        $roles = Role::factory()->count(3)->create();
+
+        $this->service->denyAllFromModel($user, $roles);
+        $this->service->undenyAllFromModel($user, $roles);
+
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UndenyRole->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }
@@ -532,6 +805,40 @@ class RoleServiceTest extends TestCase
         $this->assertTrue($this->service->modelHas($user, $role));
     }
 
+    public function test_model_does_not_have_role_granted_by_default_when_denied()
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->grantByDefault()->create();
+
+        $user->denyRole($role);
+
+        $this->assertFalse($this->service->modelHas($user, $role));
+    }
+
+    public function test_model_has_role_when_granted_by_default()
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->grantByDefault()->create();
+
+        $this->assertTrue($this->service->modelHas($user, $role));
+    }
+
+    public function test_model_does_not_have_role_through_team_role_when_denied()
+    {
+        Config::set('gatekeeper.features.teams.enabled', true);
+
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $team = Team::factory()->create();
+
+        $team->assignRole($role);
+        $user->addToTeam($team);
+
+        $user->denyRole($role);
+
+        $this->assertFalse($this->service->modelHas($user, $role));
+    }
+
     public function test_model_has_any_role()
     {
         $user = User::factory()->create();
@@ -551,7 +858,7 @@ class RoleServiceTest extends TestCase
 
         $this->assertTrue($this->service->modelHasAll($user, $roles));
 
-        $this->service->revokeFromModel($user, $roles->last());
+        $this->service->unassignFromModel($user, $roles->last());
 
         $this->assertFalse($this->service->modelHasAll($user, $roles));
     }
