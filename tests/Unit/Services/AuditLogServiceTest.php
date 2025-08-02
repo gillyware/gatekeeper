@@ -138,7 +138,7 @@ class AuditLogServiceTest extends TestCase
     public function test_add_to_team_message()
     {
         $log = new AuditLog([
-            'action' => AuditLogAction::AddTeam->value,
+            'action' => AuditLogAction::AssignTeam->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 8,
             'action_to_model_type' => User::class,
@@ -155,7 +155,7 @@ class AuditLogServiceTest extends TestCase
     public function test_remove_from_team_message()
     {
         $log = new AuditLog([
-            'action' => AuditLogAction::RemoveTeam->value,
+            'action' => AuditLogAction::UnassignTeam->value,
             'action_by_model_type' => User::class,
             'action_by_model_id' => 9,
             'action_to_model_type' => User::class,

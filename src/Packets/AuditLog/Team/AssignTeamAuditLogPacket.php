@@ -9,6 +9,6 @@ final class AssignTeamAuditLogPacket extends AbstractBaseEntityAssignmentAuditLo
 {
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::AddTeam;
+        return AuditLogAction::AssignTeam;
     }
 }

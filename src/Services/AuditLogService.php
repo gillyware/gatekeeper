@@ -78,17 +78,12 @@ class AuditLogService implements AuditLogServiceInterface
             AuditLogAction::AssignPermission->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::AssignRole->value => '{actor} assigned {entity} named {name} to {target}',
             AuditLogAction::AssignFeature->value => '{actor} assigned {entity} named {name} to {target}',
+            AuditLogAction::AssignTeam->value => '{actor} added {target} to team named {name}',
 
             AuditLogAction::UnassignPermission->value => '{actor} unassigned {entity} named {name} from {target}',
             AuditLogAction::UnassignRole->value => '{actor} unassigned {entity} named {name} from {target}',
             AuditLogAction::UnassignFeature->value => '{actor} unassigned {entity} named {name} from {target}',
-
-            AuditLogAction::RevokePermission->value => '{actor} unassigned {entity} named {name} from {target}',
-            AuditLogAction::RevokeRole->value => '{actor} unassigned {entity} named {name} from {target}',
-            AuditLogAction::RevokeFeature->value => '{actor} unassigned {entity} named {name} from {target}',
-
-            AuditLogAction::AddTeam->value => '{actor} added {target} to team named {name}',
-            AuditLogAction::RemoveTeam->value => '{actor} removed {target} from team named {name}',
+            AuditLogAction::UnassignTeam->value => '{actor} removed {target} from team named {name}',
 
             AuditLogAction::DenyPermission->value => '{actor} denied {entity} named {name} from {target}',
             AuditLogAction::DenyRole->value => '{actor} denied {entity} named {name} from {target}',

@@ -22,8 +22,6 @@ enum AuditLogAction: string
 
     case UnassignPermission = 'permission_unassign';
 
-    case RevokePermission = 'permission_revoke'; // Deprecated.
-
     case DenyPermission = 'permission_deny';
 
     case UndenyPermission = 'permission_undeny';
@@ -45,8 +43,6 @@ enum AuditLogAction: string
     case AssignRole = 'role_assign';
 
     case UnassignRole = 'role_unassign';
-
-    case RevokeRole = 'role_revoke'; // Deprecated.
 
     case DenyRole = 'role_deny';
 
@@ -70,8 +66,6 @@ enum AuditLogAction: string
 
     case UnassignFeature = 'feature_unassign';
 
-    case RevokeFeature = 'feature_revoke'; // Deprecated.
-
     case DenyFeature = 'feature_deny';
 
     case UndenyFeature = 'feature_undeny';
@@ -90,9 +84,9 @@ enum AuditLogAction: string
 
     case DeleteTeam = 'team_delete';
 
-    case AddTeam = 'team_add';
+    case AssignTeam = 'team_assign';
 
-    case RemoveTeam = 'team_remove';
+    case UnassignTeam = 'team_unassign';
 
     case DenyTeam = 'team_deny';
 
