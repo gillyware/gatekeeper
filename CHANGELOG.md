@@ -2,7 +2,8 @@
 
 ## v2.0.1 2025-08-01
 
-* Fix team command by [@braxey](https://github.com/braxey) in TBD
+* Fix grant entities through entities granted by default by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/6510e403957cf71ecbb2f00600d5516c5ff2c41d
+* Fix team command by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/d08e5beac9c532314c6a4b9f8dd6c0785ebbbd2a
 
 ## v2.0.0 - 2025-08-01
 
