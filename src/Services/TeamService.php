@@ -454,13 +454,11 @@ class TeamService extends AbstractBaseEntityService
     {
         $team = $this->resolveEntity($team);
 
-        if (! $team) {
+        if (! $team || ! $team->is_active) {
             return false;
         }
 
-        $foundAssignment = $this->teamRepository->assignedToModel($model)->get($team->name);
-
-        return $foundAssignment && $foundAssignment->is_active;
+        return $this->teamRepository->assignedToModel($model)->has($team->name);
     }
 
     /**

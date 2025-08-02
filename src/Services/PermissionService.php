@@ -501,13 +501,11 @@ class PermissionService extends AbstractBaseEntityService
     {
         $permission = $this->resolveEntity($permission);
 
-        if (! $permission) {
+        if (! $permission || ! $permission->is_active) {
             return false;
         }
 
-        $foundAssignment = $this->permissionRepository->assignedToModel($model)->get($permission->name);
-
-        return $foundAssignment && $foundAssignment->is_active;
+        return $this->permissionRepository->assignedToModel($model)->has($permission->name);
     }
 
     /**

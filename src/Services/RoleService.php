@@ -465,15 +465,14 @@ class RoleService extends AbstractBaseEntityService
      */
     public function modelHasDirectly(Model $model, $role): bool
     {
+
         $role = $this->resolveEntity($role);
 
-        if (! $role) {
+        if (! $role || ! $role->is_active) {
             return false;
         }
 
-        $foundAssignment = $this->roleRepository->assignedToModel($model)->get($role->name);
-
-        return $foundAssignment && $foundAssignment->is_active;
+        return $this->roleRepository->assignedToModel($model)->has($role->name);
     }
 
     /**

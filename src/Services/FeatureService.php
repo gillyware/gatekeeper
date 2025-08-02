@@ -467,13 +467,11 @@ class FeatureService extends AbstractBaseEntityService
     {
         $feature = $this->resolveEntity($feature);
 
-        if (! $feature) {
+        if (! $feature || ! $feature->is_active) {
             return false;
         }
 
-        $foundAssignment = $this->featureRepository->assignedToModel($model)->get($feature->name);
-
-        return $foundAssignment && $foundAssignment->is_active;
+        return $this->featureRepository->assignedToModel($model)->has($feature->name);
     }
 
     /**
