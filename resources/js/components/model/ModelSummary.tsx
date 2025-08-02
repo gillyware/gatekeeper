@@ -499,7 +499,7 @@ function PermissionItem({ permission, open, onToggle, language }: PermissionItem
                     !open ? 'border' : '',
                 )}
             >
-                <span className="font-medium">{permission.name}</span>
+                <span className="font-medium break-words" dangerouslySetInnerHTML={{ __html: permission.name.replace(/\./g, '.<wbr>') }} />
                 {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
 
@@ -507,9 +507,11 @@ function PermissionItem({ permission, open, onToggle, language }: PermissionItem
                 <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
                     <ul className="space-y-1">
                         {permission.sources.map((source, idx) => (
-                            <li className="border-l-2 pl-4" key={idx}>
-                                {language.effectivePermissionsText.sourceLabel(source)}
-                            </li>
+                            <li
+                                className="border-l-2 pl-4 break-words"
+                                key={idx}
+                                dangerouslySetInnerHTML={{ __html: language.effectivePermissionsText.sourceLabel(source).replace(/\./g, '.<wbr>') }}
+                            />
                         ))}
                     </ul>
                 </div>
@@ -528,7 +530,7 @@ function RoleItem({ role, open, onToggle, language }: RoleItemProps) {
                     !open ? 'border' : '',
                 )}
             >
-                <span className="font-medium">{role.name}</span>
+                <span className="font-medium break-words" dangerouslySetInnerHTML={{ __html: role.name.replace(/\./g, '.<wbr>') }} />
                 {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
 
@@ -536,9 +538,11 @@ function RoleItem({ role, open, onToggle, language }: RoleItemProps) {
                 <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
                     <ul className="space-y-1">
                         {role.sources.map((source, idx) => (
-                            <li className="border-l-2 pl-4" key={idx}>
-                                {language.effectiveRolesText.sourceLabel(source)}
-                            </li>
+                            <li
+                                className="border-l-2 pl-4 break-words"
+                                key={idx}
+                                dangerouslySetInnerHTML={{ __html: language.effectiveRolesText.sourceLabel(source).replace(/\./g, '.<wbr>') }}
+                            />
                         ))}
                     </ul>
                 </div>
@@ -557,7 +561,7 @@ function FeatureItem({ feature, open, onToggle, language }: FeatureItemProps) {
                     !open ? 'border' : '',
                 )}
             >
-                <span className="font-medium">{feature.name}</span>
+                <span className="font-medium break-words" dangerouslySetInnerHTML={{ __html: feature.name.replace(/\./g, '.<wbr>') }} />
                 {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
 
@@ -565,9 +569,11 @@ function FeatureItem({ feature, open, onToggle, language }: FeatureItemProps) {
                 <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
                     <ul className="space-y-1">
                         {feature.sources.map((source, idx) => (
-                            <li className="border-l-2 pl-4" key={idx}>
-                                {language.effectiveFeaturesText.sourceLabel(source)}
-                            </li>
+                            <li
+                                className="border-l-2 pl-4 break-words"
+                                key={idx}
+                                dangerouslySetInnerHTML={{ __html: language.effectiveFeaturesText.sourceLabel(source).replace(/\./g, '.<wbr>') }}
+                            />
                         ))}
                     </ul>
                 </div>
@@ -586,7 +592,7 @@ function TeamItem({ team, open, onToggle, language }: TeamItemProps) {
                     !open ? 'border' : '',
                 )}
             >
-                <span className="font-medium">{team.name}</span>
+                <span className="font-medium break-words" dangerouslySetInnerHTML={{ __html: team.name.replace(/\./g, '.<wbr>') }} />
                 {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
 
@@ -594,9 +600,11 @@ function TeamItem({ team, open, onToggle, language }: TeamItemProps) {
                 <div className="bg-background text-muted-foreground rounded-md px-6 py-2 text-sm">
                     <ul className="space-y-1">
                         {team.sources.map((source, idx) => (
-                            <li className="border-l-2 pl-4" key={idx}>
-                                {language.effectiveTeamsText.sourceLabel(source)}
-                            </li>
+                            <li
+                                className="border-l-2 pl-4 break-words"
+                                key={idx}
+                                dangerouslySetInnerHTML={{ __html: language.effectiveTeamsText.sourceLabel(source).replace(/\./g, '.<wbr>') }}
+                            />
                         ))}
                     </ul>
                 </div>

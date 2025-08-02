@@ -434,6 +434,11 @@ class FeatureService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the feature is granted by default, return true.
+        if ($feature->grant_by_default) {
+            return true;
+        }
+
         // If the feature is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $feature)) {
             return true;
@@ -441,8 +446,8 @@ class FeatureService extends AbstractBaseEntityService
 
         // If teams are enabled and the model interacts with teams, check if the model has the feature through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithFeature = $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
+            $onTeamWithFeature = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
                 ->some(fn (Team $team) => $team->hasFeature($feature));
 
             if ($onTeamWithFeature) {
@@ -450,7 +455,7 @@ class FeatureService extends AbstractBaseEntityService
             }
         }
 
-        return $feature->grant_by_default;
+        return false;
     }
 
     /**
@@ -515,6 +520,17 @@ class FeatureService extends AbstractBaseEntityService
     }
 
     /**
+     * Get all features directly assigned to a model.
+     *
+     * @return Collection<string, FeaturePacket>
+     */
+    public function getDirectForModel(Model $model): Collection
+    {
+        return $this->featureRepository->assignedToModel($model)
+            ->map(fn (Feature $feature) => $feature->toPacket());
+    }
+
+    /**
      * Get all features assigned directly or indirectly to a model.
      *
      * @return Collection<string, FeaturePacket>
@@ -523,17 +539,6 @@ class FeatureService extends AbstractBaseEntityService
     {
         return $this->featureRepository->all()
             ->filter(fn (Feature $feature) => $this->modelHas($model, $feature))
-            ->map(fn (Feature $feature) => $feature->toPacket());
-    }
-
-    /**
-     * Get all features directly assigned to a model.
-     *
-     * @return Collection<string, FeaturePacket>
-     */
-    public function getDirectForModel(Model $model): Collection
-    {
-        return $this->featureRepository->assignedToModel($model)
             ->map(fn (Feature $feature) => $feature->toPacket());
     }
 
@@ -549,18 +554,21 @@ class FeatureService extends AbstractBaseEntityService
             return $result;
         }
 
-        $this->featureRepository->all()
-            ->filter(function (Feature $feature) use ($model) {
-                $denied = $this->featureRepository->deniedFromModel($model)->has($feature->name);
+        $deniedFeatures = $this->featureRepository->deniedFromModel($model);
+        $activeUndeniedFeatures = $this->featureRepository->all()
+            ->filter(fn (Feature $feature) => ! $deniedFeatures->has($feature->name))
+            ->filter(fn (Feature $feature) => $feature->is_active);
 
-                return $feature->grant_by_default && ! $denied;
-            })
+        // Features granted by default.
+        $activeUndeniedFeatures
+            ->filter(fn (Feature $feature) => $feature->grant_by_default)
             ->each(function (Feature $feature) use (&$sourcesMap) {
                 $sourcesMap[$feature->name][] = [
                     'type' => FeatureSourceType::DEFAULT,
                 ];
             });
 
+        // Features directly assigned.
         $this->featureRepository->assignedToModel($model)
             ->filter(fn (Feature $feature) => $feature->is_active)
             ->each(function (Feature $feature) use (&$sourcesMap) {
@@ -568,11 +576,12 @@ class FeatureService extends AbstractBaseEntityService
             });
 
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
-                ->each(function (Team $team) use (&$sourcesMap) {
-                    $this->featureRepository->assignedToModel($team)
-                        ->filter(fn (Feature $feature) => $feature->is_active)
+            // Features through teams.
+            $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->each(function (Team $team) use (&$sourcesMap, $activeUndeniedFeatures) {
+                    $activeUndeniedFeatures
+                        ->filter(fn (Feature $feature) => $team->hasFeature($feature))
                         ->each(function (Feature $feature) use (&$sourcesMap, $team) {
                             $sourcesMap[$feature->name][] = [
                                 'type' => FeatureSourceType::TEAM,

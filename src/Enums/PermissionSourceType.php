@@ -9,5 +9,4 @@ enum PermissionSourceType: string
     case ROLE = 'role';
     case FEATURE = 'feature';
     case TEAM = 'team';
-    case TEAM_ROLE = 'team-role';
 }

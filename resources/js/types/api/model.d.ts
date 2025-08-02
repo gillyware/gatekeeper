@@ -33,7 +33,7 @@ export interface ConfiguredModelSearchResult extends ConfiguredModelMetadata {
 }
 
 export interface PermissionSource {
-    type: 'default' | 'direct' | 'role' | 'feature' | 'team' | 'team-role';
+    type: 'default' | 'direct' | 'role' | 'feature' | 'team';
     role?: string;
     feature?: string;
     team?: string;

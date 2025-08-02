@@ -179,8 +179,6 @@ export const manageModelText: ManageModelText = {
                         return `Feature: ${source.feature}`;
                     case 'team':
                         return `Team: ${source.team}`;
-                    case 'team-role':
-                        return `Team: ${source.team} via Role: ${source.role}`;
                     default:
                         return 'Unknown';
                 }
