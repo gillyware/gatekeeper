@@ -417,14 +417,14 @@ class FeatureService extends AbstractBaseEntityService
      */
     public function modelHas(Model $model, $feature): bool
     {
-        // To access the feature, the features feature must be enabled and the model must be using the features trait.
+        // If the features feature is disabled or the model is not using the HasFeatures trait, return false.
         if (! $this->featuresFeatureEnabled() || ! $this->modelInteractsWithFeatures($model)) {
             return false;
         }
 
         $feature = $this->resolveEntity($feature);
 
-        // The feature cannot be accessed if it does not exist or is inactive.
+        // If the feature does not exist or is inactive, return false.
         if (! $feature || ! $feature->is_active) {
             return false;
         }
@@ -444,7 +444,7 @@ class FeatureService extends AbstractBaseEntityService
             return true;
         }
 
-        // If teams are enabled and the model interacts with teams, check if the model has the feature through a team.
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the feature through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
             $onTeamWithFeature = $this->teamRepository->all()
                 ->filter(fn (Team $team) => $model->onTeam($team))

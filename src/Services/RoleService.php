@@ -417,14 +417,14 @@ class RoleService extends AbstractBaseEntityService
      */
     public function modelHas(Model $model, $role): bool
     {
-        // To access the role, the roles feature must be enabled and the model must be using the roles trait.
+        // If the roles feature is disabled or the model is not using the HasRoles trait, return false.
         if (! $this->rolesFeatureEnabled() || ! $this->modelInteractsWithRoles($model)) {
             return false;
         }
 
         $role = $this->resolveEntity($role);
 
-        // The role cannot be accessed if it does not exist or is inactive.
+        // If the role does not exist or is inactive, return false.
         if (! $role || ! $role->is_active) {
             return false;
         }
@@ -444,7 +444,7 @@ class RoleService extends AbstractBaseEntityService
             return true;
         }
 
-        // If teams are enabled and the model interacts with teams, check if the model has the role through a team.
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the role through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
             $onTeamWithRole = $this->teamRepository->all()
                 ->filter(fn (Team $team) => $model->onTeam($team))

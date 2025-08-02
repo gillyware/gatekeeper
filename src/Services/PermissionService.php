@@ -426,14 +426,14 @@ class PermissionService extends AbstractBaseEntityService
      */
     public function modelHas(Model $model, $permission): bool
     {
-        // To access the permission, the model must be using the roles trait.
+        // If the model is not using the HasPermissions trait, return false.
         if (! $this->modelInteractsWithPermissions($model)) {
             return false;
         }
 
         $permission = $this->resolveEntity($permission);
 
-        // The permission cannot be accessed if it does not exist or is inactive.
+        // If the permission does not exist or is inactive, return false.
         if (! $permission || ! $permission->is_active) {
             return false;
         }
@@ -453,37 +453,37 @@ class PermissionService extends AbstractBaseEntityService
             return true;
         }
 
-        // If roles are enabled and the model interacts with roles, check if the model has the permission through a role.
+        // If roles are enabled and the model is using the HasRoles trait, check if the model has the permission through a role.
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
             $hasRoleWithPermission = $this->roleRepository->all()
                 ->filter(fn (Role $role) => $model->hasRole($role))
                 ->some(fn (Role $role) => $role->hasPermission($permission));
 
-            // If the model has any active roles with the permission, return true.
+            // If the model has any roles with access to the permission, return true.
             if ($hasRoleWithPermission) {
                 return true;
             }
         }
 
-        // If features are enabled and the model interacts with features, check if the model has the permission through a feature.
+        // If features are enabled and the model is using the HasFeatures trait, check if the model has the permission through a feature.
         if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
             $hasFeatureWithPermission = $this->featureRepository->all()
                 ->filter(fn (Feature $feature) => $model->hasFeature($feature))
                 ->some(fn (Feature $feature) => $feature->hasPermission($permission));
 
-            // If the model has any active features with the permission, return true.
+            // If the model has any features with access to the permission, return true.
             if ($hasFeatureWithPermission) {
                 return true;
             }
         }
 
-        // If teams are enabled and the model interacts with teams, check if the model has the permission through a team.
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the permission through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
             $onTeamWithPermission = $this->teamRepository->all()
                 ->filter(fn (Team $team) => $model->onTeam($team))
                 ->some(fn (Team $team) => $team->hasPermission($permission));
 
-            // If the model has any active teams with the permission, return true.
+            // If the model is on any teams with access to the permission, return true.
             if ($onTeamWithPermission) {
                 return true;
             }

@@ -415,20 +415,20 @@ class TeamService extends AbstractBaseEntityService
      */
     public function modelHas(Model $model, $team): bool
     {
-        // To access the team, the teams feature must be enabled and the model must be using the teams trait.
+        // If the teams feature is disabled or the model is not using the HasTeams trait, return false.
         if (! $this->teamsFeatureEnabled() || ! $this->modelInteractsWithTeams($model)) {
             return false;
         }
 
         $team = $this->resolveEntity($team);
 
-        // If the team is denied from the model, return false.
-        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
+        // If the team does not exist or is inactive, return false.
+        if (! $team || ! $team->is_active) {
             return false;
         }
 
-        // The team cannot be accessed if it does not exist or is inactive.
-        if (! $team || ! $team->is_active) {
+        // If the team is denied from the model, return false.
+        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
             return false;
         }
 
