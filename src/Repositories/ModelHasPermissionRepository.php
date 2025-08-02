@@ -46,7 +46,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelPermissionLinks($model);
+        $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($model);
 
         return $modelHasPermission;
     }
@@ -63,7 +63,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', false)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelPermissionLinks($model);
+        $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($model);
 
         return true;
     }
@@ -83,7 +83,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             'denied' => true,
         ]);
 
-        $this->cacheService->invalidateCacheForModelPermissionLinks($model);
+        $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($model);
 
         return $modelHasPermission;
     }
@@ -100,7 +100,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', true)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelPermissionLinks($model);
+        $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($model);
 
         return true;
     }
@@ -112,7 +112,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasPermission::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelPermissionLinks($model);
+        $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($model);
 
         return true;
     }
@@ -131,7 +131,7 @@ class ModelHasPermissionRepository implements ModelHasEntityRepositoryInterface
                 $modelHasPermission->delete();
 
                 if ($modelHasPermission->model) {
-                    $this->cacheService->invalidateCacheForModelPermissionLinks($modelHasPermission->model);
+                    $this->cacheService->invalidateCacheForModelPermissionLinksAndAccess($modelHasPermission->model);
                 }
             });
 

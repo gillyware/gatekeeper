@@ -40,7 +40,7 @@ class CacheService implements CacheServiceInterface
      */
     public function getModelPermissionLinks(Model $model): ?Collection
     {
-        return $this->cacheRepository->get($this->getModelPermissionsCacheKey($model));
+        return $this->cacheRepository->get($this->getModelPermissionLinksCacheKey($model));
     }
 
     /**
@@ -48,7 +48,23 @@ class CacheService implements CacheServiceInterface
      */
     public function putModelPermissionLinks(Model $model, Collection $permissionLinks): void
     {
-        $this->cacheRepository->put($this->getModelPermissionsCacheKey($model), $permissionLinks);
+        $this->cacheRepository->put($this->getModelPermissionLinksCacheKey($model), $permissionLinks);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getModelPermissionAccess(Model $model): ?Collection
+    {
+        return $this->cacheRepository->get($this->getModelPermissionAccessCacheKey($model));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function putModelPermissionAccess(Model $model, Collection $permissionAccess): void
+    {
+        $this->cacheRepository->put($this->getModelPermissionAccessCacheKey($model), $permissionAccess);
     }
 
     /**
@@ -62,9 +78,10 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForModelPermissionLinks(Model $model): void
+    public function invalidateCacheForModelPermissionLinksAndAccess(Model $model): void
     {
-        $this->cacheRepository->forget($this->getModelPermissionsCacheKey($model));
+        $this->cacheRepository->forget($this->getModelPermissionLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelPermissionAccessCacheKey($model));
     }
 
     /**
@@ -88,7 +105,7 @@ class CacheService implements CacheServiceInterface
      */
     public function getModelRoleLinks(Model $model): ?Collection
     {
-        return $this->cacheRepository->get($this->getModelRolesCacheKey($model));
+        return $this->cacheRepository->get($this->getModelRoleLinksCacheKey($model));
     }
 
     /**
@@ -96,13 +113,29 @@ class CacheService implements CacheServiceInterface
      */
     public function putModelRoleLinks(Model $model, Collection $roleLinks): void
     {
-        $this->cacheRepository->put($this->getModelRolesCacheKey($model), $roleLinks);
+        $this->cacheRepository->put($this->getModelRoleLinksCacheKey($model), $roleLinks);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForAllLinks(): void
+    public function getModelRoleAccess(Model $model): ?Collection
+    {
+        return $this->cacheRepository->get($this->getModelRoleAccessCacheKey($model));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function putModelRoleAccess(Model $model, Collection $roleAccess): void
+    {
+        $this->cacheRepository->put($this->getModelRoleAccessCacheKey($model), $roleAccess);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function invalidateCacheForAllRoles(): void
     {
         $this->cacheRepository->forget($this->getAllRolesCacheKey());
     }
@@ -110,9 +143,12 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForModelRoleLinks(Model $model): void
+    public function invalidateCacheForModelRoleLinksAndAccess(Model $model): void
     {
-        $this->cacheRepository->forget($this->getModelRolesCacheKey($model));
+        $this->cacheRepository->forget($this->getModelRoleLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelRoleAccessCacheKey($model));
+
+        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
     }
 
     /**
@@ -136,7 +172,7 @@ class CacheService implements CacheServiceInterface
      */
     public function getModelFeatureLinks(Model $model): ?Collection
     {
-        return $this->cacheRepository->get($this->getModelFeaturesCacheKey($model));
+        return $this->cacheRepository->get($this->getModelFeatureLinksCacheKey($model));
     }
 
     /**
@@ -144,7 +180,23 @@ class CacheService implements CacheServiceInterface
      */
     public function putModelFeatureLinks(Model $model, Collection $featureLinks): void
     {
-        $this->cacheRepository->put($this->getModelFeaturesCacheKey($model), $featureLinks);
+        $this->cacheRepository->put($this->getModelFeatureLinksCacheKey($model), $featureLinks);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getModelFeatureAccess(Model $model): ?Collection
+    {
+        return $this->cacheRepository->get($this->getModelFeatureAccessCacheKey($model));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function putModelFeatureAccess(Model $model, Collection $featureAccess): void
+    {
+        $this->cacheRepository->put($this->getModelFeatureAccessCacheKey($model), $featureAccess);
     }
 
     /**
@@ -158,9 +210,12 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForModelFeatureLinks(Model $model): void
+    public function invalidateCacheForModelFeatureLinksAndAccess(Model $model): void
     {
-        $this->cacheRepository->forget($this->getModelFeaturesCacheKey($model));
+        $this->cacheRepository->forget($this->getModelFeatureLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelFeatureAccessCacheKey($model));
+
+        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
     }
 
     /**
@@ -184,7 +239,7 @@ class CacheService implements CacheServiceInterface
      */
     public function getModelTeamLinks(Model $model): ?Collection
     {
-        return $this->cacheRepository->get($this->getModelTeamsCacheKey($model));
+        return $this->cacheRepository->get($this->getModelTeamLinksCacheKey($model));
     }
 
     /**
@@ -192,7 +247,23 @@ class CacheService implements CacheServiceInterface
      */
     public function putModelTeamLinks(Model $model, Collection $teamLinks): void
     {
-        $this->cacheRepository->put($this->getModelTeamsCacheKey($model), $teamLinks);
+        $this->cacheRepository->put($this->getModelTeamLinksCacheKey($model), $teamLinks);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getModelTeamAccess(Model $model): ?Collection
+    {
+        return $this->cacheRepository->get($this->getModelTeamAccessCacheKey($model));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function putModelTeamAccess(Model $model, Collection $teamAccess): void
+    {
+        $this->cacheRepository->put($this->getModelTeamAccessCacheKey($model), $teamAccess);
     }
 
     /**
@@ -206,9 +277,14 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForModelTeamLinks(Model $model): void
+    public function invalidateCacheForModelTeamLinksAndAccess(Model $model): void
     {
-        $this->cacheRepository->forget($this->getModelTeamsCacheKey($model));
+        $this->cacheRepository->forget($this->getModelTeamLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelTeamAccessCacheKey($model));
+
+        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
+        $this->invalidateCacheForModelRoleLinksAndAccess($model);
+        $this->invalidateCacheForModelFeatureLinksAndAccess($model);
     }
 
     /**
@@ -220,11 +296,19 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Get the cache key for a specific model's permission names.
+     * Get the cache key for a specific model's permission links.
      */
-    private function getModelPermissionsCacheKey(Model $model): string
+    private function getModelPermissionLinksCacheKey(Model $model): string
     {
-        return "permissions.{$model->getMorphClass()}.{$model->getKey()}";
+        return "permissions.{$model->getMorphClass()}.{$model->getKey()}.links";
+    }
+
+    /**
+     * Get the cache key for a specific model's permission access.
+     */
+    private function getModelPermissionAccessCacheKey(Model $model): string
+    {
+        return "permissions.{$model->getMorphClass()}.{$model->getKey()}.access";
     }
 
     /**
@@ -236,11 +320,19 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Get the cache key for a specific model's role names.
+     * Get the cache key for a specific model's role links.
      */
-    private function getModelRolesCacheKey(Model $model): string
+    private function getModelRoleLinksCacheKey(Model $model): string
     {
-        return "roles.{$model->getMorphClass()}.{$model->getKey()}";
+        return "roles.{$model->getMorphClass()}.{$model->getKey()}.links";
+    }
+
+    /**
+     * Get the cache key for a specific model's role access.
+     */
+    private function getModelRoleAccessCacheKey(Model $model): string
+    {
+        return "roles.{$model->getMorphClass()}.{$model->getKey()}.access";
     }
 
     /**
@@ -252,11 +344,19 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Get the cache key for a specific model's feature names.
+     * Get the cache key for a specific model's feature links.
      */
-    private function getModelFeaturesCacheKey(Model $model): string
+    private function getModelFeatureLinksCacheKey(Model $model): string
     {
-        return "features.{$model->getMorphClass()}.{$model->getKey()}";
+        return "features.{$model->getMorphClass()}.{$model->getKey()}.links";
+    }
+
+    /**
+     * Get the cache key for a specific model's feature access.
+     */
+    private function getModelFeatureAccessCacheKey(Model $model): string
+    {
+        return "features.{$model->getMorphClass()}.{$model->getKey()}.access";
     }
 
     /**
@@ -268,10 +368,18 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Get the cache key for a specific model's team names.
+     * Get the cache key for a specific model's team links.
      */
-    private function getModelTeamsCacheKey(Model $model): string
+    private function getModelTeamLinksCacheKey(Model $model): string
     {
-        return "teams.{$model->getMorphClass()}.{$model->getKey()}";
+        return "teams.{$model->getMorphClass()}.{$model->getKey()}.links";
+    }
+
+    /**
+     * Get the cache key for a specific model's team access.
+     */
+    private function getModelTeamAccessCacheKey(Model $model): string
+    {
+        return "teams.{$model->getMorphClass()}.{$model->getKey()}.access";
     }
 }

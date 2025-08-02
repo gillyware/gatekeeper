@@ -46,7 +46,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
 
         return $modelHasTeam;
     }
@@ -63,7 +63,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', false)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
 
         return true;
     }
@@ -83,7 +83,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             'denied' => true,
         ]);
 
-        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
 
         return $modelHasTeam;
     }
@@ -100,7 +100,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', true)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
 
         return true;
     }
@@ -112,7 +112,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasTeam::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinks($model);
+        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
 
         return true;
     }
@@ -131,7 +131,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
                 $modelHasTeam->delete();
 
                 if ($modelHasTeam->model) {
-                    $this->cacheService->invalidateCacheForModelTeamLinks($modelHasTeam->model);
+                    $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($modelHasTeam->model);
                 }
             });
 

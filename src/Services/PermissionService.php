@@ -51,6 +51,7 @@ class PermissionService extends AbstractBaseEntityService
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly CacheService $cacheService,
     ) {}
 
     /**
@@ -370,7 +371,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Deny multiple permissions from a model.
      *
-     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $features
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function denyAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -406,7 +407,7 @@ class PermissionService extends AbstractBaseEntityService
     /**
      * Undeny multiple permissions from a model.
      *
-     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $features
+     * @param  array<Permission|PermissionPacket|string|UnitEnum>|Arrayable<Permission|PermissionPacket|string|UnitEnum>  $permissions
      */
     public function undenyAllFromModel(Model $model, array|Arrayable $permissions): bool
     {
@@ -438,58 +439,21 @@ class PermissionService extends AbstractBaseEntityService
             return false;
         }
 
-        // If the permission is denied from the model, return false.
-        if ($this->permissionRepository->deniedFromModel($model)->has($permission->name)) {
-            return false;
+        // If the model permission access is cached, return it.
+        $modelPermissionAccess = $this->cacheService->getModelPermissionAccess($model) ?: collect();
+
+        if ($modelPermissionAccess->has($permission->name)) {
+            return $modelPermissionAccess->get($permission->name);
         }
 
-        // If the permission is granted by default, return true.
-        if ($permission->grant_by_default) {
-            return true;
-        }
+        $has = $this->determineModelHas($model, $permission);
 
-        // If the permission is directly assigned to the model, return true.
-        if ($this->modelHasDirectly($model, $permission)) {
-            return true;
-        }
+        // Cache then return the result.
+        $this->cacheService->putModelPermissionAccess($model,
+            $modelPermissionAccess->put($permission->name, $has)
+        );
 
-        // If roles are enabled and the model is using the HasRoles trait, check if the model has the permission through a role.
-        if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
-            $hasRoleWithPermission = $this->roleRepository->all()
-                ->filter(fn (Role $role) => $model->hasRole($role))
-                ->some(fn (Role $role) => $role->hasPermission($permission));
-
-            // If the model has any roles with access to the permission, return true.
-            if ($hasRoleWithPermission) {
-                return true;
-            }
-        }
-
-        // If features are enabled and the model is using the HasFeatures trait, check if the model has the permission through a feature.
-        if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
-            $hasFeatureWithPermission = $this->featureRepository->all()
-                ->filter(fn (Feature $feature) => $model->hasFeature($feature))
-                ->some(fn (Feature $feature) => $feature->hasPermission($permission));
-
-            // If the model has any features with access to the permission, return true.
-            if ($hasFeatureWithPermission) {
-                return true;
-            }
-        }
-
-        // If teams are enabled and the model is using the HasTeams trait, check if the model has the permission through a team.
-        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithPermission = $this->teamRepository->all()
-                ->filter(fn (Team $team) => $model->onTeam($team))
-                ->some(fn (Team $team) => $team->hasPermission($permission));
-
-            // If the model is on any teams with access to the permission, return true.
-            if ($onTeamWithPermission) {
-                return true;
-            }
-        }
-
-        return false;
+        return $has;
     }
 
     /**
@@ -690,5 +654,64 @@ class PermissionService extends AbstractBaseEntityService
         return $orFail
             ? $this->permissionRepository->findOrFailByName($permissionName)
             : $this->permissionRepository->findByName($permissionName);
+    }
+
+    /**
+     * Determine if a model has the given permission.
+     */
+    private function determineModelHas(Model $model, Permission $permission): bool
+    {
+        // If the permission is denied from the model, return false.
+        if ($this->permissionRepository->deniedFromModel($model)->has($permission->name)) {
+            return false;
+        }
+
+        // If the permission is granted by default, return true.
+        if ($permission->grant_by_default) {
+            return true;
+        }
+
+        // If the permission is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $permission)) {
+            return true;
+        }
+
+        // If roles are enabled and the model is using the HasRoles trait, check if the model has the permission through a role.
+        if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
+            $hasRoleWithPermission = $this->roleRepository->all()
+                ->filter(fn (Role $role) => $model->hasRole($role))
+                ->some(fn (Role $role) => $role->hasPermission($permission));
+
+            // If the model has any roles with access to the permission, return true.
+            if ($hasRoleWithPermission) {
+                return true;
+            }
+        }
+
+        // If features are enabled and the model is using the HasFeatures trait, check if the model has the permission through a feature.
+        if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
+            $hasFeatureWithPermission = $this->featureRepository->all()
+                ->filter(fn (Feature $feature) => $model->hasFeature($feature))
+                ->some(fn (Feature $feature) => $feature->hasPermission($permission));
+
+            // If the model has any features with access to the permission, return true.
+            if ($hasFeatureWithPermission) {
+                return true;
+            }
+        }
+
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the permission through a team.
+        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
+            $onTeamWithPermission = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->some(fn (Team $team) => $team->hasPermission($permission));
+
+            // If the model is on any teams with access to the permission, return true.
+            if ($onTeamWithPermission) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

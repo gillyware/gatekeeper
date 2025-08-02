@@ -42,6 +42,7 @@ class FeatureService extends AbstractBaseEntityService
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasFeatureRepository $modelHasFeatureRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly CacheService $cacheService,
     ) {}
 
     /**
@@ -429,33 +430,21 @@ class FeatureService extends AbstractBaseEntityService
             return false;
         }
 
-        // If the feature is denied from the model, return false.
-        if ($this->featureRepository->deniedFromModel($model)->has($feature->name)) {
-            return false;
+        // If the model feature access is cached, return it.
+        $modelFeatureAccess = $this->cacheService->getModelFeatureAccess($model) ?: collect();
+
+        if ($modelFeatureAccess->has($feature->name)) {
+            return $modelFeatureAccess->get($feature->name);
         }
 
-        // If the feature is granted by default, return true.
-        if ($feature->grant_by_default) {
-            return true;
-        }
+        $has = $this->determineModelHas($model, $feature);
 
-        // If the feature is directly assigned to the model, return true.
-        if ($this->modelHasDirectly($model, $feature)) {
-            return true;
-        }
+        // Cache then return the result.
+        $this->cacheService->putModelFeatureAccess($model,
+            $modelFeatureAccess->put($feature->name, $has)
+        );
 
-        // If teams are enabled and the model is using the HasTeams trait, check if the model has the feature through a team.
-        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithFeature = $this->teamRepository->all()
-                ->filter(fn (Team $team) => $model->onTeam($team))
-                ->some(fn (Team $team) => $team->hasFeature($feature));
-
-            if ($onTeamWithFeature) {
-                return true;
-            }
-        }
-
-        return false;
+        return $has;
     }
 
     /**
@@ -624,5 +613,39 @@ class FeatureService extends AbstractBaseEntityService
         return $orFail
             ? $this->featureRepository->findOrFailByName($featureName)
             : $this->featureRepository->findByName($featureName);
+    }
+
+    /**
+     * Determine if a model has the given feature.
+     */
+    private function determineModelHas(Model $model, Feature $feature): bool
+    {
+        // If the feature is denied from the model, return false.
+        if ($this->featureRepository->deniedFromModel($model)->has($feature->name)) {
+            return false;
+        }
+
+        // If the feature is granted by default, return true.
+        if ($feature->grant_by_default) {
+            return true;
+        }
+
+        // If the feature is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $feature)) {
+            return true;
+        }
+
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the feature through a team.
+        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
+            $onTeamWithFeature = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->some(fn (Team $team) => $team->hasFeature($feature));
+
+            if ($onTeamWithFeature) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

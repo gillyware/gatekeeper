@@ -42,6 +42,7 @@ class RoleService extends AbstractBaseEntityService
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasRoleRepository $modelHasRoleRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly CacheService $cacheService,
     ) {}
 
     /**
@@ -360,7 +361,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Deny multiple roles from a model.
      *
-     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $features
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function denyAllFromModel(Model $model, array|Arrayable $roles): bool
     {
@@ -397,7 +398,7 @@ class RoleService extends AbstractBaseEntityService
     /**
      * Undeny multiple roles from a model.
      *
-     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $features
+     * @param  array<Role|RolePacket|string|UnitEnum>|Arrayable<Role|RolePacket|string|UnitEnum>  $roles
      */
     public function undenyAllFromModel(Model $model, array|Arrayable $roles): bool
     {
@@ -429,33 +430,21 @@ class RoleService extends AbstractBaseEntityService
             return false;
         }
 
-        // If the role is denied from the model, return false.
-        if ($this->roleRepository->deniedFromModel($model)->has($role->name)) {
-            return false;
+        // If the model role access is cached, return it.
+        $modelRoleAccess = $this->cacheService->getModelRoleAccess($model) ?: collect();
+
+        if ($modelRoleAccess->has($role->name)) {
+            return $modelRoleAccess->get($role->name);
         }
 
-        // If the role is granted by default, return true.
-        if ($role->grant_by_default) {
-            return true;
-        }
+        $has = $this->determineModelHas($model, $role);
 
-        // If the role is directly assigned to the model, return true.
-        if ($this->modelHasDirectly($model, $role)) {
-            return true;
-        }
+        // Cache then return the result.
+        $this->cacheService->putModelRoleAccess($model,
+            $modelRoleAccess->put($role->name, $has)
+        );
 
-        // If teams are enabled and the model is using the HasTeams trait, check if the model has the role through a team.
-        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithRole = $this->teamRepository->all()
-                ->filter(fn (Team $team) => $model->onTeam($team))
-                ->some(fn (Team $team) => $team->hasRole($role));
-
-            if ($onTeamWithRole) {
-                return true;
-            }
-        }
-
-        return false;
+        return $has;
     }
 
     /**
@@ -625,5 +614,39 @@ class RoleService extends AbstractBaseEntityService
         return $orFail
             ? $this->roleRepository->findOrFailByName($roleName)
             : $this->roleRepository->findByName($roleName);
+    }
+
+    /**
+     * Determine if a model has the given role.
+     */
+    private function determineModelHas(Model $model, Role $role): bool
+    {
+        // If the role is denied from the model, return false.
+        if ($this->roleRepository->deniedFromModel($model)->has($role->name)) {
+            return false;
+        }
+
+        // If the role is granted by default, return true.
+        if ($role->grant_by_default) {
+            return true;
+        }
+
+        // If the role is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $role)) {
+            return true;
+        }
+
+        // If teams are enabled and the model is using the HasTeams trait, check if the model has the role through a team.
+        if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
+            $onTeamWithRole = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->some(fn (Team $team) => $team->hasRole($role));
+
+            if ($onTeamWithRole) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

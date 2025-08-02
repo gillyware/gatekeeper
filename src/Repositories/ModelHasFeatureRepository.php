@@ -46,7 +46,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
             'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($model);
 
         return $modelHasFeature;
     }
@@ -63,7 +63,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', false)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($model);
 
         return true;
     }
@@ -83,7 +83,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
             'denied' => true,
         ]);
 
-        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($model);
 
         return $modelHasFeature;
     }
@@ -100,7 +100,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', true)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($model);
 
         return true;
     }
@@ -112,7 +112,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasFeature::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelFeatureLinks($model);
+        $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($model);
 
         return true;
     }
@@ -131,7 +131,7 @@ class ModelHasFeatureRepository implements ModelHasEntityRepositoryInterface
                 $modelHasFeature->delete();
 
                 if ($modelHasFeature->model) {
-                    $this->cacheService->invalidateCacheForModelFeatureLinks($modelHasFeature->model);
+                    $this->cacheService->invalidateCacheForModelFeatureLinksAndAccess($modelHasFeature->model);
                 }
             });
 

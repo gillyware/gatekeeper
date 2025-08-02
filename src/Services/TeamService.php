@@ -39,6 +39,7 @@ class TeamService extends AbstractBaseEntityService
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasTeamRepository $modelHasTeamRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly CacheService $cacheService,
     ) {}
 
     /**
@@ -358,7 +359,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Deny multiple teams from a model.
      *
-     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function denyAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -395,7 +396,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Deny multiple teams from a model.
      *
-     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function undenyAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -427,22 +428,21 @@ class TeamService extends AbstractBaseEntityService
             return false;
         }
 
-        // If the team is denied from the model, return false.
-        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
-            return false;
+        // If the model team access is cached, return it.
+        $modelTeamAccess = $this->cacheService->getModelTeamAccess($model) ?: collect();
+
+        if ($modelTeamAccess->has($team->name)) {
+            return $modelTeamAccess->get($team->name);
         }
 
-        // If the team is granted by default, return true.
-        if ($team->grant_by_default) {
-            return true;
-        }
+        $has = $this->determineModelHas($model, $team);
 
-        // If the team is directly assigned to the model, return true.
-        if ($this->modelHasDirectly($model, $team)) {
-            return true;
-        }
+        // Cache then return the result.
+        $this->cacheService->putModelTeamAccess($model,
+            $modelTeamAccess->put($team->name, $has)
+        );
 
-        return false;
+        return $has;
     }
 
     /**
@@ -595,5 +595,28 @@ class TeamService extends AbstractBaseEntityService
         return $orFail
             ? $this->teamRepository->findOrFailByName($teamName)
             : $this->teamRepository->findByName($teamName);
+    }
+
+    /**
+     * Determine if a model has the given team.
+     */
+    private function determineModelHas(Model $model, Team $team): bool
+    {
+        // If the team is denied from the model, return false.
+        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
+            return false;
+        }
+
+        // If the team is granted by default, return true.
+        if ($team->grant_by_default) {
+            return true;
+        }
+
+        // If the team is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $team)) {
+            return true;
+        }
+
+        return false;
     }
 }

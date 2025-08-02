@@ -1,5 +1,9 @@
 # Release Notes for 2.x
 
+## v2.1.0 2025-08-01
+
+* Cache 'model has' results by [@braxey](https://github.com/braxey) in TBD
+
 ## v2.0.1 2025-08-01
 
 * Fix grant entities through entities granted by default by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/6510e403957cf71ecbb2f00600d5516c5ff2c41d

@@ -31,18 +31,32 @@ interface CacheServiceInterface
     public function putAllPermissions(Collection $permissions): void;
 
     /**
-     * Retrieve permission names for a specific model from the cache.
+     * Retrieve permission links for a specific model from the cache.
      *
      * @return ?Collection<int, array{name: string, denied: bool}>
      */
     public function getModelPermissionLinks(Model $model): ?Collection;
 
     /**
-     * Store permission names for a specific model in the cache.
+     * Store permission links for a specific model in the cache.
      *
      * @param  ?Collection<int, array{name: string, denied: bool}>  $permissionLinks
      */
     public function putModelPermissionLinks(Model $model, Collection $permissionLinks): void;
+
+    /**
+     * Retrieve permission access for a specific model from the cache.
+     *
+     * @return ?Collection<string, bool>
+     */
+    public function getModelPermissionAccess(Model $model): ?Collection;
+
+    /**
+     * Store permission access for a specific model in the cache.
+     *
+     * @param  ?Collection<string, bool>  $permissionAccess
+     */
+    public function putModelPermissionAccess(Model $model, Collection $permissionAccess): void;
 
     /**
      * Invalidate the cache for all permissions.
@@ -50,9 +64,9 @@ interface CacheServiceInterface
     public function invalidateCacheForAllPermissions(): void;
 
     /**
-     * Invalidate the cache for a specific model's permission names.
+     * Invalidate the cache for a specific model's permission links and access.
      */
-    public function invalidateCacheForModelPermissionLinks(Model $model): void;
+    public function invalidateCacheForModelPermissionLinksAndAccess(Model $model): void;
 
     /**
      * Retrieve all roles from the cache.
@@ -69,28 +83,42 @@ interface CacheServiceInterface
     public function putAllRoles(Collection $roles): void;
 
     /**
-     * Retrieve role names for a specific model from the cache.
+     * Retrieve role links for a specific model from the cache.
      *
      * @return ?Collection<int, array{name: string, denied: bool}>
      */
     public function getModelRoleLinks(Model $model): ?Collection;
 
     /**
-     * Store role names for a specific model in the cache.
+     * Store role links for a specific model in the cache.
      *
      * @param  ?Collection<int, array{name: string, denied: bool}>  $roleLinks
      */
     public function putModelRoleLinks(Model $model, Collection $roleLinks): void;
 
     /**
-     * Invalidate the cache for all roles.
+     * Retrieve role access for a specific model from the cache.
+     *
+     * @return ?Collection<string, bool>
      */
-    public function invalidateCacheForAllLinks(): void;
+    public function getModelRoleAccess(Model $model): ?Collection;
 
     /**
-     * Invalidate the cache for a specific model's role names.
+     * Store role access for a specific model in the cache.
+     *
+     * @param  ?Collection<string, bool>  $roleAccess
      */
-    public function invalidateCacheForModelRoleLinks(Model $model): void;
+    public function putModelRoleAccess(Model $model, Collection $roleAccess): void;
+
+    /**
+     * Invalidate the cache for all roles.
+     */
+    public function invalidateCacheForAllRoles(): void;
+
+    /**
+     * Invalidate the cache for a specific model's role links and access.
+     */
+    public function invalidateCacheForModelRoleLinksAndAccess(Model $model): void;
 
     /**
      * Retrieve all features from the cache.
@@ -107,18 +135,32 @@ interface CacheServiceInterface
     public function putAllFeatures(Collection $features): void;
 
     /**
-     * Retrieve feature names for a specific model from the cache.
+     * Retrieve feature links for a specific model from the cache.
      *
      * @return ?Collection<int, array{name: string, denied: bool}>
      */
     public function getModelFeatureLinks(Model $model): ?Collection;
 
     /**
-     * Store feature names for a specific model in the cache.
+     * Store feature links for a specific model in the cache.
      *
      * @param  ?Collection<int, array{name: string, denied: bool}>  $featureLinks
      */
     public function putModelFeatureLinks(Model $model, Collection $featureLinks): void;
+
+    /**
+     * Retrieve feature access for a specific model from the cache.
+     *
+     * @return ?Collection<string, bool>
+     */
+    public function getModelFeatureAccess(Model $model): ?Collection;
+
+    /**
+     * Store feature access for a specific model in the cache.
+     *
+     * @param  ?Collection<string, bool>  $featureAccess
+     */
+    public function putModelFeatureAccess(Model $model, Collection $featureAccess): void;
 
     /**
      * Invalidate the cache for all features.
@@ -126,9 +168,9 @@ interface CacheServiceInterface
     public function invalidateCacheForAllFeatures(): void;
 
     /**
-     * Invalidate the cache for a specific model's feature names.
+     * Invalidate the cache for a specific model's feature links and access.
      */
-    public function invalidateCacheForModelFeatureLinks(Model $model): void;
+    public function invalidateCacheForModelFeatureLinksAndAccess(Model $model): void;
 
     /**
      * Retrieve all teams from the cache.
@@ -145,18 +187,32 @@ interface CacheServiceInterface
     public function putAllTeams(Collection $teams): void;
 
     /**
-     * Retrieve team names for a specific model from the cache.
+     * Retrieve team links for a specific model from the cache.
      *
      * @return ?Collection<int, array{name: string, denied: bool}>
      */
     public function getModelTeamLinks(Model $model): ?Collection;
 
     /**
-     * Store team names for a specific model in the cache.
+     * Store team links for a specific model in the cache.
      *
      * @return ?Collection<int, array{name: string, denied: bool}> $teamLinks
      */
     public function putModelTeamLinks(Model $model, Collection $teamLinks): void;
+
+    /**
+     * Retrieve team access for a specific model from the cache.
+     *
+     * @return ?Collection<string, bool>
+     */
+    public function getModelTeamAccess(Model $model): ?Collection;
+
+    /**
+     * Store team access for a specific model in the cache.
+     *
+     * @param  ?Collection<string, bool>  $teamAccess
+     */
+    public function putModelTeamAccess(Model $model, Collection $teamAccess): void;
 
     /**
      * Invalidate the cache for all teams.
@@ -164,7 +220,7 @@ interface CacheServiceInterface
     public function invalidateCacheForAllTeams(): void;
 
     /**
-     * Invalidate the cache for a specific model's team names.
+     * Invalidate the cache for a specific model's team links and access.
      */
-    public function invalidateCacheForModelTeamLinks(Model $model): void;
+    public function invalidateCacheForModelTeamLinksAndAccess(Model $model): void;
 }

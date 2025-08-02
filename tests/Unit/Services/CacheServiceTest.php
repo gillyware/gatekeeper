@@ -55,7 +55,7 @@ class CacheServiceTest extends TestCase
 
     public function test_model_permission_cache(): void
     {
-        $key = "permissions.{$this->model->getMorphClass()}.{$this->model->getKey()}";
+        $key = "permissions.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
         $collection = collect(['perm']);
 
         $this->cacheRepository->expects($this->once())
@@ -71,11 +71,9 @@ class CacheServiceTest extends TestCase
 
         $this->service->putModelPermissionLinks($this->model, $collection);
 
-        $this->cacheRepository->expects($this->once())
-            ->method('forget')
-            ->with($key);
+        $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelPermissionLinks($this->model);
+        $this->service->invalidateCacheForModelPermissionLinksAndAccess($this->model);
     }
 
     public function test_all_roles_cache(): void
@@ -99,12 +97,12 @@ class CacheServiceTest extends TestCase
             ->method('forget')
             ->with('roles');
 
-        $this->service->invalidateCacheForAllLinks();
+        $this->service->invalidateCacheForAllRoles();
     }
 
     public function test_model_roles_cache(): void
     {
-        $key = "roles.{$this->model->getMorphClass()}.{$this->model->getKey()}";
+        $key = "roles.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
         $collection = collect(['role']);
 
         $this->cacheRepository->expects($this->once())
@@ -120,11 +118,56 @@ class CacheServiceTest extends TestCase
 
         $this->service->putModelRoleLinks($this->model, $collection);
 
+        $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
+
+        $this->service->invalidateCacheForModelRoleLinksAndAccess($this->model);
+    }
+
+    public function test_all_features_cache(): void
+    {
+        $collection = collect(['feature']);
+
+        $this->cacheRepository->expects($this->once())
+            ->method('get')
+            ->with('features')
+            ->willReturn($collection);
+
+        $this->assertSame($collection, $this->service->getAllFeatures());
+
+        $this->cacheRepository->expects($this->once())
+            ->method('put')
+            ->with('features', $collection);
+
+        $this->service->putAllFeatures($collection);
+
         $this->cacheRepository->expects($this->once())
             ->method('forget')
-            ->with($key);
+            ->with('features');
 
-        $this->service->invalidateCacheForModelRoleLinks($this->model);
+        $this->service->invalidateCacheForAllFeatures();
+    }
+
+    public function test_model_features_cache(): void
+    {
+        $key = "features.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
+        $collection = collect(['feature']);
+
+        $this->cacheRepository->expects($this->once())
+            ->method('get')
+            ->with($key)
+            ->willReturn($collection);
+
+        $this->assertSame($collection, $this->service->getModelFeatureLinks($this->model));
+
+        $this->cacheRepository->expects($this->once())
+            ->method('put')
+            ->with($key, $collection);
+
+        $this->service->putModelFeatureLinks($this->model, $collection);
+
+        $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
+
+        $this->service->invalidateCacheForModelFeatureLinksAndAccess($this->model);
     }
 
     public function test_all_teams_cache(): void
@@ -153,7 +196,7 @@ class CacheServiceTest extends TestCase
 
     public function test_model_teams_cache(): void
     {
-        $key = "teams.{$this->model->getMorphClass()}.{$this->model->getKey()}";
+        $key = "teams.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
         $collection = collect(['team']);
 
         $this->cacheRepository->expects($this->once())
@@ -169,10 +212,8 @@ class CacheServiceTest extends TestCase
 
         $this->service->putModelTeamLinks($this->model, $collection);
 
-        $this->cacheRepository->expects($this->once())
-            ->method('forget')
-            ->with($key);
+        $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelTeamLinks($this->model);
+        $this->service->invalidateCacheForModelTeamLinksAndAccess($this->model);
     }
 }

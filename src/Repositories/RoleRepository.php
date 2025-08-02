@@ -92,7 +92,7 @@ class RoleRepository implements EntityRepositoryInterface
         $role = new Role(['name' => $roleName]);
 
         if ($role->save()) {
-            $this->cacheService->invalidateCacheForAllLinks();
+            $this->cacheService->invalidateCacheForAllRoles();
         }
 
         return $role->fresh();
