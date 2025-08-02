@@ -432,12 +432,17 @@ class TeamService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the team is granted by default, return true.
+        if ($team->grant_by_default) {
+            return true;
+        }
+
         // If the team is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $team)) {
             return true;
         }
 
-        return $team->grant_by_default;
+        return false;
     }
 
     /**
@@ -502,6 +507,17 @@ class TeamService extends AbstractBaseEntityService
     }
 
     /**
+     * Get all teams directly assigned to a model.
+     *
+     * @return Collection<string, TeamPacket>
+     */
+    public function getDirectForModel(Model $model): Collection
+    {
+        return $this->teamRepository->assignedToModel($model)
+            ->map(fn (Team $team) => $team->toPacket());
+    }
+
+    /**
      * Get all teams assigned directly or indirectly to a model.
      *
      * @return Collection<string, TeamPacket>
@@ -510,17 +526,6 @@ class TeamService extends AbstractBaseEntityService
     {
         return $this->teamRepository->all()
             ->filter(fn (Team $team) => $this->modelHas($model, $team))
-            ->map(fn (Team $team) => $team->toPacket());
-    }
-
-    /**
-     * Get all teams directly assigned to a model.
-     *
-     * @return Collection<string, TeamPacket>
-     */
-    public function getDirectForModel(Model $model): Collection
-    {
-        return $this->teamRepository->assignedToModel($model)
             ->map(fn (Team $team) => $team->toPacket());
     }
 
@@ -536,18 +541,21 @@ class TeamService extends AbstractBaseEntityService
             return $result;
         }
 
-        $this->teamRepository->all()
-            ->filter(function (Team $team) use ($model) {
-                $denied = $this->teamRepository->deniedFromModel($model)->has($team->name);
+        $deniedTeams = $this->teamRepository->deniedFromModel($model);
+        $activeUndeniedTeams = $this->teamRepository->all()
+            ->filter(fn (Team $team) => ! $deniedTeams->has($team->name))
+            ->filter(fn (Team $team) => $team->is_active);
 
-                return $team->grant_by_default && ! $denied;
-            })
+        // Teams granted by default.
+        $activeUndeniedTeams
+            ->filter(fn (Team $team) => $team->grant_by_default)
             ->each(function (Team $team) use (&$sourcesMap) {
                 $sourcesMap[$team->name][] = [
                     'type' => TeamSourceType::DEFAULT,
                 ];
             });
 
+        // Teams directly assigned.
         $this->teamRepository->assignedToModel($model)
             ->filter(fn (Team $team) => $team->is_active)
             ->each(function (Team $team) use (&$sourcesMap) {

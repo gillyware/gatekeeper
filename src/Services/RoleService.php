@@ -434,6 +434,11 @@ class RoleService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the role is granted by default, return true.
+        if ($role->grant_by_default) {
+            return true;
+        }
+
         // If the role is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $role)) {
             return true;
@@ -441,8 +446,8 @@ class RoleService extends AbstractBaseEntityService
 
         // If teams are enabled and the model interacts with teams, check if the model has the role through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithRole = $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
+            $onTeamWithRole = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
                 ->some(fn (Team $team) => $team->hasRole($role));
 
             if ($onTeamWithRole) {
@@ -450,7 +455,7 @@ class RoleService extends AbstractBaseEntityService
             }
         }
 
-        return $role->grant_by_default;
+        return false;
     }
 
     /**
@@ -515,6 +520,17 @@ class RoleService extends AbstractBaseEntityService
     }
 
     /**
+     * Get all roles directly assigned to a model.
+     *
+     * @return Collection<string, RolePacket>
+     */
+    public function getDirectForModel(Model $model): Collection
+    {
+        return $this->roleRepository->assignedToModel($model)
+            ->map(fn (Role $role) => $role->toPacket());
+    }
+
+    /**
      * Get all roles assigned directly or indirectly to a model.
      *
      * @return Collection<string, RolePacket>
@@ -523,17 +539,6 @@ class RoleService extends AbstractBaseEntityService
     {
         return $this->roleRepository->all()
             ->filter(fn (Role $role) => $this->modelHas($model, $role))
-            ->map(fn (Role $role) => $role->toPacket());
-    }
-
-    /**
-     * Get all roles directly assigned to a model.
-     *
-     * @return Collection<string, RolePacket>
-     */
-    public function getDirectForModel(Model $model): Collection
-    {
-        return $this->roleRepository->assignedToModel($model)
             ->map(fn (Role $role) => $role->toPacket());
     }
 
@@ -549,18 +554,21 @@ class RoleService extends AbstractBaseEntityService
             return $result;
         }
 
-        $this->roleRepository->all()
-            ->filter(function (Role $role) use ($model) {
-                $denied = $this->roleRepository->deniedFromModel($model)->has($role->name);
+        $deniedRoles = $this->roleRepository->deniedFromModel($model);
+        $activeUndeniedRoles = $this->roleRepository->all()
+            ->filter(fn (Role $role) => ! $deniedRoles->has($role->name))
+            ->filter(fn (Role $role) => $role->is_active);
 
-                return $role->grant_by_default && ! $denied;
-            })
+        // Roles granted by default.
+        $activeUndeniedRoles
+            ->filter(fn (Role $role) => $role->grant_by_default)
             ->each(function (Role $role) use (&$sourcesMap) {
                 $sourcesMap[$role->name][] = [
                     'type' => RoleSourceType::DEFAULT,
                 ];
             });
 
+        // Roles directly assigned.
         $this->roleRepository->assignedToModel($model)
             ->filter(fn (Role $role) => $role->is_active)
             ->each(function (Role $role) use (&$sourcesMap) {
@@ -568,11 +576,12 @@ class RoleService extends AbstractBaseEntityService
             });
 
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
-                ->each(function (Team $team) use (&$sourcesMap) {
-                    $this->roleRepository->assignedToModel($team)
-                        ->filter(fn (Role $role) => $role->is_active)
+            // Roles through teams.
+            $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->each(function (Team $team) use (&$sourcesMap, $activeUndeniedRoles) {
+                    $activeUndeniedRoles
+                        ->filter(fn (Role $role) => $team->hasRole($role))
                         ->each(function (Role $role) use (&$sourcesMap, $team) {
                             $sourcesMap[$role->name][] = [
                                 'type' => RoleSourceType::TEAM,

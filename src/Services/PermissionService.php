@@ -443,6 +443,11 @@ class PermissionService extends AbstractBaseEntityService
             return false;
         }
 
+        // If the permission is granted by default, return true.
+        if ($permission->grant_by_default) {
+            return true;
+        }
+
         // If the permission is directly assigned to the model, return true.
         if ($this->modelHasDirectly($model, $permission)) {
             return true;
@@ -450,8 +455,8 @@ class PermissionService extends AbstractBaseEntityService
 
         // If roles are enabled and the model interacts with roles, check if the model has the permission through a role.
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
-            $hasRoleWithPermission = $this->roleRepository->assignedToModel($model)
-                ->filter(fn (Role $role) => $role->is_active)
+            $hasRoleWithPermission = $this->roleRepository->all()
+                ->filter(fn (Role $role) => $model->hasRole($role))
                 ->some(fn (Role $role) => $role->hasPermission($permission));
 
             // If the model has any active roles with the permission, return true.
@@ -460,10 +465,22 @@ class PermissionService extends AbstractBaseEntityService
             }
         }
 
+        // If features are enabled and the model interacts with features, check if the model has the permission through a feature.
+        if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
+            $hasFeatureWithPermission = $this->featureRepository->all()
+                ->filter(fn (Feature $feature) => $model->hasFeature($feature))
+                ->some(fn (Feature $feature) => $feature->hasPermission($permission));
+
+            // If the model has any active features with the permission, return true.
+            if ($hasFeatureWithPermission) {
+                return true;
+            }
+        }
+
         // If teams are enabled and the model interacts with teams, check if the model has the permission through a team.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $onTeamWithPermission = $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
+            $onTeamWithPermission = $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
                 ->some(fn (Team $team) => $team->hasPermission($permission));
 
             // If the model has any active teams with the permission, return true.
@@ -472,7 +489,7 @@ class PermissionService extends AbstractBaseEntityService
             }
         }
 
-        return $permission->grant_by_default;
+        return false;
     }
 
     /**
@@ -537,6 +554,17 @@ class PermissionService extends AbstractBaseEntityService
     }
 
     /**
+     * Get all permissions directly assigned to a model.
+     *
+     * @return Collection<string, PermissionPacket>
+     */
+    public function getDirectForModel(Model $model): Collection
+    {
+        return $this->permissionRepository->assignedToModel($model)
+            ->map(fn (Permission $permission) => $permission->toPacket());
+    }
+
+    /**
      * Get all permissions assigned directly or indirectly to a model.
      *
      * @return Collection<string, PermissionPacket>
@@ -545,17 +573,6 @@ class PermissionService extends AbstractBaseEntityService
     {
         return $this->permissionRepository->all()
             ->filter(fn (Permission $permission) => $this->modelHas($model, $permission))
-            ->map(fn (Permission $permission) => $permission->toPacket());
-    }
-
-    /**
-     * Get all permissions directly assigned to a model.
-     *
-     * @return Collection<string, PermissionPacket>
-     */
-    public function getDirectForModel(Model $model): Collection
-    {
-        return $this->permissionRepository->assignedToModel($model)
             ->map(fn (Permission $permission) => $permission->toPacket());
     }
 
@@ -571,30 +588,34 @@ class PermissionService extends AbstractBaseEntityService
             return $result;
         }
 
-        $this->permissionRepository->all()
-            ->filter(function (Permission $permission) use ($model) {
-                $denied = $this->permissionRepository->deniedFromModel($model)->has($permission->name);
+        $deniedPermissions = $this->permissionRepository->deniedFromModel($model);
+        $activeUndeniedPermissions = $this->permissionRepository->all()
+            ->filter(fn (Permission $permission) => ! $deniedPermissions->has($permission->name))
+            ->filter(fn (Permission $permission) => $permission->is_active);
 
-                return $permission->grant_by_default && ! $denied;
-            })
+        // Permissions granted by default.
+        $activeUndeniedPermissions
+            ->filter(fn (Permission $permission) => $permission->grant_by_default)
             ->each(function (Permission $permission) use (&$sourcesMap) {
                 $sourcesMap[$permission->name][] = [
                     'type' => PermissionSourceType::DEFAULT,
                 ];
             });
 
+        // Permissions directly assigned.
         $this->permissionRepository->assignedToModel($model)
             ->filter(fn (Permission $permission) => $permission->is_active)
             ->each(function (Permission $permission) use (&$sourcesMap) {
                 $sourcesMap[$permission->name][] = ['type' => PermissionSourceType::DIRECT];
             });
 
+        // Permissions through roles.
         if ($this->rolesFeatureEnabled() && $this->modelInteractsWithRoles($model)) {
-            $this->roleRepository->assignedToModel($model)
-                ->filter(fn (Role $role) => $role->is_active)
-                ->each(function (Role $role) use (&$sourcesMap) {
-                    $this->permissionRepository->assignedToModel($role)
-                        ->filter(fn (Permission $permission) => $permission->is_active)
+            $this->roleRepository->all()
+                ->filter(fn (Role $role) => $model->hasRole($role))
+                ->each(function (Role $role) use (&$sourcesMap, $activeUndeniedPermissions) {
+                    $activeUndeniedPermissions
+                        ->filter(fn (Permission $permission) => $role->hasPermission($permission))
                         ->each(function (Permission $permission) use (&$sourcesMap, $role) {
                             $sourcesMap[$permission->name][] = [
                                 'type' => PermissionSourceType::ROLE,
@@ -604,12 +625,13 @@ class PermissionService extends AbstractBaseEntityService
                 });
         }
 
+        // Permissions through features.
         if ($this->featuresFeatureEnabled() && $this->modelInteractsWithFeatures($model)) {
-            $this->featureRepository->assignedToModel($model)
-                ->filter(fn (Feature $feature) => $feature->is_active)
-                ->each(function (Feature $feature) use (&$sourcesMap) {
-                    $this->permissionRepository->assignedToModel($feature)
-                        ->filter(fn (Permission $permission) => $permission->is_active)
+            $this->featureRepository->all()
+                ->filter(fn (Feature $feature) => $model->hasFeature($feature))
+                ->each(function (Feature $feature) use (&$sourcesMap, $activeUndeniedPermissions) {
+                    $activeUndeniedPermissions
+                        ->filter(fn (Permission $permission) => $feature->hasPermission($permission))
                         ->each(function (Permission $permission) use (&$sourcesMap, $feature) {
                             $sourcesMap[$permission->name][] = [
                                 'type' => PermissionSourceType::FEATURE,
@@ -619,34 +641,19 @@ class PermissionService extends AbstractBaseEntityService
                 });
         }
 
+        // Permissions through teams.
         if ($this->teamsFeatureEnabled() && $this->modelInteractsWithTeams($model)) {
-            $this->teamRepository->assignedToModel($model)
-                ->filter(fn (Team $team) => $team->is_active)
-                ->each(function (Team $team) use (&$sourcesMap) {
-                    $this->permissionRepository->assignedToModel($team)
-                        ->filter(fn (Permission $permission) => $permission->is_active)
+            $this->teamRepository->all()
+                ->filter(fn (Team $team) => $model->onTeam($team))
+                ->each(function (Team $team) use (&$sourcesMap, $activeUndeniedPermissions) {
+                    $activeUndeniedPermissions
+                        ->filter(fn (Permission $permission) => $team->hasPermission($permission))
                         ->each(function (Permission $permission) use (&$sourcesMap, $team) {
                             $sourcesMap[$permission->name][] = [
                                 'type' => PermissionSourceType::TEAM,
                                 'team' => $team->name,
                             ];
                         });
-
-                    if ($this->rolesFeatureEnabled()) {
-                        $this->roleRepository->assignedToModel($team)
-                            ->filter(fn (Role $role) => $role->is_active)
-                            ->each(function (Role $role) use (&$sourcesMap, $team) {
-                                $this->permissionRepository->assignedToModel($role)
-                                    ->filter(fn (Permission $permission) => $permission->is_active)
-                                    ->each(function (Permission $permission) use (&$sourcesMap, $role, $team) {
-                                        $sourcesMap[$permission->name][] = [
-                                            'type' => PermissionSourceType::TEAM_ROLE,
-                                            'team' => $team->name,
-                                            'role' => $role->name,
-                                        ];
-                                    });
-                            });
-                    }
                 });
         }
 

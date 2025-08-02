@@ -508,7 +508,7 @@ class TeamServiceTest extends TestCase
 
         /** @var AuditLog<User, User> $assignTeamLog */
         $assignTeamLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::AddTeam->value, $assignTeamLog->action);
+        $this->assertEquals(AuditLogAction::AssignTeam->value, $assignTeamLog->action);
         $this->assertEquals($team->name, $assignTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $assignTeamLog->actionBy->id);
         $this->assertEquals($user->id, $assignTeamLog->action_to_model_id);
@@ -586,12 +586,12 @@ class TeamServiceTest extends TestCase
         $this->service->assignToModel($user, $team);
         $this->service->unassignFromModel($user, $team);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignTeam->value)->get();
         $this->assertCount(1, $auditLogs);
 
         /** @var AuditLog<User, User> $unassignTeamLog */
         $unassignTeamLog = $auditLogs->first();
-        $this->assertEquals(AuditLogAction::RemoveTeam->value, $unassignTeamLog->action);
+        $this->assertEquals(AuditLogAction::UnassignTeam->value, $unassignTeamLog->action);
         $this->assertEquals($team->name, $unassignTeamLog->metadata['name']);
         $this->assertEquals($this->user->id, $unassignTeamLog->actionBy->id);
         $this->assertEquals($user->id, $unassignTeamLog->actionTo->id);
@@ -638,7 +638,7 @@ class TeamServiceTest extends TestCase
 
         $this->service->unassignAllFromModel($user, $teams);
 
-        $auditLogs = AuditLog::query()->where('action', AuditLogAction::RemoveTeam->value)->get();
+        $auditLogs = AuditLog::query()->where('action', AuditLogAction::UnassignTeam->value)->get();
         $this->assertCount(3, $auditLogs);
         $this->assertTrue($auditLogs->every(fn (AuditLog $log) => $log->metadata['lifecycle_id'] === Gatekeeper::getLifecycleId()));
     }

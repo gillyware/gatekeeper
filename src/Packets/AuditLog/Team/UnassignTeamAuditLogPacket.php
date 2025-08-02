@@ -9,6 +9,6 @@ final class UnassignTeamAuditLogPacket extends AbstractBaseEntityAssignmentAudit
 {
     protected static function getAction(): AuditLogAction
     {
-        return AuditLogAction::RemoveTeam;
+        return AuditLogAction::UnassignTeam;
     }
 }
