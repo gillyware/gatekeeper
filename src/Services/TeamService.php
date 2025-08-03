@@ -7,7 +7,7 @@ use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\TeamSourceType;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\Builders\StoreAuditLogPacketBuilder;
+use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\UpdateTeamPacket;

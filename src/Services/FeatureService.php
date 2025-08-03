@@ -8,7 +8,7 @@ use Gillyware\Gatekeeper\Enums\FeatureSourceType;
 use Gillyware\Gatekeeper\Exceptions\Feature\FeatureAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\Builders\StoreAuditLogPacketBuilder;
+use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Feature\UpdateFeaturePacket;

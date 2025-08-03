@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Http\Controllers;
 
-use Gillyware\Gatekeeper\Packets\AuditLogPagePacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;

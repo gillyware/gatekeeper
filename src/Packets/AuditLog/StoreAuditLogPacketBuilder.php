@@ -1,11 +1,10 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Packets\Builders;
+namespace Gillyware\Gatekeeper\Packets\AuditLog;
 
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
 use Gillyware\Gatekeeper\Models\AuditLog;
-use Gillyware\Gatekeeper\Packets\StoreAuditLogPacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Illuminate\Database\Eloquent\Model;
 

@@ -3,8 +3,8 @@
 namespace Gillyware\Gatekeeper\Contracts;
 
 use Gillyware\Gatekeeper\Models\AuditLog;
-use Gillyware\Gatekeeper\Packets\AuditLogPagePacket;
-use Gillyware\Gatekeeper\Packets\StoreAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacket;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface AuditLogRepositoryInterface

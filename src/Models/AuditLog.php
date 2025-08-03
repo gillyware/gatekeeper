@@ -4,7 +4,7 @@ namespace Gillyware\Gatekeeper\Models;
 
 use Carbon\Carbon;
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Packets\AuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPacket;
 use Gillyware\Gatekeeper\Services\AuditLogService;
 use Gillyware\Postal\Contracts\PacketableInterface;
 use Gillyware\Postal\Traits\Packetable;

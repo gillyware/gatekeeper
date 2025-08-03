@@ -1,6 +1,6 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Packets;
+namespace Gillyware\Gatekeeper\Packets\AuditLog;
 
 use Gillyware\Postal\Attributes\Field;
 use Gillyware\Postal\Attributes\Rule;

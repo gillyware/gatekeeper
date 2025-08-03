@@ -1,6 +1,6 @@
 <?php
 
-namespace Gillyware\Gatekeeper\Packets;
+namespace Gillyware\Gatekeeper\Packets\AuditLog;
 
 use Closure;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
