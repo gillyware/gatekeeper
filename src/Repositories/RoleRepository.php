@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
-use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -78,7 +78,7 @@ class RoleRepository implements EntityRepositoryInterface
         $role = $this->findByName($roleName);
 
         if (! $role) {
-            throw new RoleNotFoundException($roleName);
+            GatekeeperExceptionBuilder::roles()->notFound($roleName)->throw();
         }
 
         return $role;

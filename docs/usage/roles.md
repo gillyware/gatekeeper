@@ -69,7 +69,7 @@ $exists = Gatekeeper::roleExists(Role::UserManager);
 
 You may create a new role, which will be active by default.
 
-If the role already exists, a `RoleAlreadyExistsException` will be thrown.
+If the role already exists, a `GatekeeperException` will be thrown.
 
 The `createRole` method accepts a string or a string-backed enum.
 
@@ -96,9 +96,9 @@ You may update the name of an existing role.
 
 The `updateRoleName` method accepts a `RolePacket` instance, a string, or a string-backed enum as the first argument (the existing role), and a string or string-backed enum as the second argument (the new name).
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
-If a role with the new name already exists, a `RoleAlreadyExistsException` will be thrown.
+If a role with the new name already exists, a `GatekeeperException` will be thrown.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Role\RolePacket`
 
@@ -124,7 +124,7 @@ You may want a role that most, if not all, models should have by default. Granti
 
 The `grantRoleByDefault` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is already granted by default, it will simply be returned without raising an exception.
 
@@ -151,7 +151,7 @@ You may decide that a role should not be [granted by default](#grant-role-by-def
 
 The `revokeRoleDefaultGrant` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is not granted by default, it will simply be returned without raising an exception.
 
@@ -180,7 +180,7 @@ Deactivated roles remain in the database but are ignored by role checks until re
 
 The `deactivateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is already inactive, it will simply be returned without raising an exception.
 
@@ -207,7 +207,7 @@ You may reactivate an inactive role to resume granting access to models.
 
 The `reactivateRole` method accepts a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is already active, it will simply be returned without raising an exception.
 
@@ -312,7 +312,7 @@ You may assign a role to a model using one of the following approaches:
 
 The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is denied from a model, the denial will be removed before assigning.
 
@@ -351,7 +351,7 @@ The `$roles` argument must be an array or Arrayable containing any combination `
 
 If a role is already assigned, it will be skipped without raising an exception.
 
-If a role does not exist, a `RoleNotFoundException` will be thrown.
+If a role does not exist, a `GatekeeperException` will be thrown.
 
 If a role is denied from a model, the denial will be removed before assigning.
 
@@ -395,7 +395,7 @@ You may unassign a role from a model using one of the following approaches:
 
 The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is denied from the model, the denial will remain intact.
 
@@ -434,7 +434,7 @@ The `$roles` argument must be an array or Arrayable containing any combination `
 
 If a role is already unassigned, it will be skipped without raising an exception.
 
-If a role does not exist, a `RoleNotFoundException` will be thrown.
+If a role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is denied from the model, the denial will remain intact.
 
@@ -480,7 +480,7 @@ You may deny a role from a model using one of the following approaches:
 
 The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is assigned to the model, the role will be unassigned from the model before denying.
 
@@ -519,7 +519,7 @@ The `$roles` argument must be an array or Arrayable containing any combination `
 
 If a role is already denied, it will be skipped without raising an exception.
 
-If a role does not exist, a `RoleNotFoundException` will be thrown.
+If a role does not exist, a `GatekeeperException` will be thrown.
 
 If the role is denied from the model, the denial will remain intact.
 
@@ -565,7 +565,7 @@ You may undeny a role from a model using one of the following approaches:
 
 The `$role` argument must be a `RolePacket` instance, a string, or a string-backed enum.
 
-If the role does not exist, a `RoleNotFoundException` will be thrown.
+If the role does not exist, a `GatekeeperException` will be thrown.
 
 **Returns:** bool – `true` if the role is not denied
 
@@ -602,7 +602,7 @@ The `$roles` argument must be an array or Arrayable containing any combination `
 
 If a role is not denied, it will be skipped without raising an exception.
 
-If a role does not exist, a `RoleNotFoundException` will be thrown.
+If a role does not exist, a `GatekeeperException` will be thrown.
 
 > [!NOTE]
 > This method stops on the first failure.

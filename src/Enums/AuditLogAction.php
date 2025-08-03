@@ -92,6 +92,16 @@ enum AuditLogAction: string
 
     case UndenyTeam = 'team_undeny';
 
+    public function getEntity(): GatekeeperEntity
+    {
+        return GatekeeperEntity::from(str($this->value)->before('_'));
+    }
+
+    public function getVerb(): AuditLogActionVerb
+    {
+        return AuditLogActionVerb::from(str($this->value)->after('_'));
+    }
+
     public static function build(GatekeeperEntity $entity, AuditLogActionVerb $verb): static
     {
         return self::from($entity->value.'_'.$verb->value);

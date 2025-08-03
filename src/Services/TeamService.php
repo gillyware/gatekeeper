@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\TeamSourceType;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -60,7 +60,7 @@ class TeamService extends AbstractBaseEntityService
         $teamName = $this->resolveEntityName($teamName);
 
         if ($this->exists($teamName)) {
-            throw new TeamAlreadyExistsException($teamName);
+            GatekeeperExceptionBuilder::teams()->alreadyExists($teamName)->throw();
         }
 
         $createdTeam = $this->teamRepository->create($teamName);
@@ -105,7 +105,7 @@ class TeamService extends AbstractBaseEntityService
         $currentTeam = $this->resolveEntity($team, orFail: true);
 
         if ($this->exists($newTeamName) && $currentTeam->name !== $newTeamName) {
-            throw new TeamAlreadyExistsException($newTeamName);
+            GatekeeperExceptionBuilder::teams()->alreadyExists($newTeamName)->throw();
         }
 
         $oldTeamName = $currentTeam->name;

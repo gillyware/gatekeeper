@@ -6,8 +6,7 @@ use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
-use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Permission\UnassigningGatekeeperDashboardPermissionFromSelfException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
@@ -71,7 +70,7 @@ class PermissionService extends AbstractBaseEntityService
         $permissionName = $this->resolveEntityName($permissionName);
 
         if ($this->exists($permissionName)) {
-            throw new PermissionAlreadyExistsException($permissionName);
+            GatekeeperExceptionBuilder::permissions()->alreadyExists($permissionName)->throw();
         }
 
         $createdPermission = $this->permissionRepository->create($permissionName);
@@ -115,7 +114,7 @@ class PermissionService extends AbstractBaseEntityService
         $currentPermission = $this->resolveEntity($permission, orFail: true);
 
         if ($this->exists($newPermissionName) && $currentPermission->name !== $newPermissionName) {
-            throw new PermissionAlreadyExistsException($newPermissionName);
+            GatekeeperExceptionBuilder::permissions()->alreadyExists($newPermissionName)->throw();
         }
 
         $oldPermissionName = $currentPermission->name;
@@ -327,7 +326,7 @@ class PermissionService extends AbstractBaseEntityService
         $user = Auth::user();
 
         if ($user instanceof Model && $user->is($model) && in_array($permission->name, [GatekeeperPermission::View->value, GatekeeperPermission::Manage->value])) {
-            throw new UnassigningGatekeeperDashboardPermissionFromSelfException;
+            GatekeeperExceptionBuilder::permissions()->cannotUnassignFromSelf($permission->name)->throw();
         }
 
         $unassigned = $this->modelHasPermissionRepository->unassignFromModel($model, $permission);

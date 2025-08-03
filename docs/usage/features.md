@@ -69,7 +69,7 @@ $exists = Gatekeeper::featureExists(Feature::PumpingTracking);
 
 You may create a new feature, which will be active by default.
 
-If the feature already exists, a `FeatureAlreadyExistsException` will be thrown.
+If the feature already exists, a `GatekeeperException` will be thrown.
 
 The `createFeature` method accepts a string or a string-backed enum.
 
@@ -96,9 +96,9 @@ You may update the name of an existing feature.
 
 The `updateFeatureName` method accepts a `FeaturePacket` instance, a string, or a string-backed enum as the first argument (the existing feature), and a string or string-backed enum as the second argument (the new name).
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
-If a feature with the new name already exists, a `FeatureAlreadyExistsException` will be thrown.
+If a feature with the new name already exists, a `GatekeeperException` will be thrown.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket`
 
@@ -124,7 +124,7 @@ You may want a feature that most, if not all, models should have by default. Gra
 
 The `grantFeatureByDefault` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is already granted by default, it will simply be returned without raising an exception.
 
@@ -151,7 +151,7 @@ You may decide that a feature should not be [granted by default](#grant-feature-
 
 The `revokeFeatureDefaultGrant` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is not granted by default, it will simply be returned without raising an exception.
 
@@ -180,7 +180,7 @@ Deactivated features remain in the database but are ignored by feature checks un
 
 The `deactivateFeature` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is already inactive, it will simply be returned without raising an exception.
 
@@ -207,7 +207,7 @@ You may reactivate an inactive feature to resume granting access to models.
 
 The `reactivateFeature` method accepts a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is already active, it will simply be returned without raising an exception.
 
@@ -312,7 +312,7 @@ You may assign a feature to a model using one of the following approaches:
 
 The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is denied from a model, the denial will be removed before assigning.
 
@@ -351,7 +351,7 @@ The `$features` argument must be an array or Arrayable containing any combinatio
 
 If a feature is already assigned, it will be skipped without raising an exception.
 
-If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+If a feature does not exist, a `GatekeeperException` will be thrown.
 
 If a feature is denied from a model, the denial will be removed before assigning.
 
@@ -395,7 +395,7 @@ You may unassign a feature from a model using one of the following approaches:
 
 The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is denied from the model, the denial will remain intact.
 
@@ -434,7 +434,7 @@ The `$features` argument must be an array or Arrayable containing any combinatio
 
 If a feature is already unassigned, it will be skipped without raising an exception.
 
-If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+If a feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is denied from the model, the denial will remain intact.
 
@@ -480,7 +480,7 @@ You may deny a feature from a model using one of the following approaches:
 
 The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is assigned to the model, the feature will be unassigned from the model before denying.
 
@@ -519,7 +519,7 @@ The `$features` argument must be an array or Arrayable containing any combinatio
 
 If a feature is already denied, it will be skipped without raising an exception.
 
-If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+If a feature does not exist, a `GatekeeperException` will be thrown.
 
 If the feature is denied from the model, the denial will remain intact.
 
@@ -565,7 +565,7 @@ You may undeny a feature from a model using one of the following approaches:
 
 The `$feature` argument must be a `FeaturePacket` instance, a string, or a string-backed enum.
 
-If the feature does not exist, a `FeatureNotFoundException` will be thrown.
+If the feature does not exist, a `GatekeeperException` will be thrown.
 
 **Returns:** bool – `true` if the feature is not denied
 
@@ -602,7 +602,7 @@ The `$features` argument must be an array or Arrayable containing any combinatio
 
 If a feature is not denied, it will be skipped without raising an exception.
 
-If a feature does not exist, a `FeatureNotFoundException` will be thrown.
+If a feature does not exist, a `GatekeeperException` will be thrown.
 
 > [!NOTE]
 > This method stops on the first failure.

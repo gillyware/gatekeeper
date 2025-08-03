@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\FeatureSourceType;
-use Gillyware\Gatekeeper\Exceptions\Feature\FeatureAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
@@ -63,7 +63,7 @@ class FeatureService extends AbstractBaseEntityService
         $featureName = $this->resolveEntityName($featureName);
 
         if ($this->exists($featureName)) {
-            throw new FeatureAlreadyExistsException($featureName);
+            GatekeeperExceptionBuilder::features()->alreadyExists($featureName)->throw();
         }
 
         $createdFeature = $this->featureRepository->create($featureName);
@@ -108,7 +108,7 @@ class FeatureService extends AbstractBaseEntityService
         $currentFeature = $this->resolveEntity($feature, orFail: true);
 
         if ($this->exists($newFeatureName) && $currentFeature->name !== $newFeatureName) {
-            throw new FeatureAlreadyExistsException($newFeatureName);
+            GatekeeperExceptionBuilder::features()->alreadyExists($newFeatureName)->throw();
         }
 
         $oldFeatureName = $currentFeature->name;

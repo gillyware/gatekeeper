@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
-use Gillyware\Gatekeeper\Exceptions\Feature\FeatureNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Repositories\FeatureRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -85,9 +85,13 @@ class FeatureRepositoryTest extends TestCase
             ->method('getAllFeatures')
             ->willReturn(collect());
 
-        $this->expectException(FeatureNotFoundException::class);
+        $featureName = fake()->unique()->word();
 
-        $this->repository->findOrFailByName(fake()->unique()->word());
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Feature '{$featureName}' not found.");
+
+        $this->repository->findOrFailByName($featureName);
     }
 
     public function test_create_stores_feature_and_forgets_cache()

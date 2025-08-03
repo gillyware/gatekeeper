@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
-use Gillyware\Gatekeeper\Exceptions\Feature\FeatureNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\ModelHasFeature;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -78,7 +78,7 @@ class FeatureRepository implements EntityRepositoryInterface
         $feature = $this->findByName($featureName);
 
         if (! $feature) {
-            throw new FeatureNotFoundException($featureName);
+            GatekeeperExceptionBuilder::features()->notFound($featureName)->throw();
         }
 
         return $feature;

@@ -4,8 +4,7 @@ namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
-use Gillyware\Gatekeeper\Exceptions\Permission\PermissionAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
@@ -67,7 +66,9 @@ class PermissionServiceTest extends TestCase
     {
         $existing = Permission::factory()->create();
 
-        $this->expectException(PermissionAlreadyExistsException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Permission '{$existing->name}' already exists.");
 
         $this->service->create($existing->name);
     }
@@ -888,7 +889,11 @@ class PermissionServiceTest extends TestCase
             protected $table = 'users';
         };
 
-        $this->expectException(ModelDoesNotInteractWithPermissionsException::class);
+        $className = get_class($model);
+
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("The model class [{$className}] cannot have permissions. Consider using the [Gillyware\Gatekeeper\Traits\HasPermissions] trait in your model.");
 
         $this->service->assignToModel($model, 'any');
     }

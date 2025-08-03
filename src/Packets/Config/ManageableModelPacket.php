@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Packets\Config;
 
-use Gillyware\Gatekeeper\Exceptions\Model\ModelConfigurationException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Gillyware\Postal\Attributes\Rule;
 use Gillyware\Postal\Packet;
@@ -58,7 +58,7 @@ final class ManageableModelPacket extends Packet
 
     protected static function failedValidation(Validator $validator): void
     {
-        throw new ModelConfigurationException($validator->errors()->toJson());
+        GatekeeperExceptionBuilder::models()->setMessage($validator->errors()->toJson())->throw();
     }
 
     protected static function explicitRules(): array

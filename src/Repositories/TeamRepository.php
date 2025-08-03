@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -80,7 +80,7 @@ class TeamRepository implements EntityRepositoryInterface
         $team = $this->findByName($teamName);
 
         if (! $team) {
-            throw new TeamNotFoundException($teamName);
+            GatekeeperExceptionBuilder::teams()->notFound($teamName)->throw();
         }
 
         return $team;
