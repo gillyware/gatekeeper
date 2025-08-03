@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Contracts\AuditLogServiceInterface;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Models\AuditLog;
-use Gillyware\Gatekeeper\Packets\AuditLog\AuditLogPagePacket;
+use Gillyware\Gatekeeper\Packets\AuditLogPagePacket;
 use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;

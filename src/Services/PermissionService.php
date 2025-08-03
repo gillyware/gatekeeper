@@ -2,6 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\GatekeeperPermission;
 use Gillyware\Gatekeeper\Enums\PermissionSourceType;
@@ -11,21 +12,10 @@ use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\AssignPermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\CreatePermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeactivatePermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DeletePermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\DenyPermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\GrantedPermissionByDefaultAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\ReactivatePermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\RevokedPermissionDefaultGrantAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UnassignPermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UndenyPermissionAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Permission\UpdatePermissionAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\Builders\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Permission\UpdatePermissionPacket;
-use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\FeatureRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasPermissionRepository;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
@@ -50,7 +40,6 @@ class PermissionService extends AbstractBaseEntityService
         private readonly FeatureRepository $featureRepository,
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasPermissionRepository $modelHasPermissionRepository,
-        private readonly AuditLogRepository $auditLogRepository,
         private readonly CacheService $cacheService,
     ) {}
 
@@ -88,7 +77,9 @@ class PermissionService extends AbstractBaseEntityService
         $createdPermission = $this->permissionRepository->create($permissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(CreatePermissionAuditLogPacket::make($createdPermission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::CreatePermission)
+                ->setActionToEntity($createdPermission)
+                ->store();
         }
 
         return $createdPermission->toPacket();
@@ -131,7 +122,10 @@ class PermissionService extends AbstractBaseEntityService
         $updatedPermission = $this->permissionRepository->updateName($currentPermission, $newPermissionName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UpdatePermissionAuditLogPacket::make($updatedPermission, $oldPermissionName));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UpdatePermissionName)
+                ->setActionToEntity($updatedPermission)
+                ->pushMetadata('old_name', $oldPermissionName)
+                ->store();
         }
 
         return $updatedPermission->toPacket();
@@ -155,7 +149,9 @@ class PermissionService extends AbstractBaseEntityService
         $defaultedOnPermission = $this->permissionRepository->grantByDefault($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(GrantedPermissionByDefaultAuditLogPacket::make($defaultedOnPermission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::GrantPermissionByDefault)
+                ->setActionToEntity($defaultedOnPermission)
+                ->store();
         }
 
         return $defaultedOnPermission->toPacket();
@@ -179,7 +175,9 @@ class PermissionService extends AbstractBaseEntityService
         $defaultedOffPermission = $this->permissionRepository->revokeDefaultGrant($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokedPermissionDefaultGrantAuditLogPacket::make($defaultedOffPermission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::RevokePermissionDefaultGrant)
+                ->setActionToEntity($defaultedOffPermission)
+                ->store();
         }
 
         return $defaultedOffPermission->toPacket();
@@ -203,7 +201,9 @@ class PermissionService extends AbstractBaseEntityService
         $deactivatedPermission = $this->permissionRepository->deactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeactivatePermissionAuditLogPacket::make($deactivatedPermission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeactivatePermission)
+                ->setActionToEntity($deactivatedPermission)
+                ->store();
         }
 
         return $deactivatedPermission->toPacket();
@@ -227,7 +227,9 @@ class PermissionService extends AbstractBaseEntityService
         $reactivatedPermission = $this->permissionRepository->reactivate($currentPermission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(ReactivatePermissionAuditLogPacket::make($reactivatedPermission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::ReactivatePermission)
+                ->setActionToEntity($reactivatedPermission)
+                ->store();
         }
 
         return $reactivatedPermission->toPacket();
@@ -256,7 +258,9 @@ class PermissionService extends AbstractBaseEntityService
         $deleted = $this->permissionRepository->delete($permission);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeletePermissionAuditLogPacket::make($permission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeletePermission)
+                ->setActionToEntity($permission)
+                ->store();
         }
 
         return (bool) $deleted;
@@ -283,7 +287,10 @@ class PermissionService extends AbstractBaseEntityService
         $this->modelHasPermissionRepository->assignToModel($model, $permission);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(AssignPermissionAuditLogPacket::make($model, $permission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::AssignPermission)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $permission->name)
+                ->store();
         }
 
         return true;
@@ -326,7 +333,10 @@ class PermissionService extends AbstractBaseEntityService
         $unassigned = $this->modelHasPermissionRepository->unassignFromModel($model, $permission);
 
         if ($unassigned && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UnassignPermissionAuditLogPacket::make($model, $permission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UnassignPermission)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $permission->name)
+                ->store();
         }
 
         return $unassigned;
@@ -362,7 +372,10 @@ class PermissionService extends AbstractBaseEntityService
         $denied = $this->modelHasPermissionRepository->denyFromModel($model, $permission);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DenyPermissionAuditLogPacket::make($model, $permission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DenyPermission)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $permission->name)
+                ->store();
         }
 
         return (bool) $denied;
@@ -398,7 +411,10 @@ class PermissionService extends AbstractBaseEntityService
         $denied = $this->modelHasPermissionRepository->undenyFromModel($model, $permission);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UndenyPermissionAuditLogPacket::make($model, $permission));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UndenyPermission)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $permission->name)
+                ->store();
         }
 
         return (bool) $denied;

@@ -2,25 +2,15 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\TeamSourceType;
 use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\AssignTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\CreateTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeactivateTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\DeleteTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\DenyTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\GrantedTeamByDefaultAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\ReactivateTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\RevokedTeamDefaultGrantAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\UnassignTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\UndenyTeamAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Team\UpdateTeamAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\Builders\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket;
 use Gillyware\Gatekeeper\Packets\Entities\Team\UpdateTeamPacket;
-use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasTeamRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Illuminate\Contracts\Support\Arrayable;
@@ -38,7 +28,6 @@ class TeamService extends AbstractBaseEntityService
     public function __construct(
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasTeamRepository $modelHasTeamRepository,
-        private readonly AuditLogRepository $auditLogRepository,
         private readonly CacheService $cacheService,
     ) {}
 
@@ -77,7 +66,9 @@ class TeamService extends AbstractBaseEntityService
         $createdTeam = $this->teamRepository->create($teamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(CreateTeamAuditLogPacket::make($createdTeam));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::CreateTeam)
+                ->setActionToEntity($createdTeam)
+                ->store();
         }
 
         return $createdTeam->toPacket();
@@ -121,7 +112,10 @@ class TeamService extends AbstractBaseEntityService
         $updatedTeam = $this->teamRepository->updateName($currentTeam, $newTeamName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UpdateTeamAuditLogPacket::make($updatedTeam, $oldTeamName));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UpdateTeamName)
+                ->setActionToEntity($updatedTeam)
+                ->pushMetadata('old_name', $oldTeamName)
+                ->store();
         }
 
         return $updatedTeam->toPacket();
@@ -146,7 +140,9 @@ class TeamService extends AbstractBaseEntityService
         $defaultedOnTeam = $this->teamRepository->grantByDefault($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(GrantedTeamByDefaultAuditLogPacket::make($defaultedOnTeam));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::GrantTeamByDefault)
+                ->setActionToEntity($defaultedOnTeam)
+                ->store();
         }
 
         return $defaultedOnTeam->toPacket();
@@ -170,7 +166,9 @@ class TeamService extends AbstractBaseEntityService
         $defaultedOffTeam = $this->teamRepository->revokeDefaultGrant($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokedTeamDefaultGrantAuditLogPacket::make($defaultedOffTeam));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::RevokeTeamDefaultGrant)
+                ->setActionToEntity($defaultedOffTeam)
+                ->store();
         }
 
         return $defaultedOffTeam->toPacket();
@@ -194,7 +192,9 @@ class TeamService extends AbstractBaseEntityService
         $deactivatedTeam = $this->teamRepository->deactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeactivateTeamAuditLogPacket::make($deactivatedTeam));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeactivateTeam)
+                ->setActionToEntity($deactivatedTeam)
+                ->store();
         }
 
         return $deactivatedTeam->toPacket();
@@ -219,7 +219,9 @@ class TeamService extends AbstractBaseEntityService
         $reactivatedTeam = $this->teamRepository->reactivate($currentTeam);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(ReactivateTeamAuditLogPacket::make($reactivatedTeam));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::ReactivateTeam)
+                ->setActionToEntity($reactivatedTeam)
+                ->store();
         }
 
         return $reactivatedTeam->toPacket();
@@ -248,7 +250,9 @@ class TeamService extends AbstractBaseEntityService
         $deleted = $this->teamRepository->delete($team);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeleteTeamAuditLogPacket::make($team));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeleteTeam)
+                ->setActionToEntity($team)
+                ->store();
         }
 
         return (bool) $deleted;
@@ -278,7 +282,10 @@ class TeamService extends AbstractBaseEntityService
         $this->modelHasTeamRepository->assignToModel($model, $team);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(AssignTeamAuditLogPacket::make($model, $team));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::AssignTeam)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $team->name)
+                ->store();
         }
 
         return true;
@@ -314,7 +321,10 @@ class TeamService extends AbstractBaseEntityService
         $removed = $this->modelHasTeamRepository->unassignFromModel($model, $team);
 
         if ($removed && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UnassignTeamAuditLogPacket::make($model, $team));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UnassignTeam)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $team->name)
+                ->store();
         }
 
         return $removed;
@@ -350,7 +360,10 @@ class TeamService extends AbstractBaseEntityService
         $denied = $this->modelHasTeamRepository->denyFromModel($model, $team);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DenyTeamAuditLogPacket::make($model, $team));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DenyTeam)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $team->name)
+                ->store();
         }
 
         return (bool) $denied;
@@ -387,7 +400,10 @@ class TeamService extends AbstractBaseEntityService
         $denied = $this->modelHasTeamRepository->undenyFromModel($model, $team);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UndenyTeamAuditLogPacket::make($model, $team));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UndenyTeam)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $team->name)
+                ->store();
         }
 
         return (bool) $denied;
