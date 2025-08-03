@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule as ValidationRule;
 use ReflectionClass;
 
-abstract class AbstractBaseStoreAuditLogPacket extends Packet
+use function Illuminate\Support\enum_value;
+
+class StoreAuditLogPacket extends Packet
 {
     public function __construct(
         #[Rule(['required', 'string'])]
@@ -52,10 +54,10 @@ abstract class AbstractBaseStoreAuditLogPacket extends Packet
         $actionBy = Gatekeeper::getActor();
         /** @var ?Model $actionTo */
         $actionTo = data_get($data, 'action_to');
-        $metadata = data_get($data, 'metadata', []);
+        $metadata = data_get($data, 'metadata', []) ?: [];
 
         return [
-            'action' => static::getAction()->value,
+            'action' => enum_value(data_get($data, 'action')),
             'action_by_model_type' => $actionBy?->getMorphClass(),
             'action_by_model_id' => $actionBy?->getKey(),
             'action_to_model_type' => $actionTo?->getMorphClass(),
@@ -90,6 +92,4 @@ abstract class AbstractBaseStoreAuditLogPacket extends Packet
             'action_to_model_type' => [$validModelTypeRule],
         ];
     }
-
-    abstract protected static function getAction(): AuditLogAction;
 }

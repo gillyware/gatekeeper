@@ -2,26 +2,16 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
+use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\FeatureSourceType;
 use Gillyware\Gatekeeper\Exceptions\Feature\FeatureAlreadyExistsException;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Team;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\AssignFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\CreateFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\DeactivateFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\DeleteFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\DenyFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\GrantedFeatureByDefaultAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\ReactivateFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\RevokedFeatureDefaultGrantAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\UnassignFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\UndenyFeatureAuditLogPacket;
-use Gillyware\Gatekeeper\Packets\AuditLog\Feature\UpdateFeatureAuditLogPacket;
+use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Feature\FeaturePacket;
 use Gillyware\Gatekeeper\Packets\Entities\Feature\UpdateFeaturePacket;
-use Gillyware\Gatekeeper\Repositories\AuditLogRepository;
 use Gillyware\Gatekeeper\Repositories\FeatureRepository;
 use Gillyware\Gatekeeper\Repositories\ModelHasFeatureRepository;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
@@ -41,7 +31,6 @@ class FeatureService extends AbstractBaseEntityService
         private readonly FeatureRepository $featureRepository,
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasFeatureRepository $modelHasFeatureRepository,
-        private readonly AuditLogRepository $auditLogRepository,
         private readonly CacheService $cacheService,
     ) {}
 
@@ -80,7 +69,9 @@ class FeatureService extends AbstractBaseEntityService
         $createdFeature = $this->featureRepository->create($featureName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(CreateFeatureAuditLogPacket::make($createdFeature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::CreateFeature)
+                ->setActionToEntity($createdFeature)
+                ->store();
         }
 
         return $createdFeature->toPacket();
@@ -124,7 +115,10 @@ class FeatureService extends AbstractBaseEntityService
         $updatedFeature = $this->featureRepository->updateName($currentFeature, $newFeatureName);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UpdateFeatureAuditLogPacket::make($updatedFeature, $oldFeatureName));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UpdateFeatureName)
+                ->setActionToEntity($updatedFeature)
+                ->pushMetadata('old_name', $oldFeatureName)
+                ->store();
         }
 
         return $updatedFeature->toPacket();
@@ -149,7 +143,9 @@ class FeatureService extends AbstractBaseEntityService
         $defaultedOnFeature = $this->featureRepository->grantByDefault($currentFeature);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(GrantedFeatureByDefaultAuditLogPacket::make($defaultedOnFeature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::GrantFeatureByDefault)
+                ->setActionToEntity($defaultedOnFeature)
+                ->store();
         }
 
         return $defaultedOnFeature->toPacket();
@@ -173,7 +169,9 @@ class FeatureService extends AbstractBaseEntityService
         $defaultedOffFeature = $this->featureRepository->revokeDefaultGrant($currentFeature);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(RevokedFeatureDefaultGrantAuditLogPacket::make($defaultedOffFeature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::RevokeFeatureDefaultGrant)
+                ->setActionToEntity($defaultedOffFeature)
+                ->store();
         }
 
         return $defaultedOffFeature->toPacket();
@@ -197,7 +195,9 @@ class FeatureService extends AbstractBaseEntityService
         $deactivatedFeature = $this->featureRepository->deactivate($currentFeature);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeactivateFeatureAuditLogPacket::make($deactivatedFeature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeactivateFeature)
+                ->setActionToEntity($deactivatedFeature)
+                ->store();
         }
 
         return $deactivatedFeature->toPacket();
@@ -222,7 +222,9 @@ class FeatureService extends AbstractBaseEntityService
         $reactivatedFeature = $this->featureRepository->reactivate($currentFeature);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(ReactivateFeatureAuditLogPacket::make($reactivatedFeature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::ReactivateFeature)
+                ->setActionToEntity($reactivatedFeature)
+                ->store();
         }
 
         return $reactivatedFeature->toPacket();
@@ -251,7 +253,9 @@ class FeatureService extends AbstractBaseEntityService
         $deleted = $this->featureRepository->delete($feature);
 
         if ($deleted && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DeleteFeatureAuditLogPacket::make($feature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DeleteFeature)
+                ->setActionToEntity($feature)
+                ->store();
         }
 
         return (bool) $deleted;
@@ -280,7 +284,10 @@ class FeatureService extends AbstractBaseEntityService
         $this->modelHasFeatureRepository->assignToModel($model, $feature);
 
         if ($this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(AssignFeatureAuditLogPacket::make($model, $feature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::AssignFeature)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $feature->name)
+                ->store();
         }
 
         return true;
@@ -316,7 +323,10 @@ class FeatureService extends AbstractBaseEntityService
         $unassigned = $this->modelHasFeatureRepository->unassignFromModel($model, $feature);
 
         if ($unassigned && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UnassignFeatureAuditLogPacket::make($model, $feature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UnassignFeature)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $feature->name)
+                ->store();
         }
 
         return $unassigned;
@@ -352,7 +362,10 @@ class FeatureService extends AbstractBaseEntityService
         $denied = $this->modelHasFeatureRepository->denyFromModel($model, $feature);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(DenyFeatureAuditLogPacket::make($model, $feature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::DenyFeature)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $feature->name)
+                ->store();
         }
 
         return (bool) $denied;
@@ -389,7 +402,10 @@ class FeatureService extends AbstractBaseEntityService
         $denied = $this->modelHasFeatureRepository->undenyFromModel($model, $feature);
 
         if ($denied && $this->auditFeatureEnabled()) {
-            $this->auditLogRepository->create(UndenyFeatureAuditLogPacket::make($model, $feature));
+            StoreAuditLogPacketBuilder::action(AuditLogAction::UndenyFeature)
+                ->setActionToModel($model)
+                ->pushMetadata('name', $feature->name)
+                ->store();
         }
 
         return (bool) $denied;
