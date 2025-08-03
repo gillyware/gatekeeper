@@ -2,6 +2,8 @@
 
 ## v2.1.0 - TBD
 
+* Consolidate exception throwing [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/50
+
 * Consolidate duplicated and excessive audit log files by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/49
 
 * Prevent persisting empty entity names by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/48
