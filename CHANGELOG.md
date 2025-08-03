@@ -2,7 +2,7 @@
 
 ## v2.1.0 2025-08-01
 
-* Cache 'model has' results by [@braxey](https://github.com/braxey) in TBD
+* Cache 'model has' results by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/47
 
 ## v2.0.1 2025-08-01
 
