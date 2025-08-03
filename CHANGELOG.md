@@ -1,6 +1,6 @@
 # Release Notes for 2.x
 
-## v2.1.0 2025-08-01
+## v2.1.0 TBD
 
 * Prevent persisting empty entity names by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/48
 
@@ -8,13 +8,13 @@
 
 ## v2.0.1 2025-08-01
 
-* Fix grant entities through entities granted by default by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/6510e403957cf71ecbb2f00600d5516c5ff2c41d
+* Fix grant entities through entities granted by default by [@braxey](https://github.com/braxey) in [6510e40](https://github.com/gillyware/gatekeeper/commit/6510e403957cf71ecbb2f00600d5516c5ff2c41d)
 
-* Fix team command by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/d08e5beac9c532314c6a4b9f8dd6c0785ebbbd2a
+* Fix team command by [@braxey](https://github.com/braxey) in [d08e5be](https://github.com/gillyware/gatekeeper/commit/d08e5beac9c532314c6a4b9f8dd6c0785ebbbd2a)
 
 ## v2.0.0 - 2025-08-01
 
-* Implement denials and granting by default for all entities by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/commit/7d960875f899829f423336537a98275b11c31430
+* Implement denials and granting by default for all entities by [@braxey](https://github.com/braxey) in [7d96087](https://github.com/gillyware/gatekeeper/commit/7d960875f899829f423336537a98275b11c31430)
 
 # Release Notes for 1.x
 
