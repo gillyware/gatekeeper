@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
-use Gillyware\Gatekeeper\Exceptions\Team\TeamNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\TeamRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -85,9 +85,13 @@ class TeamRepositoryTest extends TestCase
             ->method('getAllTeams')
             ->willReturn(collect());
 
-        $this->expectException(TeamNotFoundException::class);
+        $teamName = fake()->unique()->word();
 
-        $this->repository->findOrFailByName(fake()->unique()->word());
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Team '{$teamName}' not found.");
+
+        $this->repository->findOrFailByName($teamName);
     }
 
     public function test_create_stores_team_and_forgets_cache()

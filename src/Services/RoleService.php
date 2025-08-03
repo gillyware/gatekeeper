@@ -5,7 +5,7 @@ namespace Gillyware\Gatekeeper\Services;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\EntityUpdateAction;
 use Gillyware\Gatekeeper\Enums\RoleSourceType;
-use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Packets\AuditLog\StoreAuditLogPacketBuilder;
@@ -63,7 +63,7 @@ class RoleService extends AbstractBaseEntityService
         $roleName = $this->resolveEntityName($roleName);
 
         if ($this->exists($roleName)) {
-            throw new RoleAlreadyExistsException($roleName);
+            GatekeeperExceptionBuilder::roles()->alreadyExists($roleName)->throw();
         }
 
         $createdRole = $this->roleRepository->create($roleName);
@@ -108,7 +108,7 @@ class RoleService extends AbstractBaseEntityService
         $currentRole = $this->resolveEntity($role, orFail: true);
 
         if ($this->exists($newRoleName) && $currentRole->name !== $newRoleName) {
-            throw new RoleAlreadyExistsException($newRoleName);
+            GatekeeperExceptionBuilder::roles()->alreadyExists($newRoleName)->throw();
         }
 
         $oldRoleName = $currentRole->name;

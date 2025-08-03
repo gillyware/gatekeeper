@@ -3,9 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
-use Gillyware\Gatekeeper\Exceptions\Feature\FeatureAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Feature\FeaturesFeatureDisabledException;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithFeaturesException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\Feature;
@@ -64,7 +62,9 @@ class FeatureServiceTest extends TestCase
     {
         $existing = Feature::factory()->create();
 
-        $this->expectException(FeatureAlreadyExistsException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Feature '{$existing->name}' already exists.");
 
         $this->service->create($existing->name);
     }
@@ -75,7 +75,9 @@ class FeatureServiceTest extends TestCase
 
         $name = fake()->unique()->word();
 
-        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The features feature is disabled. Please enable it in the configuration.');
 
         $this->service->create($name);
     }
@@ -127,7 +129,10 @@ class FeatureServiceTest extends TestCase
         $name = fake()->unique()->word();
         $feature = Feature::factory()->withName($name)->create();
 
-        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The features feature is disabled. Please enable it in the configuration.');
+
         $this->service->updateName($feature, 'new-name');
 
         $this->assertSame($name, $feature->fresh()->name);
@@ -183,7 +188,10 @@ class FeatureServiceTest extends TestCase
 
         $feature = Feature::factory()->create();
 
-        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The features feature is disabled. Please enable it in the configuration.');
+
         $this->service->grantByDefault($feature);
 
         $this->assertFalse($feature->fresh()->grant_by_default);
@@ -371,7 +379,10 @@ class FeatureServiceTest extends TestCase
 
         $feature = Feature::factory()->inactive()->create();
 
-        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The features feature is disabled. Please enable it in the configuration.');
+
         $this->service->reactivate($feature);
 
         $this->assertFalse($feature->fresh()->is_active);
@@ -894,7 +905,11 @@ class FeatureServiceTest extends TestCase
             protected $table = 'users';
         };
 
-        $this->expectException(ModelDoesNotInteractWithFeaturesException::class);
+        $className = get_class($model);
+
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("The model class [{$className}] cannot have features. Consider using the [Gillyware\Gatekeeper\Traits\HasFeatures] trait in your model.");
 
         $this->service->assignToModel($model, 'any');
     }
@@ -903,7 +918,9 @@ class FeatureServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.features.enabled', false);
 
-        $this->expectException(FeaturesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The features feature is disabled. Please enable it in the configuration.');
 
         $user = User::factory()->create();
         $this->service->assignToModel($user, 'any');

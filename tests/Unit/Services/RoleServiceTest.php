@@ -3,9 +3,7 @@
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
-use Gillyware\Gatekeeper\Exceptions\Role\RoleAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasRole;
@@ -64,7 +62,9 @@ class RoleServiceTest extends TestCase
     {
         $existing = Role::factory()->create();
 
-        $this->expectException(RoleAlreadyExistsException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Role '{$existing->name}' already exists.");
 
         $this->service->create($existing->name);
     }
@@ -75,7 +75,9 @@ class RoleServiceTest extends TestCase
 
         $name = fake()->unique()->word();
 
-        $this->expectException(RolesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The roles feature is disabled. Please enable it in the configuration.');
 
         $this->service->create($name);
     }
@@ -127,7 +129,10 @@ class RoleServiceTest extends TestCase
         $name = fake()->unique()->word();
         $role = Role::factory()->withName($name)->create();
 
-        $this->expectException(RolesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The roles feature is disabled. Please enable it in the configuration.');
+
         $this->service->updateName($role, 'new-name');
 
         $this->assertSame($name, $role->fresh()->name);
@@ -183,7 +188,10 @@ class RoleServiceTest extends TestCase
 
         $role = Role::factory()->create();
 
-        $this->expectException(RolesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The roles feature is disabled. Please enable it in the configuration.');
+
         $this->service->grantByDefault($role);
 
         $this->assertFalse($role->fresh()->grant_by_default);
@@ -371,7 +379,10 @@ class RoleServiceTest extends TestCase
 
         $role = Role::factory()->inactive()->create();
 
-        $this->expectException(RolesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The roles feature is disabled. Please enable it in the configuration.');
+
         $this->service->reactivate($role);
 
         $this->assertFalse($role->fresh()->is_active);
@@ -894,7 +905,11 @@ class RoleServiceTest extends TestCase
             protected $table = 'users';
         };
 
-        $this->expectException(ModelDoesNotInteractWithRolesException::class);
+        $className = get_class($model);
+
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("The model class [{$className}] cannot have roles. Consider using the [Gillyware\Gatekeeper\Traits\HasRoles] trait in your model.");
 
         $this->service->assignToModel($model, 'any');
     }
@@ -903,7 +918,9 @@ class RoleServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.roles.enabled', false);
 
-        $this->expectException(RolesFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The roles feature is disabled. Please enable it in the configuration.');
 
         $user = User::factory()->create();
         $this->service->assignToModel($user, 'any');

@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
-use Gillyware\Gatekeeper\Exceptions\Role\RoleNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Models\Role;
 use Gillyware\Gatekeeper\Repositories\RoleRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -85,9 +85,13 @@ class RoleRepositoryTest extends TestCase
             ->method('getAllRoles')
             ->willReturn(collect());
 
-        $this->expectException(RoleNotFoundException::class);
+        $roleName = fake()->unique()->word();
 
-        $this->repository->findOrFailByName(fake()->unique()->word());
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Role '{$roleName}' not found.");
+
+        $this->repository->findOrFailByName($roleName);
     }
 
     public function test_create_stores_role_and_forgets_cache()

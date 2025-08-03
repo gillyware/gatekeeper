@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Packets\Config\ManageableModelPacket;
 use Gillyware\Gatekeeper\Packets\Models\ModelPagePacket;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +20,7 @@ class ModelService
         $model = $modelData->class::find($pk);
 
         if (! $model) {
-            throw new GatekeeperException("Model with primary key '{$pk}' not found in class '{$modelData->class}'.");
+            GatekeeperExceptionBuilder::models()->notFound($modelData->class, $pk)->throw();
         }
 
         return $model;

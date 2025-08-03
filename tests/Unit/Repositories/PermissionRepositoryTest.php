@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Repositories;
 
-use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Repositories\PermissionRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
@@ -85,9 +85,13 @@ class PermissionRepositoryTest extends TestCase
             ->method('getAllPermissions')
             ->willReturn(collect());
 
-        $this->expectException(PermissionNotFoundException::class);
+        $permissionName = fake()->unique()->word();
 
-        $this->repository->findOrFailByName(fake()->unique()->word());
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Permission '{$permissionName}' not found.");
+
+        $this->repository->findOrFailByName($permissionName);
     }
 
     public function test_create_stores_permission_and_forgets_cache()

@@ -4,9 +4,7 @@ namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamAlreadyExistsException;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamsFeatureDisabledException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Models\AuditLog;
 use Gillyware\Gatekeeper\Models\ModelHasTeam;
@@ -50,7 +48,9 @@ class TeamServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.teams.enabled', false);
 
-        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The teams feature is disabled. Please enable it in the configuration.');
 
         $this->service->create(fake()->unique()->word());
     }
@@ -59,7 +59,9 @@ class TeamServiceTest extends TestCase
     {
         $existing = Team::factory()->create();
 
-        $this->expectException(TeamAlreadyExistsException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("Team '{$existing->name}' already exists.");
 
         $this->service->create($existing->name);
     }
@@ -109,7 +111,9 @@ class TeamServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.teams.enabled', false);
 
-        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The teams feature is disabled. Please enable it in the configuration.');
 
         $team = Team::factory()->create();
         $this->service->updateName($team, fake()->unique()->word());
@@ -165,7 +169,10 @@ class TeamServiceTest extends TestCase
 
         $team = Team::factory()->create();
 
-        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The teams feature is disabled. Please enable it in the configuration.');
+
         $this->service->grantByDefault($team);
 
         $this->assertFalse($team->fresh()->grant_by_default);
@@ -366,7 +373,10 @@ class TeamServiceTest extends TestCase
 
         $team = Team::factory()->inactive()->create();
 
-        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The teams feature is disabled. Please enable it in the configuration.');
+
         $this->service->reactivate($team);
     }
 
@@ -863,7 +873,9 @@ class TeamServiceTest extends TestCase
     {
         Config::set('gatekeeper.features.teams.enabled', false);
 
-        $this->expectException(TeamsFeatureDisabledException::class);
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage('The teams feature is disabled. Please enable it in the configuration.');
 
         $user = User::factory()->create();
         $team = Team::factory()->create();
@@ -880,7 +892,11 @@ class TeamServiceTest extends TestCase
 
         $team = Team::factory()->create();
 
-        $this->expectException(ModelDoesNotInteractWithTeamsException::class);
+        $className = get_class($model);
+
+        $this->expectException(GatekeeperException::class);
+
+        $this->expectExceptionMessage("The model class [{$className}] cannot have teams. Consider using the [Gillyware\Gatekeeper\Traits\HasTeams] trait in your model.");
 
         $this->service->assignToModel($model, $team->name);
     }

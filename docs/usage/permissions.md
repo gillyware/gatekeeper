@@ -69,7 +69,7 @@ $exists = Gatekeeper::permissionExists(Permission::CreateUsers);
 
 You may create a new permission, which will be active by default.
 
-If the permission already exists, a `PermissionAlreadyExistsException` will be thrown.
+If the permission already exists, a `GatekeeperException` will be thrown.
 
 The `createPermission` method accepts a string or a string-backed enum.
 
@@ -96,9 +96,9 @@ You may update the name of an existing permission.
 
 The `updatePermissionName` method accepts a `PermissionPacket` instance, a string, or a string-backed enum as the first argument (the existing permission), and a string or string-backed enum as the second argument (the new name).
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
-If a permission with the new name already exists, a `PermissionAlreadyExistsException` will be thrown.
+If a permission with the new name already exists, a `GatekeeperException` will be thrown.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Permission\PermissionPacket`
 
@@ -124,7 +124,7 @@ You may want a permission that most, if not all, models should have by default. 
 
 The `grantPermissionByDefault` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is already granted by default, it will simply be returned without raising an exception.
 
@@ -151,7 +151,7 @@ You may decide that a permission should not be [granted by default](#grant-permi
 
 The `revokePermissionDefaultGrant` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is not granted by default, it will simply be returned without raising an exception.
 
@@ -180,7 +180,7 @@ Deactivated permissions remain in the database but are ignored by permission che
 
 The `deactivatePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is already inactive, it will simply be returned without raising an exception.
 
@@ -207,7 +207,7 @@ You may reactivate an inactive permission to resume granting access to models.
 
 The `reactivatePermission` method accepts a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is already active, it will simply be returned without raising an exception.
 
@@ -312,7 +312,7 @@ You may assign a permission to a model using one of the following approaches:
 
 The `$permission` argument must be a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is denied from a model, the denial will be removed before assigning.
 
@@ -351,7 +351,7 @@ The `$permissions` argument must be an array or Arrayable containing any combina
 
 If a permission is already assigned, it will be skipped without raising an exception.
 
-If a permission does not exist, a `PermissionNotFoundException` will be thrown.
+If a permission does not exist, a `GatekeeperException` will be thrown.
 
 If a permission is denied from a model, the denial will be removed before assigning.
 
@@ -395,7 +395,7 @@ You may unassign a permission from a model using one of the following approaches
 
 The `$permission` argument must be a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is denied from the model, the denial will remain intact.
 
@@ -434,7 +434,7 @@ The `$permissions` argument must be an array or Arrayable containing any combina
 
 If a permission is already unassigned, it will be skipped without raising an exception.
 
-If a permission does not exist, a `PermissionNotFoundException` will be thrown.
+If a permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is denied from the model, the denial will remain intact.
 
@@ -480,7 +480,7 @@ You may deny a permission from a model using one of the following approaches:
 
 The `$permission` argument must be a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is assigned to the model, the permission will be unassigned from the model before denying.
 
@@ -519,7 +519,7 @@ The `$permissions` argument must be an array or Arrayable containing any combina
 
 If a permission is already denied, it will be skipped without raising an exception.
 
-If a permission does not exist, a `PermissionNotFoundException` will be thrown.
+If a permission does not exist, a `GatekeeperException` will be thrown.
 
 If the permission is denied from the model, the denial will remain intact.
 
@@ -565,7 +565,7 @@ You may undeny a permission from a model using one of the following approaches:
 
 The `$permission` argument must be a `PermissionPacket` instance, a string, or a string-backed enum.
 
-If the permission does not exist, a `PermissionNotFoundException` will be thrown.
+If the permission does not exist, a `GatekeeperException` will be thrown.
 
 **Returns:** bool – `true` if the permission is not denied
 
@@ -602,7 +602,7 @@ The `$permissions` argument must be an array or Arrayable containing any combina
 
 If a permission is not denied, it will be skipped without raising an exception.
 
-If a permission does not exist, a `PermissionNotFoundException` will be thrown.
+If a permission does not exist, a `GatekeeperException` will be thrown.
 
 > [!NOTE]
 > This method stops on the first failure.

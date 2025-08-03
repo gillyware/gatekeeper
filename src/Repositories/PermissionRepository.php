@@ -3,7 +3,7 @@
 namespace Gillyware\Gatekeeper\Repositories;
 
 use Gillyware\Gatekeeper\Contracts\EntityRepositoryInterface;
-use Gillyware\Gatekeeper\Exceptions\Permission\PermissionNotFoundException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\ModelHasPermission;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Packets\Entities\EntityPagePacket;
@@ -75,7 +75,7 @@ class PermissionRepository implements EntityRepositoryInterface
         $permission = $this->findByName($permissionName);
 
         if (! $permission) {
-            throw new PermissionNotFoundException($permissionName);
+            GatekeeperExceptionBuilder::permissions()->notFound($permissionName)->throw();
         }
 
         return $permission;

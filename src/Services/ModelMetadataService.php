@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Services;
 
-use Gillyware\Gatekeeper\Exceptions\Model\ModelConfigurationException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Packets\Config\ManageableModelPacket;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Support\Collection;
@@ -54,7 +54,7 @@ class ModelMetadataService
         $data = $this->getConfiguredModels()->first(fn (ManageableModelPacket $modelData) => $modelData->label === $label);
 
         if (! $data) {
-            throw new ModelConfigurationException("Model with label '{$label}' not found in configuration.");
+            GatekeeperExceptionBuilder::models()->setMessage("Model with label '{$label}' not found in configuration.")->throw();
         }
 
         return $data;

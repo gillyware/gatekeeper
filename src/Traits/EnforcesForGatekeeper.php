@@ -3,15 +3,7 @@
 namespace Gillyware\Gatekeeper\Traits;
 
 use Gillyware\Gatekeeper\Constants\GatekeeperConfigDefault;
-use Gillyware\Gatekeeper\Exceptions\Feature\FeaturesFeatureDisabledException;
-use Gillyware\Gatekeeper\Exceptions\Model\InvalidEntityAssignmentException;
-use Gillyware\Gatekeeper\Exceptions\Model\MissingActingAsModelException;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithFeaturesException;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithPermissionsException;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithRolesException;
-use Gillyware\Gatekeeper\Exceptions\Model\ModelDoesNotInteractWithTeamsException;
-use Gillyware\Gatekeeper\Exceptions\Role\RolesFeatureDisabledException;
-use Gillyware\Gatekeeper\Exceptions\Team\TeamsFeatureDisabledException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Models\Feature;
 use Gillyware\Gatekeeper\Models\Permission;
 use Gillyware\Gatekeeper\Models\Role;
@@ -29,7 +21,7 @@ trait EnforcesForGatekeeper
     protected function enforcePermissionInteraction(Model $model): void
     {
         if (! $this->modelInteractsWithPermissions($model)) {
-            throw new ModelDoesNotInteractWithPermissionsException($model);
+            GatekeeperExceptionBuilder::models()->missingHasPermissionsTrait($model)->throw();
         }
     }
 
@@ -47,7 +39,7 @@ trait EnforcesForGatekeeper
     protected function enforceModelIsNotPermission(Model $model, string $message): void
     {
         if ($this->modelIsPermission($model)) {
-            throw new InvalidEntityAssignmentException($message);
+            GatekeeperExceptionBuilder::models()->setMessage($message)->throw();
         }
     }
 
@@ -65,7 +57,7 @@ trait EnforcesForGatekeeper
     protected function enforceRoleInteraction(Model $model): void
     {
         if (! $this->modelInteractsWithRoles($model)) {
-            throw new ModelDoesNotInteractWithRolesException($model);
+            GatekeeperExceptionBuilder::models()->missingHasRolesTrait($model)->throw();
         }
     }
 
@@ -83,7 +75,7 @@ trait EnforcesForGatekeeper
     protected function enforceModelIsNotRole(Model $model, string $message): void
     {
         if ($this->modelIsRole($model)) {
-            throw new InvalidEntityAssignmentException($message);
+            GatekeeperExceptionBuilder::models()->setMessage($message)->throw();
         }
     }
 
@@ -101,7 +93,7 @@ trait EnforcesForGatekeeper
     protected function enforceFeatureInteraction(Model $model): void
     {
         if (! $this->modelInteractsWithFeatures($model)) {
-            throw new ModelDoesNotInteractWithFeaturesException($model);
+            GatekeeperExceptionBuilder::models()->missingHasFeaturesTrait($model)->throw();
         }
     }
 
@@ -119,7 +111,7 @@ trait EnforcesForGatekeeper
     protected function enforceModelIsNotFeature(Model $model, string $message): void
     {
         if ($this->modelIsFeature($model)) {
-            throw new InvalidEntityAssignmentException($message);
+            GatekeeperExceptionBuilder::models()->setMessage($message)->throw();
         }
     }
 
@@ -137,7 +129,7 @@ trait EnforcesForGatekeeper
     protected function enforceTeamInteraction(Model $model): void
     {
         if (! $this->modelInteractsWithTeams($model)) {
-            throw new ModelDoesNotInteractWithTeamsException($model);
+            GatekeeperExceptionBuilder::models()->missingHasTeamsTrait($model)->throw();
         }
     }
 
@@ -155,7 +147,7 @@ trait EnforcesForGatekeeper
     protected function enforceModelIsNotTeam(Model $model, string $message): void
     {
         if ($this->modelIsTeam($model)) {
-            throw new InvalidEntityAssignmentException($message);
+            GatekeeperExceptionBuilder::models()->setMessage($message)->throw();
         }
     }
 
@@ -175,7 +167,7 @@ trait EnforcesForGatekeeper
         $this->resolveActingAs();
 
         if ($this->auditFeatureEnabled() && (! isset($this->actingAs) || ! $this->actingAs instanceof Model)) {
-            throw new MissingActingAsModelException;
+            GatekeeperExceptionBuilder::models()->missingActor()->throw();
         }
     }
 
@@ -193,7 +185,7 @@ trait EnforcesForGatekeeper
     protected function enforceRolesFeature(): void
     {
         if (! $this->rolesFeatureEnabled()) {
-            throw new RolesFeatureDisabledException;
+            GatekeeperExceptionBuilder::roles()->featureDisabled()->throw();
         }
     }
 
@@ -211,7 +203,7 @@ trait EnforcesForGatekeeper
     protected function enforceFeaturesFeature(): void
     {
         if (! $this->featuresFeatureEnabled()) {
-            throw new FeaturesFeatureDisabledException;
+            GatekeeperExceptionBuilder::features()->featureDisabled()->throw();
         }
     }
 
@@ -229,7 +221,7 @@ trait EnforcesForGatekeeper
     protected function enforceTeamsFeature(): void
     {
         if (! $this->teamsFeatureEnabled()) {
-            throw new TeamsFeatureDisabledException;
+            GatekeeperExceptionBuilder::teams()->featureDisabled()->throw();
         }
     }
 

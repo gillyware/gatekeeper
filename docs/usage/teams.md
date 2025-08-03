@@ -68,7 +68,7 @@ $exists = Gatekeeper::teamExists(Team::Support);
 
 You may create a new team, which will be active by default.
 
-If the team already exists, a `TeamAlreadyExistsException` will be thrown.
+If the team already exists, a `GatekeeperException` will be thrown.
 
 The `createTeam` method accepts a string or a string-backed enum.
 
@@ -95,9 +95,9 @@ You may update the name of an existing team.
 
 The `updateTeamName` method accepts a `TeamPacket` instance, a string, or a string-backed enum as the first argument (the existing team), and a string or string-backed enum as the second argument (the new name).
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
-If a team with the new name already exists, a `TeamAlreadyExistsException` will be thrown.
+If a team with the new name already exists, a `GatekeeperException` will be thrown.
 
 **Returns:** `\Gillyware\Gatekeeper\Packets\Entities\Team\TeamPacket`
 
@@ -123,7 +123,7 @@ You may want a team that most, if not all, models should be on by default. Grant
 
 The `grantTeamByDefault` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is already granted by default, it will simply be returned without raising an exception.
 
@@ -150,7 +150,7 @@ You may decide that a team should not be [granted by default](#grant-team-by-def
 
 The `revokeTeamDefaultGrant` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is not granted by default, it will simply be returned without raising an exception.
 
@@ -179,7 +179,7 @@ Deactivated teams remain in the database but are ignored by team checks until re
 
 The `deactivateTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is already inactive, it will simply be returned without raising an exception.
 
@@ -206,7 +206,7 @@ You may reactivate an inactive team to resume granting access to models.
 
 The `reactivateTeam` method accepts a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is already active, it will simply be returned without raising an exception.
 
@@ -311,7 +311,7 @@ You may add a model to a team using one of the following approaches:
 
 The `$team` argument must be a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is denied from a model, the denial will be removed before assigning.
 
@@ -350,7 +350,7 @@ The `$teams` argument must be an array or Arrayable containing any combination `
 
 If the model is already on a team, the team will be skipped without raising an exception.
 
-If a team does not exist, a `TeamNotFoundException` will be thrown.
+If a team does not exist, a `GatekeeperException` will be thrown.
 
 If a team is denied from a model, the denial will be removed before assigning.
 
@@ -394,7 +394,7 @@ You may remove a model from a team using one of the following approaches:
 
 The `$team` argument must be a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is denied from the model, the denial will remain intact.
 
@@ -433,7 +433,7 @@ The `$teams` argument must be an array or Arrayable containing any combination `
 
 If a team is already unassigned, it will be skipped without raising an exception.
 
-If a team does not exist, a `TeamNotFoundException` will be thrown.
+If a team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is denied from the model, the denial will remain intact.
 
@@ -479,7 +479,7 @@ You may deny a team from a model using one of the following approaches:
 
 The `$team` argument must be a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 If the model is on the team, the model will be removed from the model before denying.
 
@@ -518,7 +518,7 @@ The `$teams` argument must be an array or Arrayable containing any combination `
 
 If a team is already denied, it will be skipped without raising an exception.
 
-If a team does not exist, a `TeamNotFoundException` will be thrown.
+If a team does not exist, a `GatekeeperException` will be thrown.
 
 If the team is denied from the model, the denial will remain intact.
 
@@ -564,7 +564,7 @@ You may undeny a team from a model using one of the following approaches:
 
 The `$team` argument must be a `TeamPacket` instance, a string, or a string-backed enum.
 
-If the team does not exist, a `TeamNotFoundException` will be thrown.
+If the team does not exist, a `GatekeeperException` will be thrown.
 
 **Returns:** bool – `true` if the team is not denied
 
@@ -601,7 +601,7 @@ The `$teams` argument must be an array or Arrayable containing any combination `
 
 If a team is not denied, it will be skipped without raising an exception.
 
-If a team does not exist, a `TeamNotFoundException` will be thrown.
+If a team does not exist, a `GatekeeperException` will be thrown.
 
 > [!NOTE]
 > This method stops on the first failure.

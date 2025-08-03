@@ -5,8 +5,8 @@ namespace Gillyware\Gatekeeper\Console;
 use Gillyware\Gatekeeper\Enums\AuditLogAction;
 use Gillyware\Gatekeeper\Enums\AuditLogActionVerb;
 use Gillyware\Gatekeeper\Enums\GatekeeperEntity;
-use Gillyware\Gatekeeper\Exceptions\GatekeeperConsoleException;
 use Gillyware\Gatekeeper\Exceptions\GatekeeperException;
+use Gillyware\Gatekeeper\Exceptions\GatekeeperExceptionBuilder;
 use Gillyware\Gatekeeper\Facades\Gatekeeper;
 use Gillyware\Gatekeeper\Factories\EntityServiceFactory;
 use Gillyware\Gatekeeper\Packets\Entities\AbstractBaseEntityPacket;
@@ -38,7 +38,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
 
     protected string $entityTable;
 
-    protected string $action;
+    protected AuditLogAction $action;
 
     protected AbstractBaseEntityService $entityService;
 
@@ -58,18 +58,18 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $this->action = $this->gatherEntityAction();
 
         try {
-            match ($this->action) {
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Create)->value => $this->handleCreate(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::UpdateName)->value => $this->handleUpdateName(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::GrantByDefault)->value => $this->handleGrantByDefault(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::RevokeDefaultGrant)->value => $this->handleRevokeDefaultGrant(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Deactivate)->value => $this->handleDeactivate(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Reactivate)->value => $this->handleReactivate(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Delete)->value => $this->handleDelete(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Assign)->value => $this->handleAssign(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Unassign)->value => $this->handleUnassign(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Deny)->value => $this->handleDeny(),
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Undeny)->value => $this->handleUndeny(),
+            match ($this->action->getVerb()) {
+                AuditLogActionVerb::Create => $this->handleCreate(),
+                AuditLogActionVerb::UpdateName => $this->handleUpdateName(),
+                AuditLogActionVerb::GrantByDefault => $this->handleGrantByDefault(),
+                AuditLogActionVerb::RevokeDefaultGrant => $this->handleRevokeDefaultGrant(),
+                AuditLogActionVerb::Deactivate => $this->handleDeactivate(),
+                AuditLogActionVerb::Reactivate => $this->handleReactivate(),
+                AuditLogActionVerb::Delete => $this->handleDelete(),
+                AuditLogActionVerb::Assign => $this->handleAssign(),
+                AuditLogActionVerb::Unassign => $this->handleUnassign(),
+                AuditLogActionVerb::Deny => $this->handleDeny(),
+                AuditLogActionVerb::Undeny => $this->handleUndeny(),
             };
         } catch (GatekeeperException $e) {
             error($e->getMessage());
@@ -78,7 +78,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         } catch (Throwable $e) {
             report($e);
 
-            $actionVerb = str($this->action)->after('_')->toString();
+            $actionVerb = $this->action->getVerb()->value;
             error("An unexpected error occurred while trying to [{$actionVerb}] the {$this->entity->value}: {$e->getMessage()}");
 
             return self::FAILURE;
@@ -418,16 +418,16 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     /**
      * Gather the action to perform on an entity.
      */
-    private function gatherEntityAction(): string
+    private function gatherEntityAction(): AuditLogAction
     {
-        return select(
+        return AuditLogAction::from(select(
             label: 'What action do you want to perform?',
             options: $this->getActionOptions(),
             required: 'An action is required.',
             validate: ['string', Rule::in(array_keys($this->getActionOptions()))],
             default: array_key_first($this->getActionOptions()),
             scroll: 20,
-        );
+        ));
     }
 
     /**
@@ -435,7 +435,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
      */
     private function gatherOneExistingEntityName(): string
     {
-        $actionVerb = str($this->action)->after('_')->toString();
+        $actionVerb = $this->action->getVerb()->value;
 
         return search(
             label: "Search for the {$this->entity->value} to [$actionVerb]",
@@ -451,7 +451,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
      */
     private function gatherOneOrMoreExistingEntityNames(): Collection
     {
-        $actionVerb = str($this->action)->after('_')->toString();
+        $actionVerb = $this->action->getVerb()->value;
 
         return collect(multisearch(
             label: "Search for the {$this->entity->value}(s) to [$actionVerb]",
@@ -542,7 +542,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $configuredModelLabels = $this->modelMetadataService->getConfiguredModelLabels();
 
         if ($configuredModelLabels->isEmpty()) {
-            throw new GatekeeperConsoleException('No models are specified in the Gatekeeper configuration.');
+            GatekeeperExceptionBuilder::console()->noConfiguredModels()->throw();
         }
 
         $actorLabel = search(
@@ -570,7 +570,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $configuredModelLabels = $this->modelMetadataService->getConfiguredModelLabels();
 
         if ($configuredModelLabels->isEmpty()) {
-            throw new GatekeeperConsoleException('No models are specified in the Gatekeeper configuration.');
+            GatekeeperExceptionBuilder::console()->noConfiguredModels()->throw();
         }
 
         $acteeLabel = search(
@@ -600,7 +600,7 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
         $instance = new $modelData->class;
 
         if (empty($searchable)) {
-            throw new GatekeeperConsoleException("No columns are searchable for [$label] models");
+            GatekeeperExceptionBuilder::console()->noSearchableColumns($label)->throw();
         }
 
         $searchableList = $searchable->pluck('label')->implode(', ');
@@ -669,40 +669,22 @@ abstract class AbstractBaseEntityCommand extends AbstractBaseGatekeeperCommand
     {
         $all = $this->entityService->getAll();
 
-        $filtered = match ($this->action) {
-            AuditLogAction::build($this->entity, AuditLogActionVerb::UpdateName)->value,
-            AuditLogAction::build($this->entity, AuditLogActionVerb::Delete)->value,
-            AuditLogAction::build($this->entity, AuditLogActionVerb::Assign)->value,
-            AuditLogAction::build($this->entity, AuditLogActionVerb::Unassign)->value, => $all,
-
-            AuditLogAction::build($this->entity, AuditLogActionVerb::RevokeDefaultGrant)->value, => $all->filter(fn (AbstractBaseEntityPacket $packet) => $packet->grantedByDefault),
-
-            AuditLogAction::build($this->entity, AuditLogActionVerb::GrantByDefault)->value, => $all->filter(fn (AbstractBaseEntityPacket $packet) => ! $packet->grantedByDefault),
-
-            AuditLogAction::build($this->entity, AuditLogActionVerb::Deactivate)->value, => $all->filter(fn (AbstractBaseEntityPacket $packet) => $packet->isActive),
-
-            AuditLogAction::build($this->entity, AuditLogActionVerb::Reactivate)->value, => $all->filter(fn (AbstractBaseEntityPacket $packet) => ! $packet->isActive),
-
+        $filtered = match ($this->action->getVerb()) {
+            AuditLogActionVerb::UpdateName,
+            AuditLogActionVerb::Delete,
+            AuditLogActionVerb::Assign,
+            AuditLogActionVerb::Unassign,
+            AuditLogActionVerb::Deny,
+            AuditLogActionVerb::Undeny, => $all,
+            AuditLogActionVerb::RevokeDefaultGrant => $all->filter(fn (AbstractBaseEntityPacket $packet) => $packet->grantedByDefault),
+            AuditLogActionVerb::GrantByDefault => $all->filter(fn (AbstractBaseEntityPacket $packet) => ! $packet->grantedByDefault),
+            AuditLogActionVerb::Deactivate => $all->filter(fn (AbstractBaseEntityPacket $packet) => $packet->isActive),
+            AuditLogActionVerb::Reactivate => $all->filter(fn (AbstractBaseEntityPacket $packet) => ! $packet->isActive),
             default => $all,
         };
 
         if ($filtered->isEmpty()) {
-            throw new GatekeeperConsoleException(match ($this->action) {
-                AuditLogAction::build($this->entity, AuditLogActionVerb::UpdateName)->value,
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Delete)->value,
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Assign)->value,
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Unassign)->value, => "No {$this->entity->value}s found.",
-
-                AuditLogAction::build($this->entity, AuditLogActionVerb::RevokeDefaultGrant)->value, => "No {$this->entity->value}s granted by default found.",
-
-                AuditLogAction::build($this->entity, AuditLogActionVerb::GrantByDefault)->value, => "No {$this->entity->value}s not granted by default found.",
-
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Deactivate)->value, => "No active {$this->entity->value}s found.",
-
-                AuditLogAction::build($this->entity, AuditLogActionVerb::Reactivate)->value, => "No inactive {$this->entity->value}s found.",
-
-                default => "No {$this->entity->value}s found.",
-            });
+            GatekeeperExceptionBuilder::console()->noSearchResults($this->action)->throw();
         }
 
         return $filtered
