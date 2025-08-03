@@ -32,6 +32,10 @@ final class AuditLogPacket extends Packet
 
     protected static function failedValidation(Validator $validator): void
     {
-        throw new PostalException('Malformed audit log.');
+        $message = app()->hasDebugModeEnabled()
+            ? "Malformed audit log: {$validator->errors()->toJson()}"
+            : 'Malformed audit log.';
+
+        throw new PostalException($message);
     }
 }
