@@ -6,6 +6,7 @@ use BackedEnum;
 use Gillyware\Gatekeeper\Contracts\EntityServiceInterface;
 use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
 use Gillyware\Gatekeeper\Packets\Entities\AbstractBaseEntityPacket;
+use Gillyware\Gatekeeper\Traits\AssertsForGatekeeper;
 use Gillyware\Gatekeeper\Traits\EnforcesForGatekeeper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -23,6 +24,7 @@ use function Illuminate\Support\enum_value;
  */
 abstract class AbstractBaseEntityService implements EntityServiceInterface
 {
+    use AssertsForGatekeeper;
     use EnforcesForGatekeeper;
 
     /**
@@ -42,6 +44,18 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
      */
     protected function resolveEntityName(AbstractBaseEntityModel|AbstractBaseEntityPacket|array|string|UnitEnum $entity): string
     {
+        $name = $this->determineEntityName($entity);
+
+        $this->assert($name, 'The entity name is required.');
+
+        return $name;
+    }
+
+    /**
+     * Determine the Gatekeeper entity name from an entity, array, or string.
+     */
+    private function determineEntityName(AbstractBaseEntityModel|AbstractBaseEntityPacket|array|string|UnitEnum $entity): string
+    {
         // If the entity is an instance of AbstractBaseEntityModel or AbstractBaseEntityPacket, return its name.
         if ($entity instanceof AbstractBaseEntityModel || $entity instanceof AbstractBaseEntityPacket) {
             return $entity->name;
@@ -49,7 +63,7 @@ abstract class AbstractBaseEntityService implements EntityServiceInterface
 
         // If the entity is an enum, return the enum value.
         if ($entity instanceof BackedEnum || $entity instanceof UnitEnum) {
-            return (string) enum_value($entity);
+            return trim((string) enum_value($entity));
         }
 
         // If the entity is a JSON string, decode it.
