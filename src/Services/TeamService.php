@@ -39,6 +39,7 @@ class TeamService extends AbstractBaseEntityService
         private readonly TeamRepository $teamRepository,
         private readonly ModelHasTeamRepository $modelHasTeamRepository,
         private readonly AuditLogRepository $auditLogRepository,
+        private readonly CacheService $cacheService,
     ) {}
 
     /**
@@ -358,7 +359,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Deny multiple teams from a model.
      *
-     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function denyAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -395,7 +396,7 @@ class TeamService extends AbstractBaseEntityService
     /**
      * Deny multiple teams from a model.
      *
-     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $features
+     * @param  array<Team|TeamPacket|string|UnitEnum>|Arrayable<Team|TeamPacket|string|UnitEnum>  $teams
      */
     public function undenyAllFromModel(Model $model, array|Arrayable $teams): bool
     {
@@ -415,34 +416,33 @@ class TeamService extends AbstractBaseEntityService
      */
     public function modelHas(Model $model, $team): bool
     {
-        // To access the team, the teams feature must be enabled and the model must be using the teams trait.
+        // If the teams feature is disabled or the model is not using the HasTeams trait, return false.
         if (! $this->teamsFeatureEnabled() || ! $this->modelInteractsWithTeams($model)) {
             return false;
         }
 
         $team = $this->resolveEntity($team);
 
-        // If the team is denied from the model, return false.
-        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
-            return false;
-        }
-
-        // The team cannot be accessed if it does not exist or is inactive.
+        // If the team does not exist or is inactive, return false.
         if (! $team || ! $team->is_active) {
             return false;
         }
 
-        // If the team is granted by default, return true.
-        if ($team->grant_by_default) {
-            return true;
+        // If the model team access is cached, return it.
+        $modelTeamAccess = $this->cacheService->getModelTeamAccess($model) ?: collect();
+
+        if ($modelTeamAccess->has($team->name)) {
+            return $modelTeamAccess->get($team->name);
         }
 
-        // If the team is directly assigned to the model, return true.
-        if ($this->modelHasDirectly($model, $team)) {
-            return true;
-        }
+        $has = $this->determineModelHas($model, $team);
 
-        return false;
+        // Cache then return the result.
+        $this->cacheService->putModelTeamAccess($model,
+            $modelTeamAccess->put($team->name, $has)
+        );
+
+        return $has;
     }
 
     /**
@@ -454,13 +454,11 @@ class TeamService extends AbstractBaseEntityService
     {
         $team = $this->resolveEntity($team);
 
-        if (! $team) {
+        if (! $team || ! $team->is_active) {
             return false;
         }
 
-        $foundAssignment = $this->teamRepository->assignedToModel($model)->get($team->name);
-
-        return $foundAssignment && $foundAssignment->is_active;
+        return $this->teamRepository->assignedToModel($model)->has($team->name);
     }
 
     /**
@@ -597,5 +595,28 @@ class TeamService extends AbstractBaseEntityService
         return $orFail
             ? $this->teamRepository->findOrFailByName($teamName)
             : $this->teamRepository->findByName($teamName);
+    }
+
+    /**
+     * Determine if a model has the given team.
+     */
+    private function determineModelHas(Model $model, Team $team): bool
+    {
+        // If the team is denied from the model, return false.
+        if ($this->teamRepository->deniedFromModel($model)->has($team->name)) {
+            return false;
+        }
+
+        // If the team is granted by default, return true.
+        if ($team->grant_by_default) {
+            return true;
+        }
+
+        // If the team is directly assigned to the model, return true.
+        if ($this->modelHasDirectly($model, $team)) {
+            return true;
+        }
+
+        return false;
     }
 }

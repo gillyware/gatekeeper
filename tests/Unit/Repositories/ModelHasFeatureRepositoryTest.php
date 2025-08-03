@@ -50,7 +50,7 @@ class ModelHasFeatureRepositoryTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelFeatureLinks')
+            ->method('invalidateCacheForModelFeatureLinksAndAccess')
             ->with($user);
 
         $record = $this->repository->assignToModel($user, $feature);
@@ -69,7 +69,7 @@ class ModelHasFeatureRepositoryTest extends TestCase
         $feature = Feature::factory()->create();
 
         $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelFeatureLinks')
+            ->method('invalidateCacheForModelFeatureLinksAndAccess')
             ->with($user);
 
         $this->repository->assignToModel($user, $feature);

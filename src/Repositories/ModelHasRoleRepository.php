@@ -46,7 +46,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+        $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($model);
 
         return $modelHasRole;
     }
@@ -63,7 +63,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', false)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+        $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($model);
 
         return true;
     }
@@ -83,7 +83,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             'denied' => true,
         ]);
 
-        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+        $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($model);
 
         return $modelHasRole;
     }
@@ -100,7 +100,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', true)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+        $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($model);
 
         return true;
     }
@@ -112,7 +112,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasRole::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelRoleLinks($model);
+        $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($model);
 
         return true;
     }
@@ -131,7 +131,7 @@ class ModelHasRoleRepository implements ModelHasEntityRepositoryInterface
                 $modelHasRole->delete();
 
                 if ($modelHasRole->model) {
-                    $this->cacheService->invalidateCacheForModelRoleLinks($modelHasRole->model);
+                    $this->cacheService->invalidateCacheForModelRoleLinksAndAccess($modelHasRole->model);
                 }
             });
 
