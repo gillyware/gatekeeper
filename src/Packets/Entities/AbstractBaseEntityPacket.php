@@ -36,6 +36,10 @@ abstract class AbstractBaseEntityPacket extends Packet
 
     protected static function failedValidation(Validator $validator): void
     {
-        throw new PostalException('Malformed entity.');
+        $message = app()->hasDebugModeEnabled()
+            ? "Malformed entity: {$validator->errors()->toJson()}"
+            : 'Malformed entity.';
+
+        throw new PostalException($message);
     }
 }
