@@ -67,8 +67,8 @@ class Gatekeeper
             ],
             'user' => [
                 'permissions' => [
-                    'can_view' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::View),
-                    'can_manage' => GatekeeperFacade::modelHasPermission($user, GatekeeperPermission::Manage),
+                    'can_view' => GatekeeperFacade::for($user)->hasPermission(GatekeeperPermission::View),
+                    'can_manage' => GatekeeperFacade::for($user)->hasPermission(GatekeeperPermission::Manage),
                 ],
             ],
         ];

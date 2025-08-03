@@ -13,12 +13,17 @@ class GatekeeperConfigDefault
 
     /**
      * ******************************************************************
+     * Timezone
+     * ******************************************************************
+     */
+    public const TIMEZONE = 'UTC';
+
+    /**
+     * ******************************************************************
      * Features
      * ******************************************************************
      */
     public const FEATURES_AUDIT_ENABLED = true;
-
-    public const TIMEZONE = 'UTC';
 
     public const FEATURES_ROLES_ENABLED = true;
 
