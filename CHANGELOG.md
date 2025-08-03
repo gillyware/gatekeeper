@@ -1,12 +1,12 @@
 # Release Notes for 2.x
 
-## v2.1.0 TBD
+## v2.1.0 - TBD
 
 * Prevent persisting empty entity names by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/48
 
 * Cache 'model has' results by [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/47
 
-## v2.0.1 2025-08-01
+## v2.0.1 - 2025-08-01
 
 * Fix grant entities through entities granted by default by [@braxey](https://github.com/braxey) in [6510e40](https://github.com/gillyware/gatekeeper/commit/6510e403957cf71ecbb2f00600d5516c5ff2c41d)
 
