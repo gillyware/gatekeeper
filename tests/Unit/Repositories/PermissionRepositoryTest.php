@@ -96,7 +96,7 @@ class PermissionRepositoryTest extends TestCase
 
     public function test_create_stores_permission_and_forgets_cache()
     {
-        $this->cacheService->expects($this->once())->method('invalidateCacheForAllPermissions');
+        $this->cacheService->expects($this->once())->method('invalidateCacheForModel');
 
         $name = fake()->unique()->word();
         $permission = $this->repository->create($name);

@@ -2,11 +2,16 @@
 
 namespace Gillyware\Gatekeeper\Tests\Unit\Services;
 
+use Gillyware\Gatekeeper\Models\Feature;
+use Gillyware\Gatekeeper\Models\Permission;
+use Gillyware\Gatekeeper\Models\Role;
+use Gillyware\Gatekeeper\Models\Team;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
 use Gillyware\Gatekeeper\Services\CacheService;
+use Gillyware\Gatekeeper\Support\AccessCachePrimer;
 use Gillyware\Gatekeeper\Tests\Fixtures\User;
+use Gillyware\Gatekeeper\Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 
 class CacheServiceTest extends TestCase
 {
@@ -22,7 +27,9 @@ class CacheServiceTest extends TestCase
 
         $cacheRepository = $this->createMock(CacheRepository::class);
         $this->cacheRepository = $cacheRepository;
-        $this->service = new CacheService($cacheRepository);
+
+        $this->service = new CacheService($cacheRepository, new AccessCachePrimer);
+
         $this->model = new User(['id' => 1]);
     }
 
@@ -32,31 +39,39 @@ class CacheServiceTest extends TestCase
         $this->service->clear();
     }
 
-    public function test_get_all_permissions(): void
+    public function test_all_permissions_cache(): void
     {
-        $collection = collect(['foo']);
+        $permission = Permission::factory()->create();
+        $collection = collect([$permission->name]);
+
         $this->cacheRepository->expects($this->once())
             ->method('get')
             ->with('permissions')
             ->willReturn($collection);
 
         $this->assertSame($collection, $this->service->getAllPermissions());
-    }
 
-    public function test_put_all_permissions(): void
-    {
-        $collection = collect(['bar']);
         $this->cacheRepository->expects($this->once())
             ->method('put')
             ->with('permissions', $collection);
 
         $this->service->putAllPermissions($collection);
+
+        $this->cacheRepository->expects($this->once())->method('clear');
+
+        $this->service->invalidateCacheForModel($permission);
     }
 
     public function test_model_permission_cache(): void
     {
         $key = "permissions.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
-        $collection = collect(['perm']);
+
+        $permission = Permission::factory()->create();
+
+        $collection = collect([$permission->name => [
+            'permission' => $permission,
+            'denied' => false,
+        ]]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -73,12 +88,13 @@ class CacheServiceTest extends TestCase
 
         $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelPermissionLinksAndAccess($this->model);
+        $this->service->invalidateCacheForModel($this->model);
     }
 
     public function test_all_roles_cache(): void
     {
-        $collection = collect(['role']);
+        $role = Role::factory()->create();
+        $collection = collect([$role->name]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -93,17 +109,21 @@ class CacheServiceTest extends TestCase
 
         $this->service->putAllRoles($collection);
 
-        $this->cacheRepository->expects($this->once())
-            ->method('forget')
-            ->with('roles');
+        $this->cacheRepository->expects($this->once())->method('clear');
 
-        $this->service->invalidateCacheForAllRoles();
+        $this->service->invalidateCacheForModel($role);
     }
 
     public function test_model_roles_cache(): void
     {
         $key = "roles.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
-        $collection = collect(['role']);
+
+        $role = Role::factory()->create();
+
+        $collection = collect([$role->name => [
+            'role' => $role,
+            'denied' => false,
+        ]]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -120,12 +140,13 @@ class CacheServiceTest extends TestCase
 
         $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelRoleLinksAndAccess($this->model);
+        $this->service->invalidateCacheForModel($this->model);
     }
 
     public function test_all_features_cache(): void
     {
-        $collection = collect(['feature']);
+        $feature = Feature::factory()->create();
+        $collection = collect([$feature->name]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -140,17 +161,21 @@ class CacheServiceTest extends TestCase
 
         $this->service->putAllFeatures($collection);
 
-        $this->cacheRepository->expects($this->once())
-            ->method('forget')
-            ->with('features');
+        $this->cacheRepository->expects($this->once())->method('clear');
 
-        $this->service->invalidateCacheForAllFeatures();
+        $this->service->invalidateCacheForModel($feature);
     }
 
     public function test_model_features_cache(): void
     {
         $key = "features.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
-        $collection = collect(['feature']);
+
+        $feature = Feature::factory()->create();
+
+        $collection = collect([$feature->name => [
+            'feature' => $feature,
+            'denied' => false,
+        ]]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -167,12 +192,13 @@ class CacheServiceTest extends TestCase
 
         $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelFeatureLinksAndAccess($this->model);
+        $this->service->invalidateCacheForModel($this->model);
     }
 
     public function test_all_teams_cache(): void
     {
-        $collection = collect(['team']);
+        $team = Team::factory()->create();
+        $collection = collect([$team->name]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -187,17 +213,21 @@ class CacheServiceTest extends TestCase
 
         $this->service->putAllTeams($collection);
 
-        $this->cacheRepository->expects($this->once())
-            ->method('forget')
-            ->with('teams');
+        $this->cacheRepository->expects($this->once())->method('clear');
 
-        $this->service->invalidateCacheForAllTeams();
+        $this->service->invalidateCacheForModel($team);
     }
 
     public function test_model_teams_cache(): void
     {
         $key = "teams.{$this->model->getMorphClass()}.{$this->model->getKey()}.links";
-        $collection = collect(['team']);
+
+        $team = Team::factory()->create();
+
+        $collection = collect([$team->name => [
+            'team' => $team,
+            'denied' => false,
+        ]]);
 
         $this->cacheRepository->expects($this->once())
             ->method('get')
@@ -214,6 +244,6 @@ class CacheServiceTest extends TestCase
 
         $this->cacheRepository->expects($this->atLeastOnce())->method('forget');
 
-        $this->service->invalidateCacheForModelTeamLinksAndAccess($this->model);
+        $this->service->invalidateCacheForModel($this->model);
     }
 }

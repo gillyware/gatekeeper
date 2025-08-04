@@ -94,7 +94,7 @@ class TeamRepository implements EntityRepositoryInterface
         $team = new Team(['name' => $teamName]);
 
         if ($team->save()) {
-            $this->cacheService->invalidateCacheForAllTeams();
+            $this->cacheService->invalidateCacheForModel($team);
         }
 
         return $team->fresh();

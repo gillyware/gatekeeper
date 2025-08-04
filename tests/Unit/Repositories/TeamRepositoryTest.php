@@ -96,7 +96,7 @@ class TeamRepositoryTest extends TestCase
 
     public function test_create_stores_team_and_forgets_cache()
     {
-        $this->cacheService->expects($this->once())->method('invalidateCacheForAllTeams');
+        $this->cacheService->expects($this->once())->method('invalidateCacheForModel');
 
         $name = fake()->unique()->word();
         $team = $this->repository->create($name);

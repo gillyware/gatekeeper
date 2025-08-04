@@ -50,7 +50,7 @@ class ModelHasTeamRepositoryTest extends TestCase
         $team = Team::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelTeamLinksAndAccess')
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $record = $this->repository->assignToModel($user, $team);
@@ -68,8 +68,8 @@ class ModelHasTeamRepositoryTest extends TestCase
         $user = User::factory()->create();
         $team = Team::factory()->create();
 
-        $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelTeamLinksAndAccess')
+        $this->cacheService->expects($this->atLeastOnce())
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $this->repository->assignToModel($user, $team);

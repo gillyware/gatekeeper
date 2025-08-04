@@ -96,7 +96,7 @@ class RoleRepositoryTest extends TestCase
 
     public function test_create_stores_role_and_forgets_cache()
     {
-        $this->cacheService->expects($this->once())->method('invalidateCacheForAllRoles');
+        $this->cacheService->expects($this->once())->method('invalidateCacheForModel');
 
         $name = fake()->unique()->word();
         $role = $this->repository->create($name);

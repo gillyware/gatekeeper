@@ -3,13 +3,18 @@
 namespace Gillyware\Gatekeeper\Services;
 
 use Gillyware\Gatekeeper\Contracts\CacheServiceInterface;
+use Gillyware\Gatekeeper\Models\AbstractBaseEntityModel;
 use Gillyware\Gatekeeper\Repositories\CacheRepository;
+use Gillyware\Gatekeeper\Support\AccessCachePrimer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class CacheService implements CacheServiceInterface
 {
-    public function __construct(private readonly CacheRepository $cacheRepository) {}
+    public function __construct(
+        private readonly CacheRepository $cacheRepository,
+        private readonly AccessCachePrimer $primer,
+    ) {}
 
     /**
      * {@inheritDoc}
@@ -17,6 +22,8 @@ class CacheService implements CacheServiceInterface
     public function clear(): void
     {
         $this->cacheRepository->clear();
+
+        $this->primer->primeAccessForAllEntities();
     }
 
     /**
@@ -70,23 +77,6 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForAllPermissions(): void
-    {
-        $this->cacheRepository->forget($this->getAllPermissionsCacheKey());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function invalidateCacheForModelPermissionLinksAndAccess(Model $model): void
-    {
-        $this->cacheRepository->forget($this->getModelPermissionLinksCacheKey($model));
-        $this->cacheRepository->forget($this->getModelPermissionAccessCacheKey($model));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getAllRoles(): ?Collection
     {
         return $this->cacheRepository->get($this->getAllRolesCacheKey());
@@ -130,25 +120,6 @@ class CacheService implements CacheServiceInterface
     public function putModelRoleAccess(Model $model, Collection $roleAccess): void
     {
         $this->cacheRepository->put($this->getModelRoleAccessCacheKey($model), $roleAccess);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function invalidateCacheForAllRoles(): void
-    {
-        $this->cacheRepository->forget($this->getAllRolesCacheKey());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function invalidateCacheForModelRoleLinksAndAccess(Model $model): void
-    {
-        $this->cacheRepository->forget($this->getModelRoleLinksCacheKey($model));
-        $this->cacheRepository->forget($this->getModelRoleAccessCacheKey($model));
-
-        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
     }
 
     /**
@@ -202,25 +173,6 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForAllFeatures(): void
-    {
-        $this->cacheRepository->forget($this->getAllFeaturesCacheKey());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function invalidateCacheForModelFeatureLinksAndAccess(Model $model): void
-    {
-        $this->cacheRepository->forget($this->getModelFeatureLinksCacheKey($model));
-        $this->cacheRepository->forget($this->getModelFeatureAccessCacheKey($model));
-
-        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getAllTeams(): ?Collection
     {
         return $this->cacheRepository->get($this->getAllTeamsCacheKey());
@@ -269,22 +221,27 @@ class CacheService implements CacheServiceInterface
     /**
      * {@inheritDoc}
      */
-    public function invalidateCacheForAllTeams(): void
+    public function invalidateCacheForModel(Model $model): void
     {
-        $this->cacheRepository->forget($this->getAllTeamsCacheKey());
-    }
+        if ($model instanceof AbstractBaseEntityModel) {
+            $this->clear();
 
-    /**
-     * {@inheritDoc}
-     */
-    public function invalidateCacheForModelTeamLinksAndAccess(Model $model): void
-    {
+            return;
+        }
+
+        $this->cacheRepository->forget($this->getModelPermissionLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelPermissionAccessCacheKey($model));
+
+        $this->cacheRepository->forget($this->getModelRoleLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelRoleAccessCacheKey($model));
+
+        $this->cacheRepository->forget($this->getModelFeatureLinksCacheKey($model));
+        $this->cacheRepository->forget($this->getModelFeatureAccessCacheKey($model));
+
         $this->cacheRepository->forget($this->getModelTeamLinksCacheKey($model));
         $this->cacheRepository->forget($this->getModelTeamAccessCacheKey($model));
 
-        $this->invalidateCacheForModelPermissionLinksAndAccess($model);
-        $this->invalidateCacheForModelRoleLinksAndAccess($model);
-        $this->invalidateCacheForModelFeatureLinksAndAccess($model);
+        $this->primer->primeAccessForModel($model);
     }
 
     /**

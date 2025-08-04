@@ -96,7 +96,7 @@ class FeatureRepositoryTest extends TestCase
 
     public function test_create_stores_feature_and_forgets_cache()
     {
-        $this->cacheService->expects($this->once())->method('invalidateCacheForAllFeatures');
+        $this->cacheService->expects($this->once())->method('invalidateCacheForModel');
 
         $name = fake()->unique()->word();
         $feature = $this->repository->create($name);

@@ -92,7 +92,7 @@ class FeatureRepository implements EntityRepositoryInterface
         $feature = new Feature(['name' => $featureName]);
 
         if ($feature->save()) {
-            $this->cacheService->invalidateCacheForAllFeatures();
+            $this->cacheService->invalidateCacheForModel($feature);
         }
 
         return $feature->fresh();

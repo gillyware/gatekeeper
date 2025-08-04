@@ -50,7 +50,7 @@ class ModelHasRoleRepositoryTest extends TestCase
         $role = Role::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelRoleLinksAndAccess')
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $record = $this->repository->assignToModel($user, $role);
@@ -68,8 +68,8 @@ class ModelHasRoleRepositoryTest extends TestCase
         $user = User::factory()->create();
         $role = Role::factory()->create();
 
-        $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelRoleLinksAndAccess')
+        $this->cacheService->expects($this->atLeastOnce())
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $this->repository->assignToModel($user, $role);

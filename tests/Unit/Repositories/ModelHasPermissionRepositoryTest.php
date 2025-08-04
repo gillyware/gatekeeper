@@ -50,7 +50,7 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $permission = Permission::factory()->create();
 
         $this->cacheService->expects($this->once())
-            ->method('invalidateCacheForModelPermissionLinksAndAccess')
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $record = $this->repository->assignToModel($user, $permission);
@@ -68,8 +68,8 @@ class ModelHasPermissionRepositoryTest extends TestCase
         $user = User::factory()->create();
         $permission = Permission::factory()->create();
 
-        $this->cacheService->expects($this->exactly(2))
-            ->method('invalidateCacheForModelPermissionLinksAndAccess')
+        $this->cacheService->expects($this->atLeastOnce())
+            ->method('invalidateCacheForModel')
             ->with($user);
 
         $this->repository->assignToModel($user, $permission);

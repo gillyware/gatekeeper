@@ -64,4 +64,8 @@ class GatekeeperConfigDefault
     public const CACHE_PREFIX = 'gatekeeper';
 
     public const CACHE_TTL = 2 * 60 * 60;
+
+    public const CACHE_PRIME_MODEL_ACCESS_ENABLED = false;
+
+    public const CACHE_PRIME_MODEL_ACCESS_ASYNC = false;
 }

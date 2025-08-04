@@ -2,7 +2,7 @@
 
 namespace Gillyware\Gatekeeper\Console;
 
-use Gillyware\Gatekeeper\Repositories\CacheRepository;
+use Gillyware\Gatekeeper\Services\CacheService;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\info;
@@ -13,9 +13,9 @@ class ClearCacheCommand extends Command
 
     protected $description = 'Invalidate items cached by Gatekeeper';
 
-    public function handle(CacheRepository $cacheRepository): int
+    public function handle(CacheService $cacheService): int
     {
-        $cacheRepository->clear();
+        $cacheService->clear();
 
         info('Gatekeeper cache cleared successfully.');
 

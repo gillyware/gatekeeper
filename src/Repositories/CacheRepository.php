@@ -17,6 +17,8 @@ class CacheRepository implements CacheRepositoryInterface
 
     private int $ttl;
 
+    private int $cacheVersion;
+
     public function __construct()
     {
         $this->cachingEnabled = (bool) Config::get('gatekeeper.cache.enabled', GatekeeperConfigDefault::CACHE_ENABLED);
@@ -56,6 +58,7 @@ class CacheRepository implements CacheRepositoryInterface
     public function put(string $key, mixed $value): void
     {
         $cacheKey = $this->buildCacheKey($key);
+
         $this->localCache[$cacheKey] = $value;
 
         if (! $this->cachingEnabled) {
@@ -63,6 +66,8 @@ class CacheRepository implements CacheRepositoryInterface
         }
 
         Cache::put($cacheKey, $value, $this->ttl);
+
+        $this->trackCacheKey($cacheKey);
     }
 
     /**
@@ -85,24 +90,30 @@ class CacheRepository implements CacheRepositoryInterface
      */
     public function clear(): void
     {
-        $cacheKey = "{$this->prefix}.cache.version";
-        $newCacheVersion = $this->getCacheVersion() + 1;
+        $currentCacheVersion = $this->getCacheVersion();
+
+        $cacheKey = "{$this->prefix}.meta.version";
+        $newCacheVersion = $currentCacheVersion + 1;
 
         if (! $this->cachingEnabled) {
             return;
         }
 
         Cache::put($cacheKey, $newCacheVersion, $this->ttl);
+
+        $this->cacheVersion = $newCacheVersion;
+
+        $this->forgetCacheVersion($currentCacheVersion);
     }
 
     /**
      * Build a cache key with the prefix and version.
      */
-    private function buildCacheKey(string $key): string
+    private function buildCacheKey(string $key, ?int $version = null): string
     {
-        $cacheVersion = $this->getCacheVersion();
+        $version ??= $this->getCacheVersion();
 
-        return "{$this->prefix}.{$cacheVersion}.{$key}";
+        return "{$this->prefix}.{$version}.{$key}";
     }
 
     /**
@@ -110,7 +121,11 @@ class CacheRepository implements CacheRepositoryInterface
      */
     private function getCacheVersion(): int
     {
-        $cacheKey = "{$this->prefix}.cache.version";
+        if (isset($this->cacheVersion)) {
+            return $this->cacheVersion;
+        }
+
+        $cacheKey = "{$this->prefix}.meta.version";
         $cacheVersion = Cache::get($cacheKey);
 
         if (! $cacheVersion) {
@@ -118,6 +133,51 @@ class CacheRepository implements CacheRepositoryInterface
             Cache::put($cacheKey, $cacheVersion, $this->ttl);
         }
 
+        $this->cacheVersion = $cacheVersion;
+
         return $cacheVersion;
+    }
+
+    /**
+     * Track the given cache key so it can be forgotten on cache invalidation.
+     */
+    private function trackCacheKey(string $key): void
+    {
+        $allTrackedKeysKey = "{$this->prefix}.meta.tracked_keys";
+        $allTrackedKeys = $this->localCache[$allTrackedKeysKey] ?? Cache::get($allTrackedKeysKey, []);
+
+        $currentVersionTrackedKeysKey = $this->buildCacheKey('meta.tracked_keys');
+        $currentVersionTrackedKeys = $allTrackedKeys[$currentVersionTrackedKeysKey] ?? [];
+
+        if (in_array($key, $currentVersionTrackedKeys)) {
+            return;
+        }
+
+        $currentVersionTrackedKeys[] = $key;
+        $allTrackedKeys[$currentVersionTrackedKeysKey] = $currentVersionTrackedKeys;
+
+        Cache::put($allTrackedKeysKey, $allTrackedKeys, $this->ttl);
+        $this->localCache[$allTrackedKeysKey] = $allTrackedKeys;
+    }
+
+    /**
+     * Forget all the cache entries for a specific cache version.
+     */
+    private function forgetCacheVersion(int $version): void
+    {
+        $allTrackedKeysKey = "{$this->prefix}.meta.tracked_keys";
+        $allTrackedKeys = $this->localCache[$allTrackedKeysKey] ?? Cache::get($allTrackedKeysKey, []);
+
+        $versionTrackedKeysKey = $this->buildCacheKey('meta.tracked_keys', $version);
+        $versionTrackedKeys = $allTrackedKeys[$versionTrackedKeysKey] ?? [];
+
+        foreach ($versionTrackedKeys as $trackedKey) {
+            Cache::forget($trackedKey);
+        }
+
+        unset($allTrackedKeys[$versionTrackedKeysKey]);
+
+        Cache::put($allTrackedKeysKey, $allTrackedKeys, $this->ttl);
+        $this->localCache[$allTrackedKeysKey] = $allTrackedKeys;
     }
 }

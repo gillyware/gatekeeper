@@ -79,11 +79,17 @@ Specifies the database table names used by Gatekeeper. There are 4 tables for en
 
 Determines whether Gatekeeper can use the application's cache, the string prefix applied to all Gatekeeper-related cache keys, and how long cached items will live (in seconds).
 
+The "prime model access" attributes control a feature that repopulates the cache on invalidation. For example, if an entity is updated, then the Gatekeeper cache needs to clear, but enabling `prime_model_access` will repopulate the cache for entity access directly after the clear, lightening the load for users. This repopulation can be done synchronously or asynchronously (uses the queue configured for your application).
+
 ```php
 'cache' => [
     'enabled' => env('GATEKEEPER_CACHE_ENABLED', true),
     'prefix' => env('GATEKEEPER_CACHE_PREFIX', 'gatekeeper'),
     'ttl' => env('GATEKEEPER_CACHE_TTL', 2 * 60 * 60),
+    'prime_model_access' => [
+        'enabled' => env('GATEKEEPER_CACHE_PRIME_MODEL_ACCESS_ENABLED', false),
+        'async' => env('GATEKEEPER_CACHE_PRIME_MODEL_ACCESS_ASYNC', false),
+    ],
 ],
 ```
 
