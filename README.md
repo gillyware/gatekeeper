@@ -12,7 +12,7 @@
 Gatekeeper is an access control management system for Laravel that combines a comprehensive dashboard with code-driven configuration. It allows you to manage permissions, roles, features, and teams while maintaining a full audit trail of changes to entities and their assignments.
 
 <p align="center">
-    <img width="720" alt="Gatekeeper Dashboard" src="https://github.com/user-attachments/assets/3d9f5218-3d4d-485b-8144-ba60d1fa90fc" />
+    <img width="720" alt="Gatekeeper Dashboard" src="https://github.com/user-attachments/assets/1641e59b-56be-4a7f-b48c-fbdc8c7f580f" />
 </p>
 
 ## Official Documentation
@@ -42,4 +42,5 @@ Manage Entities and Assignments:
 ## License
 
 Gatekeeper is open-sourced software licensed under the [MIT license](LICENSE.md).
+
 
