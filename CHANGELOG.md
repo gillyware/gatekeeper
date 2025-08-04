@@ -1,6 +1,8 @@
 # Release Notes for 2.x
 
-## v2.1.0 - TBD
+## v2.1.0 - 2025-08-04
+
+* Allow access checks through entity packets [@braxey](https://github.com) in https://github.com/gillyware/gatekeeper/pull/52
 
 * Recalculate and recache model access on cache invalidation [@braxey](https://github.com/braxey) in https://github.com/gillyware/gatekeeper/pull/51
 
