@@ -175,7 +175,7 @@ php artisan gatekeeper:team
 
 Invalidate all Gatekeeper-related cache entries.
 
-This command increments the internal cache version, effectively expiring all cache keys related to permissions, roles, features, and teams.
+Consider enabling [`prime_model_access`](../configuration.md#cache) to immmediately recalculate the access for your application's entities, potentially decreasing the initial load time for users.
 
 ### Usage
 

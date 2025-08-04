@@ -59,16 +59,6 @@ interface CacheServiceInterface
     public function putModelPermissionAccess(Model $model, Collection $permissionAccess): void;
 
     /**
-     * Invalidate the cache for all permissions.
-     */
-    public function invalidateCacheForAllPermissions(): void;
-
-    /**
-     * Invalidate the cache for a specific model's permission links and access.
-     */
-    public function invalidateCacheForModelPermissionLinksAndAccess(Model $model): void;
-
-    /**
      * Retrieve all roles from the cache.
      *
      * @return ?Collection<string, Role>
@@ -109,16 +99,6 @@ interface CacheServiceInterface
      * @param  ?Collection<string, bool>  $roleAccess
      */
     public function putModelRoleAccess(Model $model, Collection $roleAccess): void;
-
-    /**
-     * Invalidate the cache for all roles.
-     */
-    public function invalidateCacheForAllRoles(): void;
-
-    /**
-     * Invalidate the cache for a specific model's role links and access.
-     */
-    public function invalidateCacheForModelRoleLinksAndAccess(Model $model): void;
 
     /**
      * Retrieve all features from the cache.
@@ -163,16 +143,6 @@ interface CacheServiceInterface
     public function putModelFeatureAccess(Model $model, Collection $featureAccess): void;
 
     /**
-     * Invalidate the cache for all features.
-     */
-    public function invalidateCacheForAllFeatures(): void;
-
-    /**
-     * Invalidate the cache for a specific model's feature links and access.
-     */
-    public function invalidateCacheForModelFeatureLinksAndAccess(Model $model): void;
-
-    /**
      * Retrieve all teams from the cache.
      *
      * @return ?Collection<string, Team>
@@ -215,12 +185,7 @@ interface CacheServiceInterface
     public function putModelTeamAccess(Model $model, Collection $teamAccess): void;
 
     /**
-     * Invalidate the cache for all teams.
+     * Invalidate the cache for a specific model's links and access.
      */
-    public function invalidateCacheForAllTeams(): void;
-
-    /**
-     * Invalidate the cache for a specific model's team links and access.
-     */
-    public function invalidateCacheForModelTeamLinksAndAccess(Model $model): void;
+    public function invalidateCacheForModel(Model $model): void;
 }

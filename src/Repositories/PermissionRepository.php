@@ -89,7 +89,7 @@ class PermissionRepository implements EntityRepositoryInterface
         $permission = new Permission(['name' => $permissionName]);
 
         if ($permission->save()) {
-            $this->cacheService->invalidateCacheForAllPermissions();
+            $this->cacheService->invalidateCacheForModel($permission);
         }
 
         return $permission->fresh();

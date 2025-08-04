@@ -77,15 +77,20 @@ return [
     | Cache
     |--------------------------------------------------------------------------
     |
-    | Configure the cache prefix and TTL (in seconds) used for caching
-    | entities (permissions, roles, teams) and entity assignments.
+    | Configure the cache behavior for Gatekeeper. This includes the cache
+    | prefix, TTL (in seconds), and optional priming behavior for model
+    | access maps when a model's cache is invalidated.
     |
     */
 
     'cache' => [
         'enabled' => env('GATEKEEPER_CACHE_ENABLED', true),
         'prefix' => env('GATEKEEPER_CACHE_PREFIX', 'gatekeeper'),
-        'ttl' => env('GATEKEEPER_CACHE_TTL', 2 * 60 * 60),
+        'ttl' => env('GATEKEEPER_CACHE_TTL', 365 * 24 * 60 * 60),
+        'prime_model_access' => [
+            'enabled' => env('GATEKEEPER_CACHE_PRIME_MODEL_ACCESS_ENABLED', false),
+            'async' => env('GATEKEEPER_CACHE_PRIME_MODEL_ACCESS_ASYNC', false),
+        ],
     ],
 
     /*

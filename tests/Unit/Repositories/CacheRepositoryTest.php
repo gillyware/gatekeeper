@@ -28,7 +28,7 @@ class CacheRepositoryTest extends TestCase
         $prop->setValue($repo, [$cacheKey => ['foo' => 'bar']]);
 
         Cache::shouldReceive('get')
-            ->with('gatekeeper.cache.version')
+            ->with('gatekeeper.meta.version')
             ->andReturn(1);
 
         $result = $repo->get('permissions');
@@ -39,7 +39,7 @@ class CacheRepositoryTest extends TestCase
     public function test_get_fetches_from_cache_and_stores_locally()
     {
         Cache::shouldReceive('get')
-            ->with('gatekeeper.cache.version')
+            ->with('gatekeeper.meta.version')
             ->once()
             ->andReturn(1);
 
@@ -57,7 +57,7 @@ class CacheRepositoryTest extends TestCase
     public function test_get_returns_null_if_not_cached()
     {
         Cache::shouldReceive('get')
-            ->with('gatekeeper.cache.version')
+            ->with('gatekeeper.meta.version')
             ->once()
             ->andReturn(1);
 
@@ -75,12 +75,26 @@ class CacheRepositoryTest extends TestCase
     public function test_put_stores_to_cache_and_local_cache()
     {
         Cache::shouldReceive('get')
-            ->with('gatekeeper.cache.version')
-            ->andReturn(1);
+            ->with('gatekeeper.meta.version')
+            ->andReturn(1)
+            ->ordered();
 
         Cache::shouldReceive('put')
             ->once()
-            ->with('gatekeeper.1.key', 'value', 600);
+            ->with('gatekeeper.1.key', 'value', 600)
+            ->ordered();
+
+        Cache::shouldReceive('get')
+            ->with('gatekeeper.meta.tracked_keys', [])
+            ->andReturn([])
+            ->ordered();
+
+        Cache::shouldReceive('put')
+            ->once()
+            ->with('gatekeeper.meta.tracked_keys', [
+                'gatekeeper.1.meta.tracked_keys' => ['gatekeeper.1.key'],
+            ], 600)
+            ->ordered();
 
         $repo = new CacheRepository;
         $repo->put('key', 'value');
@@ -96,7 +110,7 @@ class CacheRepositoryTest extends TestCase
     public function test_forget_removes_from_cache_and_local_cache()
     {
         Cache::shouldReceive('get')
-            ->with('gatekeeper.cache.version')
+            ->with('gatekeeper.meta.version')
             ->andReturn(1);
 
         Cache::shouldReceive('forget')
@@ -119,12 +133,34 @@ class CacheRepositoryTest extends TestCase
     {
         Cache::shouldReceive('get')
             ->once()
-            ->with('gatekeeper.cache.version')
-            ->andReturn(5);
+            ->with('gatekeeper.meta.version')
+            ->andReturn(5)
+            ->ordered();
 
         Cache::shouldReceive('put')
             ->once()
-            ->with('gatekeeper.cache.version', 6, 600);
+            ->with('gatekeeper.meta.version', 6, 600)
+            ->ordered();
+
+        Cache::shouldReceive('get')
+            ->with('gatekeeper.meta.tracked_keys', [])
+            ->andReturn([
+                'gatekeeper.5.meta.tracked_keys' => ['gatekeeper.1.key'],
+                'gatekeeper.6.meta.tracked_keys' => [],
+            ])
+            ->ordered();
+
+        Cache::shouldReceive('forget')
+            ->once()
+            ->with('gatekeeper.1.key')
+            ->ordered();
+
+        Cache::shouldReceive('put')
+            ->once()
+            ->with('gatekeeper.meta.tracked_keys', [
+                'gatekeeper.6.meta.tracked_keys' => [],
+            ], 600)
+            ->ordered();
 
         $repo = new CacheRepository;
         $repo->clear();
@@ -134,12 +170,12 @@ class CacheRepositoryTest extends TestCase
     {
         Cache::shouldReceive('get')
             ->once()
-            ->with('gatekeeper.cache.version')
+            ->with('gatekeeper.meta.version')
             ->andReturn(null);
 
         Cache::shouldReceive('put')
             ->once()
-            ->with('gatekeeper.cache.version', 1, 600);
+            ->with('gatekeeper.meta.version', 1, 600);
 
         $repo = new CacheRepository;
 

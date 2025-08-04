@@ -46,7 +46,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             'denied' => false,
         ]);
 
-        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
+        $this->cacheService->invalidateCacheForModel($model);
 
         return $modelHasTeam;
     }
@@ -63,7 +63,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', false)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
+        $this->cacheService->invalidateCacheForModel($model);
 
         return true;
     }
@@ -83,7 +83,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             'denied' => true,
         ]);
 
-        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
+        $this->cacheService->invalidateCacheForModel($model);
 
         return $modelHasTeam;
     }
@@ -100,7 +100,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
             ->where('denied', true)
             ->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
+        $this->cacheService->invalidateCacheForModel($model);
 
         return true;
     }
@@ -112,7 +112,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
     {
         ModelHasTeam::forModel($model)->delete();
 
-        $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($model);
+        $this->cacheService->invalidateCacheForModel($model);
 
         return true;
     }
@@ -131,7 +131,7 @@ class ModelHasTeamRepository implements ModelHasEntityRepositoryInterface
                 $modelHasTeam->delete();
 
                 if ($modelHasTeam->model) {
-                    $this->cacheService->invalidateCacheForModelTeamLinksAndAccess($modelHasTeam->model);
+                    $this->cacheService->invalidateCacheForModel($modelHasTeam->model);
                 }
             });
 
