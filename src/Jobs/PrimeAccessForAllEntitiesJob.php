@@ -25,17 +25,23 @@ class PrimeAccessForAllEntitiesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        resolve(RoleRepository::class)->all()->each(function (Role $role) {
-            $this->primeAccessForEntity($role);
-        });
+        if ($this->rolesFeatureEnabled()) {
+            resolve(RoleRepository::class)->all()->each(function (Role $role) {
+                $this->primeAccessForEntity($role);
+            });
+        }
 
-        resolve(FeatureRepository::class)->all()->each(function (Feature $feature) {
-            $this->primeAccessForEntity($feature);
-        });
+        if ($this->featuresFeatureEnabled()) {
+            resolve(FeatureRepository::class)->all()->each(function (Feature $feature) {
+                $this->primeAccessForEntity($feature);
+            });
+        }
 
-        resolve(TeamRepository::class)->all()->each(function (Team $team) {
-            $this->primeAccessForEntity($team);
-        });
+        if ($this->teamsFeatureEnabled()) {
+            resolve(TeamRepository::class)->all()->each(function (Team $team) {
+                $this->primeAccessForEntity($team);
+            });
+        }
     }
 
     private function primeAccessForEntity(AbstractBaseEntityModel $entityModel): void
