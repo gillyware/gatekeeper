@@ -1,5 +1,9 @@
 # Release Notes for 2.x
 
+## v2.2.0 - 2025-10-26
+
+* Add `using` helper to middleware [@braxey](https://github.com) in https://github.com/gillyware/gatekeeper/pull/54
+
 ## v2.1.1 - 2025-08-10
 
 * Fix priming disabled entities [@braxey](https://github.com) in https://github.com/gillyware/gatekeeper/pull/53
